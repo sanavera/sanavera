@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var searchModal = document.getElementById('search-modal');
     var searchInput = document.getElementById('search-input');
     var searchButton = document.getElementById('search-button');
+    var favoritesButton = document.getElementById('favorites-button');
     var albumList = document.getElementById('album-list');
     var resultsCount = document.getElementById('results-count');
     var loading = document.getElementById('loading');
@@ -30,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var favoritesFloatingButton = document.getElementById('favorites-floating-button');
 
     // Verifica elementos
-    if (!searchModal || !searchInput || !searchButton || !albumList || !resultsCount || !loading || !errorMessage || !playerModal || !closeModal || !btnRepeat || !btnShuffle || !btnDownload || !favoritesModal || !favoritesCloseModal || !favoritesList || !favoritesFloatingButton) {
+    if (!searchModal || !searchInput || !searchButton || !favoritesButton || !albumList || !resultsCount || !loading || !errorMessage || !playerModal || !closeModal || !btnRepeat || !btnShuffle || !btnDownload || !favoritesModal || !favoritesCloseModal || !favoritesList || !favoritesFloatingButton) {
         document.body.innerHTML += '<p style="color: red;">Error: No se encontraron los elementos de la página.</p>';
         return;
     }
@@ -645,6 +646,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 btnDownload.setAttribute('download', song.title + '.mp3');
                 playerModal.style.display = 'flex';
                 favoritesModal.style.display = 'none';
+                playlistConfig = [song]; // Cargar solo la canción seleccionada
+                originalPlaylist = [song];
+                currentTrackIndex = 0;
                 audioPlayer.play().then(function() {
                     isPlaying = true;
                     btnPlay.classList.add('playing');
@@ -658,24 +662,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         history.pushState({ modal: 'favorites' }, '', '#favorites');
     }
-
-    // Manejo del historial
-    window.addEventListener('popstate', function(event) {
-        if (event.state && event.state.modal === 'player') {
-            searchModal.style.display = 'none';
-            favoritesModal.style.display = 'none';
-            playerModal.style.display = 'flex';
-        } else if (event.state && event.state.modal === 'favorites') {
-            searchModal.style.display = 'none';
-            playerModal.style.display = 'none';
-            favoritesModal.style.display = 'flex';
-        } else {
-            playerModal.style.display = 'none';
-            favoritesModal.style.display = 'none';
-            searchModal.style.display = 'flex';
-            albumList.scrollTop = lastScrollPosition;
-        }
-    });
 
     // Eventos de modales
     closeModal.addEventListener('click', function() {
@@ -694,6 +680,10 @@ document.addEventListener('DOMContentLoaded', function() {
         searchModal.style.display = 'flex';
         albumList.scrollTop = lastScrollPosition;
         history.back();
+    });
+
+    favoritesButton.addEventListener('click', function() {
+        showFavoriteSongs();
     });
 
     favoritesFloatingButton.addEventListener('click', function() {
