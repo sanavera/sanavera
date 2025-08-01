@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', function() {
     var searchModal = document.getElementById('search-modal');
     var searchInput = document.getElementById('search-input');
     var searchButton = document.getElementById('search-button');
-    var favoritesButton = document.getElementById('favorites-button');
     var albumList = document.getElementById('album-list');
     var resultsCount = document.getElementById('results-count');
     var loading = document.getElementById('loading');
@@ -30,8 +29,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var favoritesList = document.getElementById('favorites-list');
     var favoritesFloatingButton = document.getElementById('favorites-floating-button');
 
-    // Verifica elementos
-    if (!searchModal || !searchInput || !searchButton || !favoritesButton || !albumList || !resultsCount || !loading || !errorMessage || !playerModal || !closeModal || !btnRepeat || !btnShuffle || !btnDownload || !favoritesModal || !favoritesCloseModal || !favoritesList || !favoritesFloatingButton) {
+    // Verifica elementos (eliminé favoritesButton)
+    if (!searchModal || !searchInput || !searchButton || !albumList || !resultsCount || !loading || !errorMessage || !playerModal || !closeModal || !btnRepeat || !btnShuffle || !btnDownload || !favoritesModal || !favoritesCloseModal || !favoritesList || !favoritesFloatingButton) {
         document.body.innerHTML += '<p style="color: red;">Error: No se encontraron los elementos de la página.</p>';
         return;
     }
@@ -697,10 +696,6 @@ document.addEventListener('DOMContentLoaded', function() {
         searchModal.style.display = 'flex';
         albumList.scrollTop = lastScrollPosition;
         history.back();
-    });
-
-    favoritesButton.addEventListener('click', function() {
-        showFavoriteSongs();
     });
 
     favoritesFloatingButton.addEventListener('click', function() {
