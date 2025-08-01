@@ -341,6 +341,7 @@ document.addEventListener('DOMContentLoaded', function() {
             playlistConfig = mockTracks;
             originalPlaylist = [...mockTracks];
             currentAlbumCover = mockTracks[0].coverUrl;
+            favoritesFloatingButton.style.backgroundImage = `url('${currentAlbumCover}')`;
             initPlayer();
         } else {
             fetch('https://archive.org/metadata/' + albumId, { headers: { 'User-Agent': 'Mozilla/5.0' } })
@@ -367,13 +368,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         playlistElement.innerHTML = '<p>No se encontraron canciones MP3</p>';
                         currentAlbumId = null;
                         currentAlbumCover = null;
+                        favoritesFloatingButton.style.backgroundImage = '';
                         return;
                     }
 
                     originalPlaylist = [...playlistConfig];
                     coverImage.src = coverUrl;
+                    favoritesFloatingButton.style.backgroundImage = `url('${coverUrl}')`;
                     coverImage.addEventListener('error', function() {
                         this.src = 'https://via.placeholder.com/150';
+                        favoritesFloatingButton.style.backgroundImage = `url('https://via.placeholder.com/150')`;
                     });
                     initPlayer();
                 })
@@ -382,6 +386,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     playlistConfig = mockTracks;
                     originalPlaylist = [...mockTracks];
                     coverImage.src = 'https://via.placeholder.com/150';
+                    favoritesFloatingButton.style.backgroundImage = `url('https://via.placeholder.com/150')`;
                     songArtist.textContent = 'Queen';
                     currentAlbumId = 'queen_greatest_hits';
                     currentAlbumCover = mockTracks[0].coverUrl;
@@ -460,6 +465,7 @@ document.addEventListener('DOMContentLoaded', function() {
         songTitle.textContent = track.title;
         songArtist.textContent = track.artist;
         coverImage.src = track.coverUrl;
+        favoritesFloatingButton.style.backgroundImage = `url('${track.coverUrl}')`;
         audioPlayer.src = track.mp3Url;
         btnDownload.setAttribute('href', track.mp3Url);
         btnDownload.setAttribute('download', track.title + '.mp3');
@@ -597,7 +603,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const message = document.createElement('div');
         message.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1db954; color: white; padding: 10px; border-radius: 5px; z-index: 10000;';
         if (index === -1) {
-            favoriteSongs.unshift({ mp3Url, title, coverUrl, artist }); // Agregar al inicio
+            favoriteSongs.unshift({ mp3Url, title, coverUrl, artist });
             message.textContent = `${title} agregado a favoritos`;
         } else {
             favoriteSongs.splice(index, 1);
@@ -647,12 +653,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     songTitle.textContent = song.title;
                     songArtist.textContent = song.artist;
                     coverImage.src = song.coverUrl;
+                    favoritesFloatingButton.style.backgroundImage = `url('${song.coverUrl}')`;
                     audioPlayer.src = song.mp3Url;
                     btnDownload.setAttribute('href', song.mp3Url);
                     btnDownload.setAttribute('download', song.title + '.mp3');
                     playerModal.style.display = 'flex';
                     favoritesModal.style.display = 'none';
-                    playlistConfig = [song]; // Cargar solo la canción seleccionada
+                    playlistConfig = [song];
                     originalPlaylist = [song];
                     currentTrackIndex = 0;
                     audioPlayer.play().then(function() {
@@ -697,7 +704,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     favoritesFloatingButton.addEventListener('click', function() {
-        showFavoriteSongs();
+        searchModal.style.display = 'none';
+        favoritesModal.style.display = 'none';
+        playerModal.style.display = 'flex';
+        history.pushState({ modal: 'player' }, '', '#player');
     });
 
     audioPlayer.addEventListener('play', function() {
@@ -739,6 +749,7 @@ document.addEventListener('DOMContentLoaded', function() {
     audioPlayer.addEventListener('error', function(e) {
         currentAlbumId = null;
         currentAlbumCover = null;
+        favoritesFloatingButton.style.backgroundImage = '';
     });
     progressBar.addEventListener('click', setProgress);
     btnPlay.addEventListener('click', togglePlay);
