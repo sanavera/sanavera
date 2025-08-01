@@ -426,7 +426,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <h3>${track.title}</h3>
                     <p>${track.artist}</p>
                 </div>
-                <button class="btn-favorite-song" onclick="toggleFavoriteSong('${track.mp3Url}', '${track.title}', '${track.coverUrl}', '${track.artist}')" aria-label="Agregar a favoritos"><i class="fas fa-heart"></i></button>
+                <button class="btn-favorite-song" data-mp3="${track.mp3Url}" data-title="${track.title}" data-cover="${track.coverUrl}" data-artist="${track.artist}" aria-label="Agregar a favoritos"><i class="fas fa-heart"></i></button>
             `;
             item.addEventListener('click', function(e) {
                 if (!e.target.closest('.btn-favorite-song')) {
@@ -438,6 +438,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         btnPlay.setAttribute('aria-label', 'Pausar');
                     }).catch(function(error) {});
                 }
+            });
+            item.querySelector('.btn-favorite-song').addEventListener('click', function() {
+                toggleFavoriteSong(track.mp3Url, track.title, track.coverUrl, track.artist);
             });
             item.querySelector('img').addEventListener('error', function() {
                 this.src = 'https://via.placeholder.com/40';
@@ -594,7 +597,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const message = document.createElement('div');
         message.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1db954; color: white; padding: 10px; border-radius: 5px; z-index: 10000;';
         if (index === -1) {
-            favoriteSongs.push({ mp3Url, title, coverUrl, artist });
+            favoriteSongs.unshift({ mp3Url, title, coverUrl, artist }); // Agregar al inicio
             message.textContent = `${title} agregado a favoritos`;
         } else {
             favoriteSongs.splice(index, 1);
@@ -610,10 +613,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateFavoriteSongButton(mp3Url) {
-        const buttons = document.querySelectorAll(`[onclick*="toggleFavoriteSong('${mp3Url}'"]`);
+        const buttons = document.querySelectorAll(`.btn-favorite-song[data-mp3="${mp3Url}"]`);
         const isFav = JSON.parse(localStorage.getItem('favoriteSongs') || '[]').some(fav => fav.mp3Url === mp3Url);
         buttons.forEach(button => {
             button.classList.toggle('active', isFav);
+            button.setAttribute('aria-label', isFav ? 'Quitar de favoritos' : 'Agregar a favoritos');
         });
     }
 
@@ -636,24 +640,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     <h3>${song.title}</h3>
                     <p>${song.artist}</p>
                 </div>
+                <button class="btn-remove-favorite" data-mp3="${song.mp3Url}" aria-label="Quitar de favoritos"><i class="fas fa-times"></i></button>
             `;
-            item.addEventListener('click', function() {
-                songTitle.textContent = song.title;
-                songArtist.textContent = song.artist;
-                coverImage.src = song.coverUrl;
-                audioPlayer.src = song.mp3Url;
-                btnDownload.setAttribute('href', song.mp3Url);
-                btnDownload.setAttribute('download', song.title + '.mp3');
-                playerModal.style.display = 'flex';
-                favoritesModal.style.display = 'none';
-                playlistConfig = [song]; // Cargar solo la canción seleccionada
-                originalPlaylist = [song];
-                currentTrackIndex = 0;
-                audioPlayer.play().then(function() {
-                    isPlaying = true;
-                    btnPlay.classList.add('playing');
-                    btnPlay.setAttribute('aria-label', 'Pausar');
-                }).catch(function(error) {});
+            item.addEventListener('click', function(e) {
+                if (!e.target.closest('.btn-remove-favorite')) {
+                    songTitle.textContent = song.title;
+                    songArtist.textContent = song.artist;
+                    coverImage.src = song.coverUrl;
+                    audioPlayer.src = song.mp3Url;
+                    btnDownload.setAttribute('href', song.mp3Url);
+                    btnDownload.setAttribute('download', song.title + '.mp3');
+                    playerModal.style.display = 'flex';
+                    favoritesModal.style.display = 'none';
+                    playlistConfig = [song]; // Cargar solo la canción seleccionada
+                    originalPlaylist = [song];
+                    currentTrackIndex = 0;
+                    audioPlayer.play().then(function() {
+                        isPlaying = true;
+                        btnPlay.classList.add('playing');
+                        btnPlay.setAttribute('aria-label', 'Pausar');
+                    }).catch(function(error) {});
+                }
+            });
+            item.querySelector('.btn-remove-favorite').addEventListener('click', function() {
+                toggleFavoriteSong(song.mp3Url, song.title, song.coverUrl, song.artist);
             });
             item.querySelector('img').addEventListener('error', function() {
                 this.src = 'https://via.placeholder.com/40';
