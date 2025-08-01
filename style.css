@@ -564,7 +564,7 @@ html, body {
 }
 .favorites-item-info {
     flex: 1;
-    max-width: calc(100% - 65px);
+    max-width: calc(100% - 95px);
     overflow: hidden;
 }
 .favorites-item-info h3 {
@@ -586,6 +586,19 @@ html, body {
     text-overflow: ellipsis;
     max-height: 36px;
 }
+.btn-remove-favorite {
+    background: none;
+    border: none;
+    color: #b3b3b3;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 10px;
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+.btn-remove-favorite:hover {
+    color: #ff5555;
+    transform: scale(1.2);
+}
 .no-favorites {
     text-align: center;
     color: #b3b3b3;
@@ -593,30 +606,40 @@ html, body {
     margin-top: 20px;
 }
 
-/* Botón flotante de favoritos */
+/* Botón flotante */
 #favorites-floating-button {
     display: block;
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
     width: 60px;
     height: 60px;
-    background-color: #ff5555;
+    background-color: transparent;
+    background-size: cover;
+    background-position: center;
     border-radius: 50%;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    border: 2px solid white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3), 0 4px 20px rgba(29, 185, 84, 0.6);
     cursor: pointer;
     z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     transition: transform 0.3s ease;
 }
-#favorites-floating-button i {
-    font-size: 24px;
-    color: white;
+#favorites-floating-button::after {
+    content: '';
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border: 3px solid rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+    z-index: -1;
 }
 #favorites-floating-button:hover {
-    transform: scale(1.1);
+    transform: translateX(-50%) scale(1.1);
+}
+#favorites-floating-button i {
+    display: none;
 }
 
 /* Animaciones */
@@ -742,10 +765,10 @@ html, body {
     #favorites-floating-button {
         width: 50px;
         height: 50px;
-        bottom: 15px;
-        right: 15px;
+        bottom: 60px; /* Ajustado para móvil */
     }
-    #favorites-floating-button i {
-        font-size: 20px;
+    #favorites-floating-button::after {
+        width: 50px;
+        height: 50px;
     }
 }
