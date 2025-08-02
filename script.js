@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Selección de elementos
+    var welcomeModal = document.getElementById('welcome-modal');
     var searchModal = document.getElementById('search-modal');
     var searchInput = document.getElementById('search-input');
     var searchButton = document.getElementById('search-button');
@@ -26,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var durationElement = document.getElementById('duration');
 
     // Verifica elementos
-    if (!searchModal || !searchInput || !searchButton || !albumList || !resultsCount || !loading || !errorMessage || !playerModal || !closeModal || !btnRepeat || !btnShuffle || !btnDownload) {
+    if (!welcomeModal || !searchModal || !searchInput || !searchButton || !albumList || !resultsCount || !loading || !errorMessage || !playerModal || !closeModal || !btnRepeat || !btnShuffle || !btnDownload) {
         document.body.innerHTML += '<p style="color: red;">Error: No se encontraron los elementos de la página.</p>';
         return;
     }
@@ -50,8 +51,25 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     cleanProgressContainer();
 
-    // Mostrar modal del buscador al cargar
-    searchModal.style.display = 'flex';
+    // Mostrar modal de bienvenida al cargar
+    if (!sessionStorage.getItem('welcomeShown')) {
+        welcomeModal.style.display = 'flex';
+        searchModal.style.display = 'none';
+        playerModal.style.display = 'none';
+        setTimeout(function() {
+            welcomeModal.style.animation = 'fadeOut 0.5s forwards';
+            setTimeout(function() {
+                welcomeModal.style.display = 'none';
+                searchModal.style.display = 'flex';
+                searchModal.style.animation = 'fadeIn 0.5s forwards';
+                sessionStorage.setItem('welcomeShown', 'true');
+            }, 500);
+        }, 10000);
+    } else {
+        searchModal.style.display = 'flex';
+        welcomeModal.style.display = 'none';
+        playerModal.style.display = 'none';
+    }
 
     // Álbum simulado
     var mockAlbums = [
@@ -130,10 +148,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Manejo del historial para el botón Atrás
     window.addEventListener('popstate', function(event) {
         if (event.state && event.state.modal === 'player') {
-            closePlayerModal();
+            playerModal.style.display = 'flex';
+            searchModal.style.display = 'none';
+            welcomeModal.style.display = 'none';
         } else {
             searchModal.style.display = 'flex';
             playerModal.style.display = 'none';
+            welcomeModal.style.display = 'none';
             albumList.scrollTop = lastScrollPosition;
         }
     });
@@ -141,6 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function closePlayerModal() {
         playerModal.style.display = 'none';
         searchModal.style.display = 'flex';
+        welcomeModal.style.display = 'none';
         albumList.scrollTop = lastScrollPosition;
         audioPlayer.pause();
         isPlaying = false;
@@ -340,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btnPlay.classList.remove('playing');
         btnPlay.setAttribute('aria-label', 'Reproducir');
         repeatMode = 'off';
-        isNovel = false;
+        isShuffled = false;
         btnRepeat.classList.remove('active', 'repeat-one');
         btnShuffle.classList.remove('active');
         btnRepeat.setAttribute('aria-label', 'Repetir');
@@ -438,7 +460,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     isPlaying = true;
                     btnPlay.classList.add('playing');
                     btnPlay.setAttribute('aria-label', 'Pausar');
-                }).catch(function(error) {});
+                }).catch(function(error) {
+                    console.error('Error playing track:', error);
+                });
             });
             item.querySelector('img').addEventListener('error', function() {
                 this.src = 'https://via.placeholder.com/40';
@@ -466,7 +490,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 isPlaying = true;
                 btnPlay.classList.add('playing');
                 btnPlay.setAttribute('aria-label', 'Pausar');
-            }).catch(function(error) {});
+            }).catch(function(error) {
+                console.error('Error playing track:', error);
+            });
         }
     }
 
@@ -506,7 +532,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 isPlaying = true;
                 btnPlay.classList.add('playing');
                 btnPlay.setAttribute('aria-label', 'Pausar');
-            }).catch(function(error) {});
+            }).catch(function(error) {
+                console.error('Error playing audio:', error);
+            });
         }
     }
 
@@ -521,7 +549,9 @@ document.addEventListener('DOMContentLoaded', function() {
             isPlaying = true;
             btnPlay.classList.add('playing');
             btnPlay.setAttribute('aria-label', 'Pausar');
-        }).catch(function(error) {});
+        }).catch(function(error) {
+            console.error('Error playing next track:', error);
+        });
     }
 
     function prevTrack() {
@@ -535,7 +565,9 @@ document.addEventListener('DOMContentLoaded', function() {
             isPlaying = true;
             btnPlay.classList.add('playing');
             btnPlay.setAttribute('aria-label', 'Pausar');
-        }).catch(function(error) {});
+        }).catch(function(error) {
+            console.error('Error playing previous track:', error);
+        });
     }
 
     function toggleRepeat() {
@@ -625,6 +657,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateProgress();
     });
     audioPlayer.addEventListener('error', function(e) {
+        console.error('Audio player error:', e);
         currentAlbumId = null;
     });
     progressBar.addEventListener('click', setProgress);
