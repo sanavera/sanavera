@@ -24,10 +24,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var progress = document.getElementById('progress');
     var currentTimeElement = document.getElementById('current-time');
     var durationElement = document.getElementById('duration');
-    var floatingPlayerButton = document.getElementById('floating-player-button');
 
     // Verifica elementos
-    if (!searchModal || !searchInput || !searchButton || !albumList || !resultsCount || !loading || !errorMessage || !playerModal || !closeModal || !btnRepeat || !btnShuffle || !btnDownload || !floatingPlayerButton) {
+    if (!searchModal || !searchInput || !searchButton || !albumList || !resultsCount || !loading || !errorMessage || !playerModal || !closeModal || !btnRepeat || !btnShuffle || !btnDownload) {
         document.body.innerHTML += '<p style="color: red;">Error: No se encontraron los elementos de la página.</p>';
         return;
     }
@@ -53,7 +52,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Mostrar modal del buscador al cargar
     searchModal.style.display = 'flex';
-    floatingPlayerButton.style.display = 'none';
 
     // Álbum simulado
     var mockAlbums = [
@@ -131,16 +129,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Manejo del historial para el botón Atrás
     window.addEventListener('popstate', function(event) {
-        console.log('popstate event:', event.state, 'currentAlbumId:', currentAlbumId);
-        if (event.state && event.state.modal === 'player' && currentAlbumId) {
-            playerModal.style.display = 'flex';
-            searchModal.style.display = 'none';
-            floatingPlayerButton.style.display = 'none';
+        if (event.state && event.state.modal === 'player') {
+            closePlayerModal();
         } else {
             searchModal.style.display = 'flex';
             playerModal.style.display = 'none';
             albumList.scrollTop = lastScrollPosition;
-            floatingPlayerButton.style.display = currentAlbumId ? 'flex' : 'none';
         }
     });
 
@@ -148,20 +142,11 @@ document.addEventListener('DOMContentLoaded', function() {
         playerModal.style.display = 'none';
         searchModal.style.display = 'flex';
         albumList.scrollTop = lastScrollPosition;
-        floatingPlayerButton.style.display = currentAlbumId ? 'flex' : 'none';
-        // No pausamos el audio para que siga sonando
+        audioPlayer.pause();
+        isPlaying = false;
+        btnPlay.classList.remove('playing');
+        btnPlay.setAttribute('aria-label', 'Reproducir');
     }
-
-    // Evento para el botón flotante
-    floatingPlayerButton.addEventListener('click', function() {
-        console.log('Floating button clicked, currentAlbumId:', currentAlbumId);
-        if (currentAlbumId) {
-            searchModal.style.display = 'none';
-            playerModal.style.display = 'flex';
-            floatingPlayerButton.style.display = 'none';
-            history.pushState({ modal: 'player' }, '', '#player');
-        }
-    });
 
     // Búsqueda automática de "juan_chota_dura" al cargar
     currentQuery = 'juan_chota_dura';
@@ -340,11 +325,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function openPlayer(albumId) {
-        console.log('Opening player for albumId:', albumId);
         lastScrollPosition = albumList.scrollTop;
         searchModal.style.display = 'none';
         playerModal.style.display = 'flex';
-        floatingPlayerButton.style.display = 'none';
         playlistElement.innerHTML = '<p>Cargando canciones...</p>';
         songTitle.textContent = 'Selecciona una canción';
         songArtist.textContent = '';
@@ -357,7 +340,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btnPlay.classList.remove('playing');
         btnPlay.setAttribute('aria-label', 'Reproducir');
         repeatMode = 'off';
-        isShuffled = false;
+        isNovel = false;
         btnRepeat.classList.remove('active', 'repeat-one');
         btnShuffle.classList.remove('active');
         btnRepeat.setAttribute('aria-label', 'Repetir');
@@ -370,7 +353,6 @@ document.addEventListener('DOMContentLoaded', function() {
             songArtist.textContent = 'Queen';
             playlistConfig = mockTracks;
             originalPlaylist = [...mockTracks];
-            floatingPlayerButton.style.display = 'flex';
             initPlayer();
         } else {
             fetch('https://archive.org/metadata/' + albumId, { headers: { 'User-Agent': 'Mozilla/5.0' } })
@@ -396,7 +378,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (playlistConfig.length === 0) {
                         playlistElement.innerHTML = '<p>No se encontraron canciones MP3</p>';
                         currentAlbumId = null;
-                        floatingPlayerButton.style.display = 'none';
                         return;
                     }
 
@@ -405,7 +386,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     coverImage.addEventListener('error', function() {
                         this.src = 'https://via.placeholder.com/150';
                     });
-                    floatingPlayerButton.style.display = 'flex';
                     initPlayer();
                 })
                 .catch(function(error) {
@@ -415,7 +395,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     coverImage.src = 'https://via.placeholder.com/150';
                     songArtist.textContent = 'Queen';
                     currentAlbumId = 'queen_greatest_hits';
-                    floatingPlayerButton.style.display = 'flex';
                     initPlayer();
                 });
         }
@@ -459,9 +438,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     isPlaying = true;
                     btnPlay.classList.add('playing');
                     btnPlay.setAttribute('aria-label', 'Pausar');
-                }).catch(function(error) {
-                    console.error('Error playing track:', error);
-                });
+                }).catch(function(error) {});
             });
             item.querySelector('img').addEventListener('error', function() {
                 this.src = 'https://via.placeholder.com/40';
@@ -489,9 +466,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 isPlaying = true;
                 btnPlay.classList.add('playing');
                 btnPlay.setAttribute('aria-label', 'Pausar');
-            }).catch(function(error) {
-                console.error('Error playing track:', error);
-            });
+            }).catch(function(error) {});
         }
     }
 
@@ -531,9 +506,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 isPlaying = true;
                 btnPlay.classList.add('playing');
                 btnPlay.setAttribute('aria-label', 'Pausar');
-            }).catch(function(error) {
-                console.error('Error playing audio:', error);
-            });
+            }).catch(function(error) {});
         }
     }
 
@@ -548,9 +521,7 @@ document.addEventListener('DOMContentLoaded', function() {
             isPlaying = true;
             btnPlay.classList.add('playing');
             btnPlay.setAttribute('aria-label', 'Pausar');
-        }).catch(function(error) {
-            console.error('Error playing next track:', error);
-        });
+        }).catch(function(error) {});
     }
 
     function prevTrack() {
@@ -564,9 +535,7 @@ document.addEventListener('DOMContentLoaded', function() {
             isPlaying = true;
             btnPlay.classList.add('playing');
             btnPlay.setAttribute('aria-label', 'Pausar');
-        }).catch(function(error) {
-            console.error('Error playing previous track:', error);
-        });
+        }).catch(function(error) {});
     }
 
     function toggleRepeat() {
@@ -656,9 +625,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateProgress();
     });
     audioPlayer.addEventListener('error', function(e) {
-        console.error('Audio player error:', e);
         currentAlbumId = null;
-        floatingPlayerButton.style.display = 'none';
     });
     progressBar.addEventListener('click', setProgress);
     btnPlay.addEventListener('click', togglePlay);
