@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Selección de elementos
+    var welcomeModal = document.getElementById('welcome-modal');
     var searchModal = document.getElementById('search-modal');
     var searchInput = document.getElementById('search-input');
     var searchButton = document.getElementById('search-button');
@@ -26,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var durationElement = document.getElementById('duration');
 
     // Verifica elementos
-    if (!searchModal || !searchInput || !searchButton || !albumList || !resultsCount || !loading || !errorMessage || !playerModal || !closeModal || !btnRepeat || !btnShuffle || !btnDownload) {
+    if (!welcomeModal || !searchModal || !searchInput || !searchButton || !albumList || !resultsCount || !loading || !errorMessage || !playerModal || !closeModal || !btnRepeat || !btnShuffle || !btnDownload) {
         document.body.innerHTML += '<p style="color: red;">Error: No se encontraron los elementos de la página.</p>';
         return;
     }
@@ -41,19 +42,73 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Limpiar basura en progress-container
     function cleanProgressContainer() {
-        const progressContainer = document.querySelector('.progress-container');
-        progressContainer.childNodes.forEach(node => {
-            if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '') {
-                node.remove();
-            }
+        const progressContainers = document.querySelectorAll('.progress-container');
+        progressContainers.forEach(container => {
+            container.childNodes.forEach(node => {
+                if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '') {
+                    node.remove();
+                }
+            });
         });
     }
     cleanProgressContainer();
 
-    // Mostrar modal del buscador al cargar
-    searchModal.style.display = 'flex';
+    // Mostrar modal de bienvenida al cargar
+    if (!sessionStorage.getItem('welcomeShown')) {
+        console.log('Mostrando modal de bienvenida');
+        welcomeModal.style.display = 'flex';
+        searchModal.style.display = 'none';
+        playerModal.style.display = 'none';
+        // Deshabilitar el botón de retroceso durante el modal de bienvenida
+        history.pushState({ modal: 'welcome' }, '', '#welcome');
+        setTimeout(function() {
+            welcomeModal.style.animation = 'fadeOut 0.5s forwards';
+            setTimeout(function() {
+                welcomeModal.style.display = 'none';
+                searchModal.style.display = 'flex';
+                searchModal.style.animation = 'fadeIn 0.5s forwards';
+                sessionStorage.setItem('welcomeShown', 'true');
+                console.log('Modal de bienvenida cerrado, mostrando buscador');
+                // Iniciar búsqueda automática
+                currentQuery = 'juan_chota_dura';
+                searchInput.value = '';
+                searchAlbums(currentQuery, currentPage, true);
+                history.replaceState({ modal: 'search' }, '', '');
+            }, 500);
+        }, 10000);
+    } else {
+        console.log('Modal de bienvenida ya mostrado, mostrando buscador');
+        welcomeModal.style.display = 'none';
+        searchModal.style.display = 'flex';
+        playerModal.style.display = 'none';
+        // Iniciar búsqueda automática
+        currentQuery = 'juan_chota_dura';
+        searchInput.value = '';
+        searchAlbums(currentQuery, currentPage, true);
+        history.replaceState({ modal: 'search' }, '', '');
+    }
 
-    // Álbum simulado
+    // Manejo del historial para el botón Atrás
+    window.addEventListener('popstate', function(event) {
+        console.log('Evento popstate:', event.state);
+        if (event.state && event.state.modal === 'player') {
+            playerModal.style.display = 'flex';
+            searchModal.style.display = 'none';
+            welcomeModal.style.display = 'none';
+        } else if (event.state && event.state.modal === 'welcome') {
+            // Evitar que el botón de retroceso cierre el modal de bienvenida
+            if (!sessionStorage.getItem('welcomeShown')) {
+                history.pushState({ modal: 'welcome' }, '', '#welcome');
+            }
+        } else {
+            searchModal.style.display = 'flex';
+            playerModal.style.display = 'none';
+            welcomeModal.style.display = 'none';
+            albumList.scrollTop = lastScrollPosition;
+        }
+    });
+
+    // Resto del código (sin cambios)
     var mockAlbums = [
         { id: 'queen_greatest_hits', title: 'Queen - Greatest Hits', artist: 'Queen', image: 'https://indiehoy.com/wp-content/uploads/2022/05/queen-queen-ii.jpg' }
     ];
@@ -62,7 +117,6 @@ document.addEventListener('DOMContentLoaded', function() {
         { title: 'Another One Bites the Dust', artist: 'Queen', mp3Url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', coverUrl: 'https://indiehoy.com/wp-content/uploads/2022/05/queen-queen-ii.jpg' }
     ];
 
-    // Estado
     var currentPage = 1;
     var isLoading = false;
     var currentQuery = '';
@@ -76,7 +130,6 @@ document.addEventListener('DOMContentLoaded', function() {
     var repeatMode = 'off';
     var isShuffled = false;
 
-    // Cola para limitar solicitudes simultáneas
     const imageLoadQueue = [];
     let activeImageLoads = 0;
     const maxConcurrentLoads = 4;
@@ -106,7 +159,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Configurar IntersectionObserver
     const observer = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -127,75 +179,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Manejo del historial para el botón Atrás
-    window.addEventListener('popstate', function(event) {
-        if (event.state && event.state.modal === 'player') {
-            closePlayerModal();
-        } else {
-            searchModal.style.display = 'flex';
-            playerModal.style.display = 'none';
-            albumList.scrollTop = lastScrollPosition;
-        }
-    });
-
     function closePlayerModal() {
         playerModal.style.display = 'none';
         searchModal.style.display = 'flex';
+        welcomeModal.style.display = 'none';
         albumList.scrollTop = lastScrollPosition;
         audioPlayer.pause();
         isPlaying = false;
         btnPlay.classList.remove('playing');
         btnPlay.setAttribute('aria-label', 'Reproducir');
     }
-
-    // Búsqueda automática de "juan_chota_dura" al cargar
-    currentQuery = 'juan_chota_dura';
-    searchInput.value = '';
-    searchAlbums(currentQuery, currentPage, true);
-    history.replaceState({ modal: 'search' }, '', '');
-
-    // Eventos de búsqueda
-    searchButton.addEventListener('click', function() {
-        var query = searchInput.value.trim();
-        if (query) {
-            currentPage = 1;
-            allAlbums = [];
-            currentQuery = query;
-            searchAlbums(query, currentPage, true);
-            history.replaceState({ modal: 'search' }, '', '');
-        } else {
-            errorMessage.textContent = 'Por favor, ingresá un término de búsqueda.';
-            errorMessage.style.display = 'block';
-            displayAlbums(mockAlbums);
-        }
-    });
-
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            var query = searchInput.value.trim();
-            if (query) {
-                currentPage = 1;
-                allAlbums = [];
-                currentQuery = query;
-                searchAlbums(query, currentPage, true);
-                history.replaceState({ modal: 'search' }, '', '');
-            } else {
-                errorMessage.textContent = 'Por favor, ingresá un término de búsqueda.';
-                errorMessage.style.display = 'block';
-                displayAlbums(mockAlbums);
-            }
-        }
-    });
-
-    // Scroll infinito
-    albumList.addEventListener('scroll', function() {
-        lastScrollPosition = albumList.scrollTop;
-        if (isLoading || !currentQuery) return;
-        if (albumList.scrollTop + albumList.clientHeight >= albumList.scrollHeight - 100) {
-            currentPage++;
-            searchAlbums(currentQuery, currentPage, false);
-        }
-    });
 
     function searchAlbums(query, page, clearPrevious) {
         if (isLoading) return;
@@ -328,6 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
         lastScrollPosition = albumList.scrollTop;
         searchModal.style.display = 'none';
         playerModal.style.display = 'flex';
+        welcomeModal.style.display = 'none';
         playlistElement.innerHTML = '<p>Cargando canciones...</p>';
         songTitle.textContent = 'Selecciona una canción';
         songArtist.textContent = '';
@@ -340,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btnPlay.classList.remove('playing');
         btnPlay.setAttribute('aria-label', 'Reproducir');
         repeatMode = 'off';
-        isNovel = false;
+        isShuffled = false;
         btnRepeat.classList.remove('active', 'repeat-one');
         btnShuffle.classList.remove('active');
         btnRepeat.setAttribute('aria-label', 'Repetir');
@@ -438,7 +432,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     isPlaying = true;
                     btnPlay.classList.add('playing');
                     btnPlay.setAttribute('aria-label', 'Pausar');
-                }).catch(function(error) {});
+                }).catch(function(error) {
+                    console.error('Error playing track:', error);
+                });
             });
             item.querySelector('img').addEventListener('error', function() {
                 this.src = 'https://via.placeholder.com/40';
@@ -466,7 +462,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 isPlaying = true;
                 btnPlay.classList.add('playing');
                 btnPlay.setAttribute('aria-label', 'Pausar');
-            }).catch(function(error) {});
+            }).catch(function(error) {
+                console.error('Error playing track:', error);
+            });
         }
     }
 
@@ -506,7 +504,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 isPlaying = true;
                 btnPlay.classList.add('playing');
                 btnPlay.setAttribute('aria-label', 'Pausar');
-            }).catch(function(error) {});
+            }).catch(function(error) {
+                console.error('Error playing audio:', error);
+            });
         }
     }
 
@@ -521,7 +521,9 @@ document.addEventListener('DOMContentLoaded', function() {
             isPlaying = true;
             btnPlay.classList.add('playing');
             btnPlay.setAttribute('aria-label', 'Pausar');
-        }).catch(function(error) {});
+        }).catch(function(error) {
+            console.error('Error playing next track:', error);
+        });
     }
 
     function prevTrack() {
@@ -535,7 +537,9 @@ document.addEventListener('DOMContentLoaded', function() {
             isPlaying = true;
             btnPlay.classList.add('playing');
             btnPlay.setAttribute('aria-label', 'Pausar');
-        }).catch(function(error) {});
+        }).catch(function(error) {
+            console.error('Error playing previous track:', error);
+        });
     }
 
     function toggleRepeat() {
@@ -625,6 +629,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateProgress();
     });
     audioPlayer.addEventListener('error', function(e) {
+        console.error('Audio player error:', e);
         currentAlbumId = null;
     });
     progressBar.addEventListener('click', setProgress);
