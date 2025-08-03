@@ -137,9 +137,38 @@
     margin-bottom: 20px !important;
 }
 
+
+
+
+
+.autor {
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.autor img {
+    max-height: 55px;
+    width: auto;
+    margin: 0 auto;
+    display: block;
+}
+
+
+
+
+
+
+
+
+
+
+
 #reproductor-container-sanavera .autor {
     font-size: 14px !important;
     color: #b3b3b3 !important;
+    margin-top: 10px;
+    margin-bottom: 5px;
 }
 
 #reproductor-container-sanavera .search-container {
