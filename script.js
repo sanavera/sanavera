@@ -1,14 +1,16 @@
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded ejecutado');
+
     // Selección de elementos
     var welcomeModal = document.getElementById('welcome-modal');
     var searchModal = document.getElementById('search-modal');
+    var playerModal = document.getElementById('player-modal');
     var searchInput = document.getElementById('search-input');
     var searchButton = document.getElementById('search-button');
     var albumList = document.getElementById('album-list');
     var resultsCount = document.getElementById('results-count');
     var loading = document.getElementById('loading');
     var errorMessage = document.getElementById('error-message');
-    var playerModal = document.getElementById('player-modal');
     var closeModal = document.getElementById('close-modal');
     var coverImage = document.getElementById('cover-image');
     var songTitle = document.getElementById('song-title');
@@ -27,7 +29,23 @@ document.addEventListener('DOMContentLoaded', function() {
     var durationElement = document.getElementById('duration');
 
     // Verifica elementos
+    console.log('Verificando elementos:', {
+        welcomeModal: !!welcomeModal,
+        searchModal: !!searchModal,
+        playerModal: !!playerModal,
+        searchInput: !!searchInput,
+        searchButton: !!searchButton,
+        albumList: !!albumList,
+        resultsCount: !!resultsCount,
+        loading: !!loading,
+        errorMessage: !!errorMessage,
+        closeModal: !!closeModal,
+        btnRepeat: !!btnRepeat,
+        btnShuffle: !!btnShuffle,
+        btnDownload: !!btnDownload
+    });
     if (!welcomeModal || !searchModal || !searchInput || !searchButton || !albumList || !resultsCount || !loading || !errorMessage || !playerModal || !closeModal || !btnRepeat || !btnShuffle || !btnDownload) {
+        console.error('Error: No se encontraron los elementos de la página.');
         document.body.innerHTML += '<p style="color: red;">Error: No se encontraron los elementos de la página.</p>';
         return;
     }
@@ -42,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Limpiar basura en progress-container
     function cleanProgressContainer() {
+        console.log('Limpiando progress-container');
         const progressContainers = document.querySelectorAll('.progress-container');
         progressContainers.forEach(container => {
             container.childNodes.forEach(node => {
@@ -53,40 +72,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     cleanProgressContainer();
 
-    // Mostrar modal de bienvenida al cargar
-    if (!sessionStorage.getItem('welcomeShown')) {
-        console.log('Mostrando modal de bienvenida');
-        welcomeModal.style.display = 'flex';
-        searchModal.style.display = 'none';
-        playerModal.style.display = 'none';
-        // Deshabilitar el botón de retroceso durante el modal de bienvenida
-        history.pushState({ modal: 'welcome' }, '', '#welcome');
+    // Forzar modal de bienvenida
+    console.log('Mostrando modal de bienvenida');
+    welcomeModal.style.display = 'flex';
+    searchModal.style.display = 'none';
+    playerModal.style.display = 'none';
+    history.pushState({ modal: 'welcome' }, '', '#welcome');
+
+    // Transición al buscador después de 10 segundos
+    setTimeout(function() {
+        console.log('Ejecutando transición del modal de bienvenida');
+        welcomeModal.style.animation = 'fadeOut 0.5s forwards';
         setTimeout(function() {
-            welcomeModal.style.animation = 'fadeOut 0.5s forwards';
-            setTimeout(function() {
-                welcomeModal.style.display = 'none';
-                searchModal.style.display = 'flex';
-                searchModal.style.animation = 'fadeIn 0.5s forwards';
-                sessionStorage.setItem('welcomeShown', 'true');
-                console.log('Modal de bienvenida cerrado, mostrando buscador');
-                // Iniciar búsqueda automática
-                currentQuery = 'juan_chota_dura';
-                searchInput.value = '';
-                searchAlbums(currentQuery, currentPage, true);
-                history.replaceState({ modal: 'search' }, '', '');
-            }, 500);
-        }, 10000);
-    } else {
-        console.log('Modal de bienvenida ya mostrado, mostrando buscador');
-        welcomeModal.style.display = 'none';
-        searchModal.style.display = 'flex';
-        playerModal.style.display = 'none';
-        // Iniciar búsqueda automática
-        currentQuery = 'juan_chota_dura';
-        searchInput.value = '';
-        searchAlbums(currentQuery, currentPage, true);
-        history.replaceState({ modal: 'search' }, '', '');
-    }
+            console.log('Ocultando welcome-modal, mostrando search-modal');
+            welcomeModal.style.display = 'none';
+            searchModal.style.display = 'flex';
+            searchModal.style.animation = 'fadeIn 0.5s forwards';
+            // Iniciar búsqueda automática
+            currentQuery = 'juan_chota_dura';
+            searchInput.value = '';
+            searchAlbums(currentQuery, currentPage, true);
+            history.replaceState({ modal: 'search' }, '', '');
+        }, 500);
+    }, 10000);
 
     // Manejo del historial para el botón Atrás
     window.addEventListener('popstate', function(event) {
@@ -97,9 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
             welcomeModal.style.display = 'none';
         } else if (event.state && event.state.modal === 'welcome') {
             // Evitar que el botón de retroceso cierre el modal de bienvenida
-            if (!sessionStorage.getItem('welcomeShown')) {
-                history.pushState({ modal: 'welcome' }, '', '#welcome');
-            }
+            history.pushState({ modal: 'welcome' }, '', '#welcome');
         } else {
             searchModal.style.display = 'flex';
             playerModal.style.display = 'none';
@@ -108,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Resto del código (sin cambios)
+    // Variables globales
     var mockAlbums = [
         { id: 'queen_greatest_hits', title: 'Queen - Greatest Hits', artist: 'Queen', image: 'https://indiehoy.com/wp-content/uploads/2022/05/queen-queen-ii.jpg' }
     ];
@@ -116,7 +122,6 @@ document.addEventListener('DOMContentLoaded', function() {
         { title: 'Bohemian Rhapsody', artist: 'Queen', mp3Url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', coverUrl: 'https://indiehoy.com/wp-content/uploads/2022/05/queen-queen-ii.jpg' },
         { title: 'Another One Bites the Dust', artist: 'Queen', mp3Url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', coverUrl: 'https://indiehoy.com/wp-content/uploads/2022/05/queen-queen-ii.jpg' }
     ];
-
     var currentPage = 1;
     var isLoading = false;
     var currentQuery = '';
@@ -129,7 +134,6 @@ document.addEventListener('DOMContentLoaded', function() {
     var currentAlbumId = null;
     var repeatMode = 'off';
     var isShuffled = false;
-
     const imageLoadQueue = [];
     let activeImageLoads = 0;
     const maxConcurrentLoads = 4;
