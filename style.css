@@ -608,3 +608,65 @@ html, body {
         font-size: 8px;
     }
 }
+
+/* Añadir al final de styles.css */
+.welcome-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 20px;
+}
+
+.welcome-image {
+    width: 200px;
+    height: 200px;
+    object-fit: contain;
+    margin-bottom: 20px;
+}
+
+.welcome-text {
+    font-size: 18px;
+    color: #ffffff;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.welcome-content .progress-container {
+    width: 80%;
+    max-width: 300px;
+}
+
+.welcome-content .progress-bar {
+    width: 100%;
+    height: 4px;
+    background-color: #535353;
+    border-radius: 2px;
+}
+
+.welcome-content .progress {
+    width: 0;
+    height: 100%;
+    background-color: #1db954;
+    border-radius: 2px;
+    animation: welcome-progress 10s linear forwards;
+}
+
+@keyframes welcome-progress {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+@media (max-width: 400px) {
+    .welcome-content {
+        padding: 15px;
+    }
+    .welcome-image {
+        width: 150px;
+        height: 150px;
+    }
+    .welcome-text {
+        font-size: 16px;
+    }
+}
