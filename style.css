@@ -1,414 +1,406 @@
 /* Estilos generales */
 #reproductor-container-sanavera {
-    position: relative !important;
-    width: 100% !important;
-    height: 100vh !important;
-    overflow: hidden !important;
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
 }
 
 #reproductor-container-sanavera .modal {
-    display: none !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    background-color: rgba(0, 0, 0, 0.8) !important;
-    z-index: 1000 !important;
-    justify-content: center !important;
-    align-items: center !important;
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
 }
 
 #reproductor-container-sanavera .modal-content {
-    background-color: #181818 !important;
-    border-radius: 12px !important;
-    padding: 25px !important;
-    width: 90% !important;
-    max-width: 450px !important;
-    height: 90vh !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
-    display: flex !important;
-    flex-direction: column !important;
-    overflow-y: auto !important;
-    position: relative !important;
+    background-color: #181818;
+    border-radius: 12px;
+    padding: 25px;
+    width: 90%;
+    max-width: 450px;
+    height: 90vh;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    position: relative;
 }
 
 #reproductor-container-sanavera .welcome-content {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    height: 100% !important;
-    padding: 20px !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 20px;
 }
 
 #reproductor-container-sanavera .welcome-image {
-    width: 200px !important;
-    height: 200px !important;
-    object-fit: contain !important;
-    margin-bottom: 20px !important;
+    width: 200px;
+    height: 200px;
+    object-fit: contain;
+    margin-bottom: 20px;
 }
 
 #reproductor-container-sanavera .welcome-text {
-    font-size: 18px !important;
-    color: #ffffff !important;
-    margin-bottom: 20px !important;
-    text-align: center !important;
+    font-size: 18px;
+    color: #ffffff;
+    margin-bottom: 20px;
+    text-align: center;
 }
 
 #reproductor-container-sanavera .welcome-content .progress-container {
-    width: 80% !important;
-    max-width: 300px !important;
+    width: 80%;
+    max-width: 300px;
 }
 
 #reproductor-container-sanavera .welcome-content .progress-bar {
-    width: 100% !important;
-    height: 4px !important;
-    background-color: #535353 !important;
-    border-radius: 2px !important;
+    width: 100%;
+    height: 4px;
+    background-color: #535353;
+    border-radius: 2px;
 }
 
 #reproductor-container-sanavera .welcome-content .progress {
-    width: 0 !important;
-    height: 100% !important;
-    background-color: #1db954 !important;
-    border-radius: 2px !important;
-    animation: welcome-progress 10s linear forwards !important;
-    transition: width 0.1s linear !important;
+    width: 0;
+    height: 100%;
+    background-color: #1db954;
+    border-radius: 2px;
+    animation: welcome-progress 10s linear forwards;
+    transition: width 0.1s linear;
 }
 
 @keyframes welcome-progress {
-    from { width: 0 !important; }
-    to { width: 100% !important; }
+    from { width: 0; }
+    to { width: 100%; }
 }
 
 @keyframes fadeOut {
-    from { opacity: 1 !important; }
-    to { opacity: 0 !important; }
+    from { opacity: 1; }
+    to { opacity: 0; }
 }
 
 @keyframes fadeIn {
-    from { opacity: 0 !important; }
-    to { opacity: 1 !important; }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 @media (max-width: 400px) {
     #reproductor-container-sanavera .welcome-content {
-        padding: 15px !important;
+        padding: 15px;
     }
     #reproductor-container-sanavera .welcome-image {
-        width: 150px !important;
-        height: 150px !important;
+        width: 150px;
+        height: 150px;
     }
     #reproductor-container-sanavera .welcome-text {
-        font-size: 16px !important;
+        font-size: 16px;
     }
 }
 
 /* Estilos del buscador */
 #reproductor-container-sanavera .search-modal {
-    display: none !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    background-color: rgba(0, 0, 0, 0.8) !important;
-    z-index: 1000 !important;
-    justify-content: center !important;
-    align-items: center !important;
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
 }
 
 #reproductor-container-sanavera .search-modal-content {
-    background-color: #181818 !important;
-    border-radius: 12px !important;
-    padding: 25px !important;
-    width: 90% !important;
-    max-width: 450px !important;
-    height: 90vh !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
-    display: flex !important;
-    flex-direction: column !important;
-    overflow-y: auto !important;
+    background-color: #181818;
+    border-radius: 12px;
+    padding: 25px;
+    width: 90%;
+    max-width: 450px;
+    height: 90vh;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
 }
 
 #reproductor-container-sanavera .header {
-    text-align: center !important;
-    margin-bottom: 20px !important;
+    text-align: center;
+    margin-bottom: 20px;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #reproductor-container-sanavera .autor {
-    font-size: 14px !important;
-    color: #b3b3b3 !important;
+    font-size: 14px;
+    color: #b3b3b3;
     margin-top: 10px;
     margin-bottom: 5px;
 }
 
 #reproductor-container-sanavera .search-container {
-    display: flex !important;
-    gap: 10px !important;
-    margin-bottom: 20px !important;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
 #reproductor-container-sanavera #search-input {
-    flex: 1 !important;
-    padding: 10px !important;
-    font-size: 16px !important;
-    border: 1px solid #535353 !important;
-    border-radius: 4px !important;
-    background-color: #282828 !important;
-    color: #ffffff !important;
+    flex: 1;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #535353;
+    border-radius: 4px;
+    background-color: #282828;
+    color: #ffffff;
 }
 
 #reproductor-container-sanavera #search-button {
-    padding: 10px 20px !important;
-    background-color: #1db954 !important;
-    color: #ffffff !important;
-    border: none !important;
-    border-radius: 4px !important;
-    cursor: pointer !important;
+    padding: 10px 20px;
+    background-color: #1db954;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 #reproductor-container-sanavera #search-button:hover {
-    background-color: #1ed760 !important;
+    background-color: #1ed760;
 }
 
 #reproductor-container-sanavera #results-count {
-    font-size: 14px !important;
-    color: #b3b3b3 !important;
-    margin-bottom: 10px !important;
+    font-size: 14px;
+    color: #b3b3b3;
+    margin-bottom: 10px;
 }
 
 #reproductor-container-sanavera .album-list {
-    flex: 1 !important;
-    overflow-y: auto !important;
+    flex: 1;
+    overflow-y: auto;
+    contain: content; /* Restringe el renderizado al contenido visible */
 }
 
 #reproductor-container-sanavera .album-item {
-    display: flex !important;
-    align-items: center !important;
-    padding: 10px !important;
-    border-bottom: 1px solid #282828 !important;
-    cursor: pointer !important;
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #282828;
+    cursor: pointer;
 }
 
 #reproductor-container-sanavera .album-item img {
-    width: 50px !important;
-    height: 50px !important;
-    object-fit: cover !important;
-    margin-right: 10px !important;
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    margin-right: 10px;
+    background-color: #282828; /* Placeholder mientras carga */
 }
 
 #reproductor-container-sanavera .album-item-info h3 {
-    margin: 0 !important;
-    font-size: 16px !important;
-    color: #ffffff !important;
+    margin: 0;
+    font-size: 16px;
+    color: #ffffff;
 }
 
 #reproductor-container-sanavera .album-item-info p {
-    margin: 0 !important;
-    font-size: 14px !important;
-    color: #b3b3b3 !important;
+    margin: 0;
+    font-size: 14px;
+    color: #b3b3b3;
 }
 
 #reproductor-container-sanavera .loading {
-    display: none !important;
-    text-align: center !important;
-    color: #b3b3b3 !important;
-    margin-top: 20px !important;
+    display: none;
+    text-align: center;
+    color: #b3b3b3;
+    margin-top: 20px;
 }
 
 #reproductor-container-sanavera .error-message {
-    display: none !important;
-    color: #ff4d4d !important;
-    text-align: center !important;
-    margin-top: 20px !important;
+    display: none;
+    color: #ff4d4d;
+    text-align: center;
+    margin-top: 20px;
 }
 
 /* Estilos del reproductor */
 #reproductor-container-sanavera .close-button {
-    position: absolute !important;
-    top: 10px !important;
-    right: 10px !important;
-    background: none !important;
-    border: none !important;
-    color: #ffffff !important;
-    font-size: 14px !important;
-    cursor: pointer !important;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 14px;
+    cursor: pointer;
 }
 
 #reproductor-container-sanavera .player-section {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    margin-bottom: 20px !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
 #reproductor-container-sanavera .cover-container {
-    width: 100% !important;
-    max-width: 200px !important;
-    margin-bottom: 20px !important;
+    width: 100%;
+    max-width: 200px;
+    margin-bottom: 20px;
 }
 
 #reproductor-container-sanavera .cover-container img {
-    width: 100% !important;
-    height: auto !important;
-    border-radius: 8px !important;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
 }
 
 #reproductor-container-sanavera .audio-info {
-    text-align: center !important;
+    text-align: center;
 }
 
 #reproductor-container-sanavera .audio-info h2 {
-    margin: 0 !important;
-    font-size: 18px !important;
-    color: #ffffff !important;
+    margin: 0;
+    font-size: 18px;
+    color: #ffffff;
 }
 
 #reproductor-container-sanavera .audio-info p {
-    margin: 5px 0 0 !important;
-    font-size: 14px !important;
-    color: #b3b3b3 !important;
+    margin: 5px 0 0;
+    font-size: 14px;
+    color: #b3b3b3;
 }
 
 #reproductor-container-sanavera .playlist-section {
-    flex: 1 !important;
-    overflow-y: auto !important;
-    margin-bottom: 20px !important;
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 20px;
 }
 
 #reproductor-container-sanavera .playlist {
-    display: flex !important;
-    flex-direction: column !important;
+    display: flex;
+    flex-direction: column;
 }
 
 #reproductor-container-sanavera .playlist-item {
-    display: flex !important;
-    align-items: center !important;
-    padding: 10px !important;
-    border-bottom: 1px solid #282828 !important;
-    cursor: pointer !important;
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #282828;
+    cursor: pointer;
 }
 
 #reproductor-container-sanavera .playlist-item img {
-    width: 40px !important;
-    height: 40px !important;
-    object-fit: cover !important;
-    margin-right: 10px !important;
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    margin-right: 10px;
+    background-color: #282828; /* Placeholder mientras carga */
 }
 
 #reproductor-container-sanavera .playlist-item-info h3 {
-    margin: 0 !important;
-    font-size: 14px !important;
-    color: #ffffff !important;
+    margin: 0;
+    font-size: 14px;
+    color: #ffffff;
 }
 
 #reproductor-container-sanavera .playlist-item-info p {
-    margin: 0 !important;
-    font-size: 12px !important;
-    color: #b3b3b3 !important;
+    margin: 0;
+    font-size: 12px;
+    color: #b3b3b3;
 }
 
 #reproductor-container-sanavera .playlist-item.active {
-    background-color: #282828 !important;
+    background-color: #282828;
 }
 
 #reproductor-container-sanavera .controls-section {
-    margin-top: auto !important;
+    margin-top: auto;
 }
 
 #reproductor-container-sanavera .controls {
-    display: flex !important;
-    justify-content: center !important;
-    gap: 10px !important;
-    margin-bottom: 10px !important;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
 }
 
 #reproductor-container-sanavera .btn {
-    background: none !important;
-    border: none !important;
-    color: #ffffff !important;
-    font-size: 24px !important;
-    cursor: pointer !important;
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 24px;
+    cursor: pointer;
 }
 
 #reproductor-container-sanavera .btn-small {
-    font-size: 18px !important;
+    font-size: 18px;
 }
 
 #reproductor-container-sanavera .btn-play {
-    font-size: 30px !important;
+    font-size: 30px;
 }
 
 #reproductor-container-sanavera .btn-play.playing .fa-play {
-    display: none !important;
+    display: none;
 }
 
 #reproductor-container-sanavera .btn-play .fa-pause {
-    display: none !important;
+    display: none;
 }
 
 #reproductor-container-sanavera .btn-play.playing .fa-pause {
-    display: inline !important;
+    display: inline;
 }
 
 #reproductor-container-sanavera .btn.active {
-    color: #1db954 !important;
+    color: #1db954;
 }
 
 #reproductor-container-sanavera .btn.repeat-one::before {
-    content: '1' !important;
-    position: absolute !important;
-    font-size: 12px !important;
-    margin-left: 12px !important;
+    content: '1';
+    position: absolute;
+    font-size: 12px;
+    margin-left: 12px;
 }
 
 #reproductor-container-sanavera .progress-container {
-    width: 100% !important;
+    width: 100%;
 }
 
 #reproductor-container-sanavera .progress-bar {
-    width: 100% !important;
-    height: 4px !important;
-    background-color: #535353 !important;
-    border-radius: 2px !important;
-    cursor: pointer !important;
+    width: 100%;
+    height: 4px;
+    background-color: #535353;
+    border-radius: 2px;
+    cursor: pointer;
 }
 
 #reproductor-container-sanavera .progress {
-    width: 0 !important;
-    height: 100% !important;
-    background-color: #1db954 !important;
-    border-radius: 2px !important;
+    width: 0;
+    height: 100%;
+    background-color: #1db954;
+    border-radius: 2px;
 }
 
 #reproductor-container-sanavera .time-info {
-    display: flex !important;
-    justify-content: space-between !important;
-    font-size: 12px !important;
-    color: #b3b3b3 !important;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #b3b3b3;
 }
 
 #reproductor-container-sanavera .footer-text {
-    text-align: center !important;
-    font-size: 12px !important;
-    color: #b3b3b3 !important;
-    margin-top: 10px !important;
+    text-align: center;
+    font-size: 12px;
+    color: #b3b3b3;
+    margin-top: 10px;
+}
+
+/* Reforzar lazy loading */
+#reproductor-container-sanavera img {
+    loading: lazy;
 }
