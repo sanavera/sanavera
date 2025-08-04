@@ -1,4 +1,4 @@
-/* Estilos generales Sanavera Sebastian Gustavo */
+/* Estilos generales */
 #reproductor-container-sanavera {
     position: relative !important;
     width: 100% !important;
@@ -137,27 +137,9 @@
     margin-bottom: 20px !important;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #reproductor-container-sanavera .autor {
     font-size: 14px !important;
     color: #b3b3b3 !important;
-    margin-top: 10px;
-    margin-bottom: 5px;
 }
 
 #reproductor-container-sanavera .search-container {
