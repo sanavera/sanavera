@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="reproductor-container-sanavera" style="position:relative;width:100%;height:100vh;overflow:hidden;">
+  <div id="reproductor-container-sanavera" style="position: relative; width: 100%; height: 100vh; overflow: hidden;">
 
     <!-- Bienvenida -->
     <div id="welcome-modal" class="modal">
@@ -51,7 +51,7 @@
     <div id="player-modal" class="modal">
       <div class="modal-content is-player">
         <!-- HERO portada full-bleed -->
-        <div class="player-hero" id="player-hero" style="--cover-url:url('');">
+        <div class="player-hero" id="player-hero" style="--cover-url: url('');">
           <div class="hero-text">
             <h2 id="hero-song-title">Selecciona una canción</h2>
             <p id="hero-song-artist"></p>
@@ -59,20 +59,23 @@
         </div>
 
         <div class="player-section">
-          <!-- oculto por CSS, queda de fallback -->
+          <!-- Mantengo para compat con JS legacy; se oculta por CSS -->
           <div class="cover-container">
             <img id="cover-image" src="" alt="Portada del álbum" />
           </div>
 
-          <!-- oculto por CSS para evitar duplicado -->
+          <!-- Info debajo (accesibilidad / fallback) -->
           <div class="audio-info">
             <h2 id="song-title">Selecciona una canción</h2>
             <p id="song-artist"></p>
           </div>
 
-          <select id="format-selector" class="format-selector">
-            <option value="mp3" selected>Calidad: MP3 (más rápido)</option>
-          </select>
+          <!-- Botón de calidad (reemplaza al <select>) -->
+          <div class="quality-row">
+            <button id="quality-button" class="quality-btn" aria-haspopup="dialog" aria-controls="quality-sheet">
+              <i class="fa-solid fa-signal"></i><span>Calidad</span>
+            </button>
+          </div>
         </div>
 
         <div class="playlist-section">
@@ -106,7 +109,7 @@
     <div id="favorites-modal" class="modal">
       <div class="modal-content is-favorites">
         <!-- HERO portada full-bleed -->
-        <div class="player-hero" id="favorites-hero" style="--cover-url:url('');">
+        <div class="player-hero" id="favorites-hero" style="--cover-url: url('');">
           <div class="hero-text">
             <h2 id="favorites-hero-song-title">Selecciona una canción</h2>
             <p id="favorites-hero-song-artist"></p>
@@ -114,15 +117,20 @@
         </div>
 
         <div class="player-section">
-          <!-- oculto por CSS, queda de fallback -->
+          <!-- Mantengo para compat con JS legacy; se oculta por CSS -->
           <div class="cover-container">
             <img id="favorites-cover-image" src="" alt="Portada de la canción" />
           </div>
 
-          <!-- oculto por CSS para evitar duplicado -->
           <div class="audio-info">
             <h2 id="favorites-song-title">Selecciona una canción</h2>
             <p id="favorites-song-artist"></p>
+          </div>
+
+          <div class="quality-row">
+            <button id="favorites-quality-button" class="quality-btn" aria-haspopup="dialog" aria-controls="favorites-quality-sheet">
+              <i class="fa-solid fa-signal"></i><span>Calidad</span>
+            </button>
           </div>
         </div>
 
@@ -150,6 +158,26 @@
 
         <div class="footer-text">Código escrito por Sebastián Sanavera ®</div>
         <audio id="favorites-audio-player"></audio>
+      </div>
+    </div>
+
+    <!-- Bottom Sheet – Formatos (Player) -->
+    <div id="quality-sheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="quality-title">
+      <div class="sheet-card">
+        <div class="sheet-handle"></div>
+        <h3 id="quality-title">Elegir calidad</h3>
+        <div id="quality-options" class="sheet-options"><!-- botones por JS --></div>
+        <button class="sheet-close" id="quality-close">Cerrar</button>
+      </div>
+    </div>
+
+    <!-- Bottom Sheet – Formatos (Favoritos) -->
+    <div id="favorites-quality-sheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="favorites-quality-title">
+      <div class="sheet-card">
+        <div class="sheet-handle"></div>
+        <h3 id="favorites-quality-title">Elegir calidad</h3>
+        <div id="favorites-quality-options" class="sheet-options"><!-- botones por JS --></div>
+        <button class="sheet-close" id="favorites-quality-close">Cerrar</button>
       </div>
     </div>
 
