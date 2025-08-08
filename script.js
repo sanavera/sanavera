@@ -70,12 +70,14 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Todos los elementos encontrados correctamente.');
 
     // Asegura que los botones no tengan texto redundante junto al <i>
-    document.querySelectorAll('.btn, .btn-small, .btn-play, .btn-favorite, .btn-remove-favorite').forEach(btn => {
-        const icon = btn.querySelector('i');
-        if (!icon) return;
-        btn.textContent = '';
-        btn.appendChild(icon);
-    });
+    document.querySelectorAll('.btn, .btn-small, .btn-favorite, .btn-remove-favorite, .btn-play')
+  .forEach(btn => {
+    const icons = btn.querySelectorAll('i');
+    if (icons.length) {
+      btn.innerHTML = '';
+      icons.forEach(i => btn.appendChild(i)); // mantiene play y pause
+    }
+  });
 
     // ===== Constantes / estado =====
     const HQ_FORMATS = ['wav', 'flac', 'aiff', 'alac'];
