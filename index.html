@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="reproductor-container-sanavera" style="position: relative; width: 100%; height: 100vh; overflow: hidden;">
+  <div id="reproductor-container-sanavera" style="position:relative;width:100%;height:100vh;overflow:hidden;">
 
     <!-- Bienvenida -->
     <div id="welcome-modal" class="modal">
@@ -34,10 +34,12 @@
             <img src="https://cdn.jsdelivr.net/gh/sanavera/sanavera@main/20250803_143726.png" alt="Sanavera Mp3 Logo" />
           </div>
         </div>
+
         <div class="search-container">
           <input type="text" id="search-input" placeholder="Buscar álbumes (ej. Rata Blanca)" />
           <button id="search-button">Buscar</button>
         </div>
+
         <div id="results-count">Resultados: 0</div>
         <div id="album-list" class="album-list"></div>
         <div id="loading" class="loading">Cargando...</div>
@@ -49,7 +51,7 @@
     <div id="player-modal" class="modal">
       <div class="modal-content is-player">
         <!-- HERO portada full-bleed -->
-        <div class="player-hero" id="player-hero" style="--cover-url: url('');">
+        <div class="player-hero" id="player-hero" style="--cover-url:url('');">
           <div class="hero-text">
             <h2 id="hero-song-title">Selecciona una canción</h2>
             <p id="hero-song-artist"></p>
@@ -57,12 +59,12 @@
         </div>
 
         <div class="player-section">
-          <!-- Mantengo para compatibilidad con JS; oculto por CSS -->
+          <!-- oculto por CSS, queda de fallback -->
           <div class="cover-container">
             <img id="cover-image" src="" alt="Portada del álbum" />
           </div>
 
-          <!-- Info debajo (sigue mostrando por accesibilidad y fallback) -->
+          <!-- oculto por CSS para evitar duplicado -->
           <div class="audio-info">
             <h2 id="song-title">Selecciona una canción</h2>
             <p id="song-artist"></p>
@@ -104,7 +106,7 @@
     <div id="favorites-modal" class="modal">
       <div class="modal-content is-favorites">
         <!-- HERO portada full-bleed -->
-        <div class="player-hero" id="favorites-hero" style="--cover-url: url('');">
+        <div class="player-hero" id="favorites-hero" style="--cover-url:url('');">
           <div class="hero-text">
             <h2 id="favorites-hero-song-title">Selecciona una canción</h2>
             <p id="favorites-hero-song-artist"></p>
@@ -112,11 +114,12 @@
         </div>
 
         <div class="player-section">
-          <!-- Mantengo para compatibilidad con JS; oculto por CSS -->
+          <!-- oculto por CSS, queda de fallback -->
           <div class="cover-container">
             <img id="favorites-cover-image" src="" alt="Portada de la canción" />
           </div>
 
+          <!-- oculto por CSS para evitar duplicado -->
           <div class="audio-info">
             <h2 id="favorites-song-title">Selecciona una canción</h2>
             <p id="favorites-song-artist"></p>
