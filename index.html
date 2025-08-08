@@ -1,0 +1,1722 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sanavera - Buscador de Álbumes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        :root {
+            --header-h: 120px;
+            --footer-safe: 88px;
+            --side-pad: 10px;
+        }
+
+        body.modal-open {
+            position: fixed;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        #reproductor-container-sanavera {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #reproductor-container-sanavera .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            touch-action: pan-y;
+            background-clip: padding-box;
+        }
+
+        #reproductor-container-sanavera .modal-content,
+        #reproductor-container-sanavera .search-modal-content {
+            background-color: #181818;
+            border-radius: 0;
+            padding: 16px var(--side-pad);
+            width: 100%;
+            max-width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+            box-sizing: border-box;
+            overscroll-behavior: contain;
+            border: none;
+            outline: none;
+            box-shadow: none;
+        }
+
+        #reproductor-container-sanavera .welcome-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #reproductor-container-sanavera .welcome-image {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+            margin-bottom: 20px;
+        }
+
+        #reproductor-container-sanavera .welcome-text {
+            font-size: 18px;
+            color: #ffffff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #reproductor-container-sanavera .welcome-content .progress-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 0 5px;
+        }
+
+        #reproductor-container-sanavera .welcome-content .progress-bar {
+            width: 100%;
+            height: 4px;
+            background-color: #535353;
+            border-radius: 2px;
+        }
+
+        #reproductor-container-sanavera .welcome-content .progress {
+            width: 0;
+            height: 100%;
+            background-color: #1db954;
+            border-radius: 2px;
+            animation: welcome-progress 10s linear forwards;
+            transition: width 0.1s linear;
+        }
+
+        @keyframes welcome-progress {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 400px) {
+            #reproductor-container-sanavera .welcome-content {
+                padding: 10px;
+            }
+            #reproductor-container-sanavera .welcome-image {
+                width: 150px;
+                height: 150px;
+            }
+            #reproductor-container-sanavera .welcome-text {
+                font-size: 16px;
+            }
+        }
+
+        #reproductor-container-sanavera .search-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            touch-action: pan-y;
+        }
+
+        #reproductor-container-sanavera .header {
+            text-align: center;
+            margin-bottom: 15px;
+            width: 100%;
+            padding: 10px 0;
+            position: sticky;
+            top: 0;
+            background-color: #181818;
+            z-index: 20;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            height: calc(var(--header-h) - 50px);
+        }
+
+        #reproductor-container-sanavera .autor {
+            font-size: 14px;
+            color: #b3b3b3;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        #reproductor-container-sanavera .autor img {
+            max-height: 30px;
+            width: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        #reproductor-container-sanavera .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 0 var(--side-pad);
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            position: sticky;
+            top: calc(var(--header-h) - 50px);
+            background-color: #181818;
+            z-index: 20;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            height: 50px;
+        }
+
+        #reproductor-container-sanavera #search-input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #535353;
+            border-radius: 4px;
+            background-color: #282828;
+            color: #ffffff;
+        }
+
+        #reproductor-container-sanavera #search-button {
+            padding: 10px 20px;
+            background-color: #1db954;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #reproductor-container-sanavera #search-button:hover {
+            background-color: #1ed760;
+        }
+
+        #reproductor-container-sanavera #results-count {
+            font-size: 14px;
+            color: #b3b3b3;
+            margin: 4px 0;
+            padding: 0 var(--side-pad);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #reproductor-container-sanavera .album-list {
+            margin-top: 0;
+            padding: 0 var(--side-pad) var(--footer-safe);
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            height: calc(100vh - var(--header-h) - 16px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        #reproductor-container-sanavera .album-list > .spacer,
+        #reproductor-container-sanavera .album-list::after {
+            display: none !important;
+            content: none !important;
+            height: 0 !important;
+        }
+
+        #reproductor-container-sanavera .album-item {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            background-color: #282828;
+            border-radius: 10px;
+            padding: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+            margin: 8px 0;
+        }
+
+        #reproductor-container-sanavera .album-item:hover {
+            background-color: #333;
+        }
+
+        #reproductor-container-sanavera .album-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-right: 10px;
+            flex-shrink: 0;
+            background-color: #282828;
+        }
+
+        #reproductor-container-sanavera .album-item-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: left;
+            flex: 1;
+            min-width: 0;
+        }
+
+        #reproductor-container-sanavera .album-item-info h3 {
+            margin: 0;
+            font-size: 13px;
+            color: #fff;
+            line-height: 1.2em;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+        }
+
+        #reproductor-container-sanavera .album-item-info p {
+            margin: 4px 0 0;
+            font-size: 11px;
+            color: #b3b3b3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #reproductor-container-sanavera .loading {
+            display: none;
+            text-align: center;
+            color: #b3b3b3;
+            margin-top: 15px;
+            padding: 0;
+            width: 100%;
+        }
+
+        #reproductor-container-sanavera .error-message {
+            display: none;
+            color: #ff4d4d;
+            text-align: center;
+            margin-top: 15px;
+            padding: 0;
+            width: 100%;
+        }
+
+        #reproductor-container-sanavera .player-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+            width: 100%;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        #reproductor-container-sanavera .cover-container {
+            width: 100%;
+            max-width: 200px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        #reproductor-container-sanavera .cover-container img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid #1db954;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        #reproductor-container-sanavera .audio-info {
+            text-align: center;
+            width: 100%;
+        }
+
+        #reproductor-container-sanavera .audio-info h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #ffffff;
+        }
+
+        #reproductor-container-sanavera .audio-info p {
+            margin: 5px 0 0;
+            font-size: 14px;
+            color: #b3b3b3;
+        }
+
+        #reproductor-container-sanavera .format-selector {
+            display: none;
+            width: 100%;
+            max-width: 300px;
+            padding: 8px;
+            font-size: 12px;
+            border: 1px solid #535353;
+            border-radius: 4px;
+            background-color: #282828;
+            color: #ffffff;
+            margin: 10px auto;
+            cursor: pointer;
+        }
+
+        #reproductor-container-sanavera .format-selector:hover {
+            border-color: #1db954;
+        }
+
+        #reproductor-container-sanavera .playlist-section {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            width: 100%;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        #reproductor-container-sanavera .playlist,
+        #reproductor-container-sanavera .favorites-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 0;
+            width: calc(100% - 20px);
+            max-width: 100%;
+            margin: 0 auto;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        #reproductor-container-sanavera .playlist-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            margin: 8px 0;
+            padding: 10px;
+            border-radius: 10px;
+            background: #2b2b2b;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: background 0.15s ease, transform 0.05s ease;
+            transform: none !important;
+            position: static;
+            box-sizing: border-box;
+        }
+
+        #reproductor-container-sanavera .playlist-item:hover {
+            background: #323232;
+        }
+
+        #reproductor-container-sanavera .playlist-item:active {
+            transform: scale(0.995);
+        }
+
+        #reproductor-container-sanavera .playlist-item.active {
+            background: #1db954;
+            border-color: #1db954;
+        }
+
+        #reproductor-container-sanavera .playlist-item.active h3,
+        #reproductor-container-sanavera .playlist-item.active p,
+        #reproductor-container-sanavera .playlist-item.active i,
+        #reproductor-container-sanavera .playlist-item.active .hq-indicator {
+            color: #fff;
+        }
+
+        #reproductor-container-sanavera .playlist-item.active .hq-indicator {
+            background: #158f41;
+        }
+
+        #reproductor-container-sanavera .playlist-item img {
+            width: 44px;
+            height: 44px;
+            flex: 0 0 44px;
+            object-fit: cover;
+            border-radius: 6px;
+            background: #1f1f1f;
+        }
+
+        #reproductor-container-sanavera .playlist-item-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            gap: 2px;
+        }
+
+        #reproductor-container-sanavera .playlist-item-info h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            line-height: 1.2;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        #reproductor-container-sanavera .playlist-item-info p {
+            margin: 0;
+            font-size: 12px;
+            color: #b3b3b3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #reproductor-container-sanavera .playlist-item-actions {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #reproductor-container-sanavera .playlist > .spacer,
+        #reproductor-container-sanavera .playlist::after {
+            display: none !important;
+            content: none !important;
+            height: 0 !important;
+        }
+
+        #reproductor-container-sanavera .controls-section {
+            margin-top: auto;
+            width: 100%;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        #reproductor-container-sanavera .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 10px 0;
+            width: 100%;
+        }
+
+        #reproductor-container-sanavera .btn {
+            background-color: #282828;
+            border: none;
+            color: #ffffff;
+            font-size: 24px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        #reproductor-container-sanavera .btn:hover {
+            background-color: #333;
+            transform: scale(1.1);
+        }
+
+        #reproductor-container-sanavera .btn:active {
+            transform: scale(0.95);
+        }
+
+        #reproductor-container-sanavera .btn-small {
+            font-size: 18px;
+            width: 32px;
+            height: 32px;
+        }
+
+        #reproductor-container-sanavera .btn-play {
+            font-size: 30px;
+            width: 48px;
+            height: 48px;
+        }
+
+        #reproductor-container-sanavera .btn-play.playing .fa-play {
+            display: none;
+        }
+
+        #reproductor-container-sanavera .btn-play .fa-pause {
+            display: none;
+        }
+
+        #reproductor-container-sanavera .btn-play.playing .fa-pause {
+            display: inline;
+        }
+
+        #reproductor-container-sanavera .btn.active {
+            color: #1db954;
+        }
+
+        #reproductor-container-sanavera .btn.repeat-one::before {
+            content: '1';
+            position: absolute;
+            font-size: 12px;
+            margin-left: 12px;
+            color: #1db954;
+        }
+
+        #reproductor-container-sanavera .progress-container {
+            width: 100%;
+            padding: 0;
+        }
+
+        #reproductor-container-sanavera .progress-bar {
+            width: 100%;
+            height: 4px;
+            background-color: #535353;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        #reproductor-container-sanavera .progress {
+            width: 0;
+            height: 100%;
+            background-color: #1db954;
+            border-radius: 2px;
+        }
+
+        #reproductor-container-sanavera .time-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #b3b3b3;
+            width: 100%;
+        }
+
+        #reproductor-container-sanavera .footer-text {
+            text-align: center;
+            font-size: 12px;
+            color: #b3b3b3;
+            margin-top: 10px;
+            width: 100%;
+            padding: 0;
+        }
+
+        #floating-search-button, #floating-player-button, #floating-favorites-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: #181818;
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            z-index: 1001;
+            transition: transform 0.2s ease;
+        }
+
+        #floating-favorites-button {
+            bottom: 100px;
+        }
+
+        #floating-player-button {
+            bottom: 180px;
+        }
+
+        #floating-search-button:hover, #floating-player-button:hover, #floating-favorites-button:hover {
+            transform: scale(1.1);
+        }
+
+        #floating-search-button i, #floating-player-button i, #floating-favorites-button i {
+            color: #1db954;
+            font-size: 24px;
+            line-height: 60px;
+        }
+
+        #floating-search-button::after, #floating-player-button::after, #floating-favorites-button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 50%;
+            border: 2px solid #1db954;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .btn-favorite, .btn-remove-favorite {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            margin-left: 10px;
+            align-self: center;
+            font-size: 16px;
+        }
+
+        .btn-favorite i, .btn-remove-favorite i {
+            color: #ffffff;
+        }
+
+        .btn-favorite.active i {
+            color: #ff0000;
+        }
+
+        .seek-bar {
+            width: 100%;
+            height: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+            background-color: #535353;
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .seek-bar::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background-color: #1db954;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .seek-bar::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background-color: #1db954;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        #reproductor-container-sanavera img {
+            loading: lazy;
+        }
+    </style>
+</head>
+<body>
+    <div id="reproductor-container-sanavera" style="position: relative; width: 100%; height: 100vh; overflow: hidden;">
+        <div id="welcome-modal" class="modal">
+            <div class="modal-content">
+                <div class="welcome-content">
+                    <img src="https://cdn.jsdelivr.net/gh/sanavera/sanavera@main/20250803_143726.png" alt="Sanavera Logo" class="welcome-image" />
+                    <p class="welcome-text">Bienvenidos a Sanavera MP3</p>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="welcome-progress-bar">
+                            <div class="progress" id="welcome-progress"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="search-modal" class="modal">
+            <div class="search-modal-content">
+                <div class="header">
+                    <div class="autor">
+                        <img src="https://cdn.jsdelivr.net/gh/sanavera/sanavera@main/20250803_143726.png" alt="Sanavera Mp3 Logo" />
+                    </div>
+                </div>
+                <div class="search-container">
+                    <input type="text" id="search-input" placeholder="Buscar álbumes (ej. Rata Blanca)" />
+                    <button id="search-button">Buscar</button>
+                </div>
+                <div id="results-count">Resultados: 0</div>
+                <div id="album-list" class="album-list"></div>
+                <div id="loading" class="loading">Cargando...</div>
+                <div id="error-message" class="error-message"></div>
+            </div>
+        </div>
+        <div id="player-modal" class="modal">
+            <div class="modal-content">
+                <div class="player-section">
+                    <div class="cover-container">
+                        <img id="cover-image" src="" alt="Portada del álbum" />
+                    </div>
+                    <div class="audio-info">
+                        <h2 id="song-title">Selecciona una canción</h2>
+                        <p id="song-artist"></p>
+                    </div>
+                    <select id="format-selector" class="format-selector">
+                        <option value="mp3" selected>Calidad: MP3 (más rápido)</option>
+                    </select>
+                </div>
+                <div class="playlist-section">
+                    <div class="playlist" id="playlist"></div>
+                </div>
+                <div class="controls-section">
+                    <div class="controls">
+                        <button class="btn btn-small" id="btn-repeat" aria-label="Repetir"><i class="fas fa-repeat"></i></button>
+                        <button class="btn" id="btn-prev" aria-label="Anterior"><i class="fas fa-backward-step"></i></button>
+                        <button class="btn btn-play" id="btn-play" aria-label="Reproducir"><i class="fas fa-play"></i><i class="fas fa-pause"></i></button>
+                        <button class="btn" id="btn-next" aria-label="Siguiente"><i class="fas fa-forward-step"></i></button>
+                        <button class="btn btn-small" id="btn-shuffle" aria-label="Mezclar"><i class="fas fa-shuffle"></i></button>
+                        <a class="btn btn-small" id="btn-download" href="#" download aria-label="Descargar"><i class="fas fa-download"></i></a>
+                    </div>
+                    <div class="progress-container">
+                        <input type="range" id="seek-bar" class="seek-bar" min="0" max="100" value="0" />
+                        <div class="time-info">
+                            <span id="current-time">0:00</span>
+                            <span id="duration">0:00</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-text">Código escrito por Sebastián Sanavera ®</div>
+                <audio id="audio-player"></audio>
+            </div>
+        </div>
+        <div id="favorites-modal" class="modal">
+            <div class="modal-content">
+                <div class="player-section">
+                    <div class="cover-container">
+                        <img id="favorites-cover-image" src="" alt="Portada de la canción" />
+                    </div>
+                    <div class="audio-info">
+                        <h2 id="favorites-song-title">Selecciona una canción</h2>
+                        <p id="favorites-song-artist"></p>
+                    </div>
+                </div>
+                <div class="playlist-section">
+                    <div class="playlist" id="favorites-playlist"></div>
+                </div>
+                <div class="controls-section">
+                    <div class="controls">
+                        <button class="btn btn-small" id="favorites-btn-repeat" aria-label="Repetir"><i class="fas fa-repeat"></i></button>
+                        <button class="btn" id="favorites-btn-prev" aria-label="Anterior"><i class="fas fa-backward-step"></i></button>
+                        <button class="btn btn-play" id="favorites-btn-play" aria-label="Reproducir"><i class="fas fa-play"></i><i class="fas fa-pause"></i></button>
+                        <button class="btn" id="favorites-btn-next" aria-label="Siguiente"><i class="fas fa-forward-step"></i></button>
+                        <button class="btn btn-small" id="favorites-btn-shuffle" aria-label="Mezclar"><i class="fas fa-shuffle"></i></button>
+                        <a class="btn btn-small" id="favorites-btn-download" href="#" download aria-label="Descargar"><i class="fas fa-download"></i></a>
+                    </div>
+                    <div class="progress-container">
+                        <input type="range" id="favorites-seek-bar" class="seek-bar" min="0" max="100" value="0" />
+                        <div class="time-info">
+                            <span id="favorites-current-time">0:00</span>
+                            <span id="favorites-duration">0:00</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-text">Código escrito por Sebastián Sanavera ®</div>
+                <audio id="favorites-audio-player"></audio>
+            </div>
+        </div>
+        <button id="floating-search-button" aria-label="Ir a búsqueda"><i class="fas fa-search"></i></button>
+        <button id="floating-player-button" aria-label="Ir al reproductor"><i class="fas fa-play"></i></button>
+        <button id="floating-favorites-button" aria-label="Ir a favoritos"><i class="fas fa-heart"></i></button>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded ejecutado');
+
+            const elements = {
+                welcomeModal: document.getElementById('welcome-modal'),
+                searchModal: document.getElementById('search-modal'),
+                playerModal: document.getElementById('player-modal'),
+                favoritesModal: document.getElementById('favorites-modal'),
+                searchInput: document.getElementById('search-input'),
+                searchButton: document.getElementById('search-button'),
+                albumList: document.getElementById('album-list'),
+                resultsCount: document.getElementById('results-count'),
+                loading: document.getElementById('loading'),
+                errorMessage: document.getElementById('error-message'),
+                coverImage: document.getElementById('cover-image'),
+                songTitle: document.getElementById('song-title'),
+                songArtist: document.getElementById('song-artist'),
+                playlistElement: document.getElementById('playlist'),
+                audioPlayer: document.getElementById('audio-player'),
+                btnPlay: document.getElementById('btn-play'),
+                btnPrev: document.getElementById('btn-prev'),
+                btnNext: document.getElementById('btn-next'),
+                btnRepeat: document.getElementById('btn-repeat'),
+                btnShuffle: document.getElementById('btn-shuffle'),
+                btnDownload: document.getElementById('btn-download'),
+                seekBar: document.getElementById('seek-bar'),
+                currentTimeElement: document.getElementById('current-time'),
+                durationElement: document.getElementById('duration'),
+                formatSelector: document.getElementById('format-selector'),
+                floatingSearchButton: document.getElementById('floating-search-button'),
+                floatingPlayerButton: document.getElementById('floating-player-button'),
+                floatingFavoritesButton: document.getElementById('floating-favorites-button'),
+                favoritesCoverImage: document.getElementById('favorites-cover-image'),
+                favoritesSongTitle: document.getElementById('favorites-song-title'),
+                favoritesSongArtist: document.getElementById('favorites-song-artist'),
+                favoritesPlaylistElement: document.getElementById('favorites-playlist'),
+                favoritesAudioPlayer: document.getElementById('favorites-audio-player'),
+                favoritesBtnPlay: document.getElementById('favorites-btn-play'),
+                favoritesBtnPrev: document.getElementById('favorites-btn-prev'),
+                favoritesBtnNext: document.getElementById('favorites-btn-next'),
+                favoritesBtnRepeat: document.getElementById('favorites-btn-repeat'),
+                favoritesBtnShuffle: document.getElementById('favorites-btn-shuffle'),
+                favoritesBtnDownload: document.getElementById('favorites-btn-download'),
+                favoritesSeekBar: document.getElementById('favorites-seek-bar'),
+                favoritesCurrentTime: document.getElementById('favorites-current-time'),
+                favoritesDuration: document.getElementById('favorites-duration')
+            };
+
+            const missingElements = Object.entries(elements).filter(([key, value]) => !value);
+            if (missingElements.length > 0) {
+                console.error('Elementos no encontrados:', missingElements.map(([key]) => key));
+                document.body.innerHTML += '<p style="color: red;">Error: No se encontraron elementos clave en la página.</p>';
+                return;
+            }
+            console.log('Todos los elementos encontrados correctamente.');
+
+            document.querySelectorAll('.btn, .btn-small, .btn-play, .btn-favorite, .btn-remove-favorite').forEach(btn => {
+                if (btn.innerText.trim() !== '') {
+                    btn.innerText = '';
+                    btn.appendChild(btn.querySelector('i'));
+                }
+            });
+
+            const HQ_FORMATS = ['wav', 'flac', 'aiff', 'alac'];
+
+            let mockAlbums = [
+                { id: 'queen_greatest_hits', title: 'Queen - Greatest Hits', artist: 'Queen', image: 'https://indiehoy.com/wp-content/uploads/2022/05/queen-queen-ii.jpg', relevance: 0 }
+            ];
+            let mockTracks = [
+                { title: 'Bohemian Rhapsody', artist: 'Queen', urls: { mp3: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' }, coverUrl: 'https://indiehoy.com/wp-content/uploads/2022/05/queen-queen-ii.jpg', format: 'mp3' },
+                { title: 'Another One Bites the Dust', artist: 'Queen', urls: { mp3: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' }, coverUrl: 'https://indiehoy.com/wp-content/uploads/2022/05/queen-queen-ii.jpg', format: 'mp3' }
+            ];
+            let currentPage = 1;
+            let isLoading = false;
+            let currentQuery = '';
+            let allAlbums = [];
+            let playlistConfig = [];
+            let originalPlaylist = [];
+            let favoritesPlaylist = [];
+            let originalFavoritesPlaylist = [];
+            let currentTrackIndex = 0;
+            let currentFavoritesTrackIndex = 0;
+            let isPlaying = false;
+            let isFavoritesPlaying = false;
+            let lastScrollPosition = 0;
+            let currentAlbumId = null;
+            let repeatMode = 'none';
+            let isShuffled = false;
+            let availableFormats = ['mp3'];
+            let currentFormat = 'mp3';
+            const paginationEnabled = false;
+
+            try {
+                const storedFavorites = localStorage.getItem('favorites');
+                if (storedFavorites) {
+                    favoritesPlaylist = JSON.parse(storedFavorites);
+                    favoritesPlaylist = favoritesPlaylist.filter(fav => fav && fav.title && fav.artist && fav.urls && fav.urls.mp3);
+                    console.log('Favoritos cargados:', favoritesPlaylist);
+                }
+            } catch (e) {
+                console.error('Error al cargar favoritos:', e);
+                favoritesPlaylist = [];
+                localStorage.setItem('favorites', JSON.stringify([]));
+            }
+
+            function toggleBodyScroll(lock) {
+                if (lock) {
+                    document.body.classList.add('modal-open');
+                } else {
+                    document.body.classList.remove('modal-open');
+                }
+            }
+
+            function truncateText(text, maxLength) {
+                if (text.length > maxLength) {
+                    return text.substring(0, maxLength - 2) + '..';
+                }
+                return text;
+            }
+
+            function formatTime(seconds) {
+                if (isNaN(seconds) || seconds < 0) return '0:00';
+                const minutes = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+            }
+
+            function setupPlayerTimeEvents(player, seekBar, currentTimeEl, durationEl, repeatBtn) {
+                player.addEventListener('loadedmetadata', () => {
+                    durationEl.textContent = formatTime(player.duration);
+                    seekBar.value = 0;
+                });
+                player.addEventListener('timeupdate', () => {
+                    if (!isNaN(player.duration) && player.duration > 0) {
+                        currentTimeEl.textContent = formatTime(player.currentTime);
+                        const progressPercent = (player.currentTime / player.duration) * 100;
+                        seekBar.value = progressPercent;
+                    }
+                });
+                player.addEventListener('ended', () => {
+                    if (repeatMode === 'one') {
+                        player.currentTime = 0;
+                        player.play().catch(error => console.error('Error repeating track:', error));
+                    } else if (repeatMode === 'all') {
+                        nextTrack();
+                    } else {
+                        nextTrack();
+                    }
+                });
+                seekBar.addEventListener('input', () => {
+                    if (!isNaN(player.duration) && player.duration > 0) {
+                        const newTime = (player.duration * seekBar.value) / 100;
+                        player.currentTime = newTime;
+                        currentTimeEl.textContent = formatTime(newTime);
+                    }
+                });
+            }
+
+            setupPlayerTimeEvents(elements.audioPlayer, elements.seekBar, elements.currentTimeElement, elements.durationElement, elements.btnRepeat);
+            setupPlayerTimeEvents(elements.favoritesAudioPlayer, elements.favoritesSeekBar, elements.favoritesCurrentTime, elements.favoritesDuration, elements.favoritesBtnRepeat);
+
+            function setupFormatSelector(selector, player, btnDownload) {
+                selector.addEventListener('change', () => {
+                    currentFormat = selector.value;
+                    console.log('Formato seleccionado:', currentFormat);
+                    playlistConfig.forEach(track => {
+                        track.format = currentFormat;
+                    });
+                    const currentTrack = playlistConfig[currentTrackIndex];
+                    if (currentTrack && currentTrack.urls[currentFormat]) {
+                        player.src = currentTrack.urls[currentFormat] || currentTrack.urls.mp3;
+                        btnDownload.setAttribute('href', currentTrack.urls[currentFormat] || currentTrack.urls.mp3);
+                        btnDownload.setAttribute('download', `${currentTrack.title}.${currentFormat}`);
+                        console.log('URL actualizada:', player.src);
+                        renderPlaylist();
+                        if (isPlaying) {
+                            player.play().catch(error => console.error('Error playing track with new format:', error));
+                        }
+                    } else {
+                        console.warn(`Formato ${currentFormat} no disponible para ${currentTrack.title}, usando MP3`);
+                        player.src = currentTrack.urls.mp3;
+                        btnDownload.setAttribute('href', currentTrack.urls.mp3);
+                        btnDownload.setAttribute('download', `${currentTrack.title}.mp3`);
+                        renderPlaylist();
+                        if (isPlaying) {
+                            player.play().catch(error => console.error('Error playing track:', error));
+                        }
+                    }
+                });
+            }
+
+            setupFormatSelector(elements.formatSelector, elements.audioPlayer, elements.btnDownload);
+
+            if (!sessionStorage.getItem('welcomeShown')) {
+                console.log('Mostrando modal de bienvenida');
+                elements.welcomeModal.style.display = 'flex';
+                elements.searchModal.style.display = 'none';
+                elements.playerModal.style.display = 'none';
+                elements.favoritesModal.style.display = 'none';
+                elements.floatingSearchButton.style.display = 'none';
+                elements.floatingPlayerButton.style.display = 'none';
+                elements.floatingFavoritesButton.style.display = 'none';
+                toggleBodyScroll(true);
+                setTimeout(() => {
+                    console.log('Transición del modal de bienvenida');
+                    elements.welcomeModal.style.animation = 'fadeOut 0.5s forwards';
+                    setTimeout(() => {
+                        elements.welcomeModal.style.display = 'none';
+                        showSearchModal();
+                        currentQuery = 'juan_chota_dura';
+                        elements.searchInput.value = '';
+                        searchAlbums(currentQuery, currentPage, true);
+                        sessionStorage.setItem('welcomeShown', 'true');
+                    }, 500);
+                }, 10000);
+            } else {
+                console.log('Modal de bienvenida ya mostrado');
+                showSearchModal();
+                currentQuery = 'juan_chota_dura';
+                elements.searchInput.value = '';
+                searchAlbums(currentQuery, currentPage, true);
+            }
+
+            function showSearchModal() {
+                elements.searchModal.style.display = 'flex';
+                elements.playerModal.style.display = 'none';
+                elements.favoritesModal.style.display = 'none';
+                elements.welcomeModal.style.display = 'none';
+                elements.floatingSearchButton.style.display = 'none';
+                elements.floatingPlayerButton.style.display = (isPlaying || isFavoritesPlaying) ? 'block' : 'none';
+                elements.floatingFavoritesButton.style.display = 'block';
+                elements.albumList.scrollTop = lastScrollPosition;
+                toggleBodyScroll(true);
+            }
+
+            function showPlayerModal() {
+                elements.searchModal.style.display = 'none';
+                elements.playerModal.style.display = 'flex';
+                elements.favoritesModal.style.display = 'none';
+                elements.welcomeModal.style.display = 'none';
+                elements.floatingSearchButton.style.display = 'block';
+                elements.floatingPlayerButton.style.display = 'none';
+                elements.floatingFavoritesButton.style.display = 'block';
+                toggleBodyScroll(true);
+                document.querySelectorAll('#reproductor-container-sanavera .playlist')
+                    .forEach(el => el.scrollLeft = 0);
+            }
+
+            function showFavoritesModal() {
+                elements.searchModal.style.display = 'none';
+                elements.playerModal.style.display = 'none';
+                elements.favoritesModal.style.display = 'flex';
+                elements.welcomeModal.style.display = 'none';
+                elements.floatingSearchButton.style.display = 'block';
+                elements.floatingPlayerButton.style.display = (isPlaying || isFavoritesPlaying) ? 'block' : 'none';
+                elements.floatingFavoritesButton.style.display = 'none';
+                loadFavorites();
+                toggleBodyScroll(true);
+                document.querySelectorAll('#reproductor-container-sanavera .playlist')
+                    .forEach(el => el.scrollLeft = 0);
+            }
+
+            function hideAllModals() {
+                elements.searchModal.style.display = 'none';
+                elements.playerModal.style.display = 'none';
+                elements.favoritesModal.style.display = 'none';
+                elements.welcomeModal.style.display = 'none';
+                toggleBodyScroll(false);
+            }
+
+            elements.floatingSearchButton.addEventListener('click', () => {
+                console.log('Navegando a búsqueda');
+                showSearchModal();
+            });
+
+            elements.floatingPlayerButton.addEventListener('click', () => {
+                console.log('Navegando a reproductor');
+                showPlayerModal();
+            });
+
+            elements.floatingFavoritesButton.addEventListener('click', () => {
+                console.log('Navegando a favoritos');
+                showFavoritesModal();
+            });
+
+            elements.searchButton.addEventListener('click', () => {
+                const query = elements.searchInput.value.trim();
+                if (query) {
+                    console.log('Búsqueda iniciada por botón:', query);
+                    currentQuery = query;
+                    currentPage = 1;
+                    searchAlbums(currentQuery, currentPage, true);
+                } else {
+                    console.error('Búsqueda vacía');
+                    elements.errorMessage.textContent = 'Por favor, ingresa un término de búsqueda.';
+                    elements.errorMessage.style.display = 'block';
+                }
+            });
+
+            elements.searchInput.addEventListener('keypress', event => {
+                if (event.key === 'Enter') {
+                    const query = elements.searchInput.value.trim();
+                    if (query) {
+                        console.log('Búsqueda iniciada por Enter:', query);
+                        currentQuery = query;
+                        currentPage = 1;
+                        searchAlbums(currentQuery, currentPage, true);
+                    } else {
+                        console.error('Búsqueda vacía');
+                        elements.errorMessage.textContent = 'Por favor, ingresa un término de búsqueda.';
+                        elements.errorMessage.style.display = 'block';
+                    }
+                }
+            });
+
+            function searchAlbums(query, page, clearPrevious) {
+                console.log('Ejecutando searchAlbums:', { query, page, clearPrevious });
+                if (isLoading) return;
+                isLoading = true;
+                elements.loading.style.display = 'block';
+                elements.errorMessage.style.display = 'none';
+                if (clearPrevious) {
+                    elements.albumList.innerHTML = '';
+                    allAlbums = [];
+                    elements.resultsCount.textContent = 'Resultados: 0';
+                }
+
+                const queryEncoded = encodeURIComponent(query);
+                const url = `https://archive.org/advancedsearch.php?q=${queryEncoded}+AND+mediatype:audio+AND+NOT+access-restricted-item:true&fl=identifier,title,creator&rows=5000&page=${page}&output=json`;
+
+                fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' } })
+                    .then(response => {
+                        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        return response.json();
+                    })
+                    .then(data => {
+                        isLoading = false;
+                        elements.loading.style.display = 'none';
+                        const docs = data.response?.docs || [];
+                        if (docs.length === 0 && page === 1) {
+                            elements.errorMessage.textContent = 'No se encontraron resultados. Probá con "Amar Azul" o "Queen Greatest Hits".';
+                            elements.errorMessage.style.display = 'block';
+                            if (clearPrevious) displayAlbums(mockAlbums);
+                            return;
+                        }
+                        if (docs.length === 0 && page > 1) return;
+
+                        const albums = docs.map(doc => ({
+                            id: doc.identifier,
+                            title: doc.title || 'Sin título',
+                            artist: normalizeCreator(doc.creator),
+                            image: `https://archive.org/services/img/${doc.identifier}`,
+                            relevance: calculateRelevance(doc, query.toLowerCase())
+                        }));
+                        allAlbums = allAlbums.concat(albums);
+                        const uniqueAlbums = Array.from(new Map(allAlbums.map(album => [`${album.title}|${album.artist}`, album])).values());
+                        elements.resultsCount.textContent = `Resultados: ${uniqueAlbums.length}`;
+                        displayAlbums(uniqueAlbums);
+                    })
+                    .catch(error => {
+                        isLoading = false;
+                        elements.loading.style.display = 'none';
+                        console.error('Error en searchAlbums:', error);
+                        if (clearPrevious && allAlbums.length === 0) {
+                            elements.errorMessage.textContent = `Error: ${error.message}. Mostrando datos de prueba.`;
+                            elements.errorMessage.style.display = 'block';
+                            displayAlbums(mockAlbums);
+                        } else {
+                            elements.errorMessage.textContent = `Error: ${error.message}.`;
+                            elements.errorMessage.style.display = 'block';
+                        }
+                    });
+            }
+
+            function normalizeCreator(creator) {
+                return Array.isArray(creator) ? creator.join(', ') : creator || 'Desconocido';
+            }
+
+            function calculateRelevance(doc, queryLower) {
+                const title = (doc.title || '').toLowerCase();
+                const creator = normalizeCreator(doc.creator).toLowerCase();
+                let relevance = 0;
+                if (title === queryLower) relevance += 300;
+                else if (isNearMatch(title, queryLower)) relevance += 250;
+                else if (title.includes(queryLower)) relevance += 150;
+                if (creator.includes(queryLower)) relevance += 50;
+                return relevance;
+            }
+
+            function isNearMatch(str1, str2) {
+                str1 = str1.toLowerCase().replace(/[^a-z0-9]/g, '');
+                str2 = str2.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (str1.includes(str2) || str2.includes(str1)) return true;
+                const maxLength = Math.max(str1.length, str2.length);
+                let differences = 0;
+                for (let i = 0; i < Math.min(str1.length, str2.length); i++) {
+                    if (str1[i] !== str2[i]) differences++;
+                    if (differences > maxLength * 0.2) return false;
+                }
+                return true;
+            }
+
+            function displayAlbums(albums) {
+                console.log('Ejecutando displayAlbums:', albums);
+                if (!albums || albums.length === 0) {
+                    elements.resultsCount.textContent = 'Resultados: 0';
+                    elements.albumList.innerHTML = '<p>No se encontraron álbumes.</p>';
+                    return;
+                }
+                albums.sort((a, b) => b.relevance - a.relevance);
+                elements.resultsCount.textContent = `Resultados: ${albums.length}`;
+                elements.albumList.innerHTML = '';
+                albums.forEach(album => {
+                    const albumItem = document.createElement('div');
+                    albumItem.className = 'album-item';
+                    albumItem.innerHTML = `
+                        <img src="${album.image}" alt="${album.title}" loading="lazy">
+                        <div class="album-item-info">
+                            <h3>${truncateText(album.title, 35)}</h3>
+                            <p>${truncateText(album.artist, 23)}</p>
+                        </div>
+                    `;
+                    albumItem.addEventListener('click', () => openPlayer(album.id));
+                    elements.albumList.appendChild(albumItem);
+                });
+            }
+
+            function openPlayer(albumId) {
+                console.log('Ejecutando openPlayer:', albumId);
+                lastScrollPosition = elements.albumList.scrollTop;
+                showPlayerModal();
+                elements.playlistElement.innerHTML = '<p>Cargando canciones...</p>';
+                elements.songTitle.textContent = 'Selecciona una canción';
+                elements.songArtist.textContent = '';
+                elements.coverImage.src = '';
+                elements.audioPlayer.src = '';
+                elements.seekBar.value = 0;
+                elements.currentTimeElement.textContent = '0:00';
+                elements.durationElement.textContent = '0:00';
+                elements.formatSelector.style.display = 'none';
+                playlistConfig = [];
+                originalPlaylist = [];
+                currentTrackIndex = 0;
+                isPlaying = false;
+                availableFormats = ['mp3'];
+                currentFormat = 'mp3';
+                elements.btnPlay.classList.remove('playing');
+                elements.btnPlay.setAttribute('aria-label', 'Reproducir');
+                elements.btnRepeat.classList.remove('active', 'repeat-one');
+                elements.btnShuffle.classList.remove('active');
+                repeatMode = 'none';
+                isShuffled = false;
+                currentAlbumId = albumId;
+
+                if (albumId === 'queen_greatest_hits') {
+                    console.log('Cargando álbum de prueba: Queen');
+                    elements.coverImage.src = mockAlbums[0].image;
+                    elements.songArtist.textContent = 'Queen';
+                    playlistConfig = mockTracks;
+                    originalPlaylist = [...mockTracks];
+                    availableFormats = ['mp3'];
+                    elements.formatSelector.style.display = 'none';
+                    initPlayer();
+                } else {
+                    console.log('Consultando metadata para:', albumId);
+                    fetch(`https://archive.org/metadata/${albumId}`, { headers: { 'User-Agent': 'Mozilla/5.0' } })
+                        .then(response => {
+                            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('Metadata recibida:', data);
+                            const coverUrl = `https://archive.org/services/img/${albumId}`;
+                            const artist = normalizeCreator(data.metadata?.creator || data.metadata?.artist || 'Desconocido');
+                            elements.songArtist.textContent = artist;
+                            const files = data.files.filter(file => file.name && (/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i.test(file.name)));
+                            console.log('Archivos de audio encontrados:', files);
+                            playlistConfig = files.reduce((tracks, file) => {
+                                const title = extractSongTitle(file.name);
+                                const format = file.name.match(/\.(\w+)$/i)[1].toLowerCase();
+                                const url = `https://archive.org/download/${albumId}/${encodeURIComponent(file.name).replace(/\+/g, '%20')}`;
+                                let track = tracks.find(t => t.title === title);
+                                if (!track) {
+                                    track = { title, artist, coverUrl, urls: {}, format: currentFormat };
+                                    tracks.push(track);
+                                }
+                                track.urls[format] = url;
+                                return tracks;
+                            }, []);
+                            availableFormats = [...new Set(files.map(file => file.name.match(/\.(\w+)$/i)[1].toLowerCase()))];
+                            console.log('Formatos disponibles:', availableFormats);
+                            elements.formatSelector.style.display = availableFormats.length > 1 ? 'block' : 'none';
+                            elements.formatSelector.innerHTML = availableFormats.map(format => `<option value="${format}"${format === currentFormat ? ' selected' : ''}>Calidad: ${format.toUpperCase()} (${format === 'mp3' ? 'más rápido' : 'alta calidad'})</option>`).join('');
+                            if (playlistConfig.length === 0) {
+                                console.warn('No se encontraron canciones de audio');
+                                elements.playlistElement.innerHTML = '<p>No se encontraron canciones de audio</p>';
+                                currentAlbumId = null;
+                                return;
+                            }
+                            originalPlaylist = [...playlistConfig];
+                            elements.coverImage.src = coverUrl;
+                            initPlayer();
+                        })
+                        .catch(error => {
+                            console.error('Error en openPlayer:', error);
+                            elements.playlistElement.innerHTML = `<p>Error al cargar canciones: ${error.message}. Usando datos de prueba.</p>`;
+                            playlistConfig = mockTracks;
+                            originalPlaylist = [...mockTracks];
+                            elements.coverImage.src = mockAlbums[0].image;
+                            elements.songArtist.textContent = 'Queen';
+                            currentAlbumId = 'queen_greatest_hits';
+                            availableFormats = ['mp3'];
+                            elements.formatSelector.style.display = 'none';
+                            initPlayer();
+                        });
+                }
+            }
+
+            function extractSongTitle(fileName) {
+                try {
+                    let name = fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i, '');
+                    const lastSlash = name.lastIndexOf('/');
+                    if (lastSlash !== -1) name = name.substring(lastSlash + 1);
+                    return name.replace(/_/g, ' ');
+                } catch (e) {
+                    return fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i, '').replace(/_/g, ' ');
+                }
+            }
+
+            function initPlayer() {
+                console.log('Inicializando reproductor con:', playlistConfig);
+                renderPlaylist();
+                loadTrack(currentTrackIndex);
+                elements.audioPlayer.volume = 1.0;
+                elements.btnPlay.classList.remove('playing');
+                elements.btnPlay.setAttribute('aria-label', 'Reproducir');
+            }
+
+            function renderPlaylist() {
+                elements.playlistElement.innerHTML = '';
+                const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+                playlistConfig.forEach((track, index) => {
+                    const isHQ = HQ_FORMATS.includes(currentFormat);
+                    const item = document.createElement('div');
+                    item.className = `playlist-item${index === currentTrackIndex ? ' active' : ''}`;
+                    item.innerHTML = `
+                        <img src="${track.coverUrl}" alt="${track.title}" loading="lazy" />
+                        <div class="playlist-item-info">
+                            <h3>${track.title}</h3>
+                            <p>${track.artist}</p>
+                        </div>
+                        <div class="playlist-item-actions">
+                            ${isHQ ? '<span class="hq-indicator">HQ</span>' : ''}
+                            <button class="btn-favorite${favorites.some(fav => fav.urls && fav.urls.mp3 === track.urls.mp3) ? ' active' : ''}" data-index="${index}" aria-label="${favorites.some(fav => fav.urls && fav.urls.mp3 === track.urls.mp3) ? 'Quitar de favoritos' : 'Agregar a favoritos'}">
+                                <i class="${favorites.some(fav => fav.urls && fav.urls.mp3 === track.urls.mp3) ? 'fas fa-heart' : 'far fa-heart'}"></i>
+                            </button>
+                        </div>
+                    `;
+                    item.querySelector('.btn-favorite').addEventListener('click', () => {
+                        const track = playlistConfig[index];
+                        if (favorites.some(fav => fav.urls && fav.urls.mp3 === track.urls.mp3)) {
+                            removeFromFavorites(track.urls.mp3);
+                        } else {
+                            addToFavorites(track);
+                        }
+                    });
+                    item.addEventListener('click', e => {
+                        if (!e.target.closest('.btn-favorite')) {
+                            currentTrackIndex = index;
+                            loadTrack(currentTrackIndex);
+                            elements.audioPlayer.play().then(() => {
+                                isPlaying = true;
+                                elements.btnPlay.classList.add('playing');
+                                elements.btnPlay.setAttribute('aria-label', 'Pausar');
+                                if (isFavoritesPlaying) {
+                                    elements.favoritesAudioPlayer.pause();
+                                    isFavoritesPlaying = false;
+                                    elements.favoritesBtnPlay.classList.remove('playing');
+                                    elements.favoritesBtnPlay.setAttribute('aria-label', 'Reproducir');
+                                }
+                                elements.floatingPlayerButton.style.display = 'none';
+                            }).catch(error => console.error('Error playing track:', error));
+                        }
+                    });
+                    elements.playlistElement.appendChild(item);
+                });
+            }
+
+            function loadTrack(index) {
+                const track = playlistConfig[index];
+                if (!track) return;
+                console.log('Cargando pista:', track, 'Formato:', currentFormat);
+                track.format = currentFormat;
+                elements.songTitle.textContent = track.title;
+                elements.songArtist.textContent = track.artist;
+                elements.coverImage.src = track.coverUrl;
+                const url = track.urls[currentFormat] || track.urls.mp3;
+                elements.audioPlayer.src = url;
+                elements.btnDownload.setAttribute('href', url);
+                elements.btnDownload.setAttribute('download', `${track.title}.${currentFormat}`);
+                console.log('URL de reproducción:', url);
+                elements.seekBar.value = 0;
+                elements.currentTimeElement.textContent = '0:00';
+                elements.durationElement.textContent = '0:00';
+                elements.formatSelector.value = currentFormat;
+                renderPlaylist();
+            }
+
+            function addToFavorites(track) {
+                const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+                if (!favorites.some(fav => fav.urls && fav.urls.mp3 === track.urls.mp3)) {
+                    favorites.unshift({ ...track, format: currentFormat });
+                    localStorage.setItem('favorites', JSON.stringify(favorites));
+                    console.log('Canción añadida a favoritos:', track.title, 'Formato:', currentFormat);
+                    renderPlaylist();
+                    if (elements.favoritesModal.style.display === 'flex') loadFavorites();
+                }
+            }
+
+            function removeFromFavorites(mp3Url) {
+                let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+                favorites = favorites.filter(fav => !(fav.urls && fav.urls.mp3 === mp3Url));
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+                favoritesPlaylist = favorites;
+                console.log('Canción eliminada de favoritos:', mp3Url);
+                if (elements.favoritesModal.style.display === 'flex') loadFavorites();
+                renderPlaylist();
+            }
+
+            function loadFavorites() {
+                console.log('Cargando favoritos');
+                try {
+                    favoritesPlaylist = JSON.parse(localStorage.getItem('favorites') || '[]');
+                    favoritesPlaylist = favoritesPlaylist.filter(fav => fav && fav.title && fav.artist && fav.urls && fav.urls.mp3);
+                    console.log('Favoritos filtrados:', favoritesPlaylist);
+                    originalFavoritesPlaylist = [...favoritesPlaylist];
+                    if (favoritesPlaylist.length === 0) {
+                        elements.favoritesPlaylistElement.innerHTML = '<p>No hay canciones en favoritos.</p>';
+                        elements.favoritesSongTitle.textContent = 'Selecciona una canción';
+                        elements.favoritesSongArtist.textContent = '';
+                        elements.favoritesCoverImage.src = '';
+                        elements.favoritesAudioPlayer.src = '';
+                        elements.favoritesSeekBar.value = 0;
+                        elements.favoritesCurrentTime.textContent = '0:00';
+                        elements.favoritesDuration.textContent = '0:00';
+                        isFavoritesPlaying = false;
+                        elements.favoritesBtnPlay.classList.remove('playing');
+                        elements.favoritesBtnPlay.setAttribute('aria-label', 'Reproducir');
+                        elements.favoritesBtnRepeat.classList.remove('active', 'repeat-one');
+                        elements.favoritesBtnShuffle.classList.remove('active');
+                        repeatMode = 'none';
+                        isShuffled = false;
+                        return;
+                    }
+                    renderFavoritesPlaylist();
+                    if (!elements.favoritesAudioPlayer.src) loadFavoritesTrack(currentFavoritesTrackIndex);
+                } catch (e) {
+                    console.error('Error al cargar favoritos:', e);
+                    elements.favoritesPlaylistElement.innerHTML = '<p>Error al cargar favoritos.</p>';
+                }
+            }
+
+            function renderFavoritesPlaylist() {
+                console.log('Renderizando lista de favoritos:', favoritesPlaylist);
+                elements.favoritesPlaylistElement.innerHTML = '';
+                favoritesPlaylist.forEach((track, index) => {
+                    const isHQ = HQ_FORMATS.includes(track.format);
+                    const item = document.createElement('div');
+                    item.className = `playlist-item${index === currentFavoritesTrackIndex ? ' active' : ''}`;
+                    item.innerHTML = `
+                        <img src="${track.coverUrl}" alt="${track.title}" loading="lazy" />
+                        <div class="playlist-item-info">
+                            <h3>${track.title}</h3>
+                            <p>${track.artist}</p>
+                        </div>
+                        <div class="playlist-item-actions">
+                            ${isHQ ? '<span class="hq-indicator">HQ</span>' : ''}
+                            <button class="btn-remove-favorite" data-index="${index}" aria-label="Quitar de favoritos">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `;
+                    item.querySelector('.btn-remove-favorite').addEventListener('click', () => removeFromFavorites(track.urls.mp3));
+                    item.addEventListener('click', e => {
+                        if (!e.target.closest('.btn-remove-favorite')) {
+                            currentFavoritesTrackIndex = index;
+                            loadFavoritesTrack(currentFavoritesTrackIndex);
+                            elements.favoritesAudioPlayer.play().then(() => {
+                                isFavoritesPlaying = true;
+                                elements.favoritesBtnPlay.classList.add('playing');
+                                elements.favoritesBtnPlay.setAttribute('aria-label', 'Pausar');
+                                if (isPlaying) {
+                                    elements.audioPlayer.pause();
+                                    isPlaying = false;
+                                    elements.btnPlay.classList.remove('playing');
+                                    elements.btnPlay.setAttribute('aria-label', 'Reproducir');
+                                }
+                                elements.floatingPlayerButton.style.display = 'none';
+                            }).catch(error => console.error('Error playing track:', error));
+                        }
+                    });
+                    elements.favoritesPlaylistElement.appendChild(item);
+                });
+            }
+
+            function loadFavoritesTrack(index) {
+                const track = favoritesPlaylist[index];
+                if (!track) return;
+                console.log('Cargando pista de favoritos:', track);
+                elements.favoritesSongTitle.textContent = track.title;
+                elements.favoritesSongArtist.textContent = track.artist;
+                elements.favoritesCoverImage.src = track.coverUrl;
+                const format = track.format || 'mp3';
+                elements.favoritesAudioPlayer.src = track.urls[format] || track.urls.mp3;
+                elements.favoritesBtnDownload.setAttribute('href', track.urls[format] || track.urls.mp3);
+                elements.favoritesBtnDownload.setAttribute('download', `${track.title}.${format}`);
+                elements.favoritesSeekBar.value = 0;
+                elements.favoritesCurrentTime.textContent = '0:00';
+                elements.favoritesDuration.textContent = '0:00';
+                renderFavoritesPlaylist();
+            }
+
+            function togglePlay() {
+                if (elements.playerModal.style.display === 'flex') {
+                    if (isPlaying) {
+                        elements.audioPlayer.pause();
+                        isPlaying = false;
+                        elements.btnPlay.classList.remove('playing');
+                        elements.btnPlay.setAttribute('aria-label', 'Reproducir');
+                    } else {
+                        elements.audioPlayer.play().then(() => {
+                            isPlaying = true;
+                            elements.btnPlay.classList.add('playing');
+                            elements.btnPlay.setAttribute('aria-label', 'Pausar');
+                            if (isFavoritesPlaying) {
+                                elements.favoritesAudioPlayer.pause();
+                                isFavoritesPlaying = false;
+                                elements.favoritesBtnPlay.classList.remove('playing');
+                                elements.favoritesBtnPlay.setAttribute('aria-label', 'Reproducir');
+                            }
+                            elements.floatingPlayerButton.style.display = 'none';
+                        }).catch(error => console.error('Error playing audio:', error));
+                    }
+                } else if (elements.favoritesModal.style.display === 'flex') {
+                    if (isFavoritesPlaying) {
+                        elements.favoritesAudioPlayer.pause();
+                        isFavoritesPlaying = false;
+                        elements.favoritesBtnPlay.classList.remove('playing');
+                        elements.favoritesBtnPlay.setAttribute('aria-label', 'Reproducir');
+                    } else {
+                        elements.favoritesAudioPlayer.play().then(() => {
+                            isFavoritesPlaying = true;
+                            elements.favoritesBtnPlay.classList.add('playing');
+                            elements.favoritesBtnPlay.setAttribute('aria-label', 'Pausar');
+                            if (isPlaying) {
+                                elements.audioPlayer.pause();
+                                isPlaying = false;
+                                elements.btnPlay.classList.remove('playing');
+                                elements.btnPlay.setAttribute('aria-label', 'Reproducir');
+                            }
+                            elements.floatingPlayerButton.style.display = 'none';
+                        }).catch(error => console.error('Error playing audio:', error));
+                    }
+                }
+            }
+
+            function nextTrack() {
+                if (elements.playerModal.style.display === 'flex') {
+                    if (currentTrackIndex + 1 < playlistConfig.length) {
+                        currentTrackIndex = (currentTrackIndex + 1) % playlistConfig.length;
+                        loadTrack(currentTrackIndex);
+                        if (isPlaying) {
+                            elements.audioPlayer.play().catch(error => console.error('Error playing next track:', error));
+                        }
+                    } else if (repeatMode === 'all') {
+                        currentTrackIndex = 0;
+                        loadTrack(currentTrackIndex);
+                        if (isPlaying) {
+                            elements.audioPlayer.play().catch(error => console.error('Error playing next track:', error));
+                        }
+                    }
+                } else if (elements.favoritesModal.style.display === 'flex') {
+                    if (currentFavoritesTrackIndex + 1 < favoritesPlaylist.length) {
+                        currentFavoritesTrackIndex = (currentFavoritesTrackIndex + 1) % favoritesPlaylist.length;
+                        loadFavoritesTrack(currentFavoritesTrackIndex);
+                        if (isFavoritesPlaying) {
+                            elements.favoritesAudioPlayer.play().catch(error => console.error('Error playing next track:', error));
+                        }
+                    } else if (repeatMode === 'all') {
+                        currentFavoritesTrackIndex = 0;
+                        loadFavoritesTrack(currentFavoritesTrackIndex);
+                        if (isFavoritesPlaying) {
+                            elements.favoritesAudioPlayer.play().catch(error => console.error('Error playing next track:', error));
+                        }
+                    }
+                }
+            }
+
+            function prevTrack() {
+                if (elements.playerModal.style.display === 'flex') {
+                    currentTrackIndex = (currentTrackIndex - 1 + playlistConfig.length) % playlistConfig.length;
+                    loadTrack(currentTrackIndex);
+                    if (isPlaying) elements.audioPlayer.play().catch(error => console.error('Error playing previous track:', error));
+                } else if (elements.favoritesModal.style.display === 'flex') {
+                    currentFavoritesTrackIndex = (currentFavoritesTrackIndex - 1 + favoritesPlaylist.length) % favoritesPlaylist.length;
+                    loadFavoritesTrack(currentFavoritesTrackIndex);
+                    if (isFavoritesPlaying) elements.favoritesAudioPlayer.play().catch(error => console.error('Error playing previous track:', error));
+                }
+            }
+
+            function toggleRepeat() {
+                if (elements.playerModal.style.display === 'flex') {
+                    if (repeatMode === 'none') {
+                        repeatMode = 'all';
+                        elements.btnRepeat.classList.add('active');
+                        elements.btnRepeat.setAttribute('aria-label', 'Repetir todo');
+                    } else if (repeatMode === 'all') {
+                        repeatMode = 'one';
+                        elements.btnRepeat.classList.add('repeat-one');
+                        elements.btnRepeat.setAttribute('aria-label', 'Repetir una canción');
+                    } else {
+                        repeatMode = 'none';
+                        elements.btnRepeat.classList.remove('active', 'repeat-one');
+                        elements.btnRepeat.setAttribute('aria-label', 'Repetir');
+                    }
+                    console.log('Modo de repetición:', repeatMode);
+                } else if (elements.favoritesModal.style.display === 'flex') {
+                    if (repeatMode === 'none') {
+                        repeatMode = 'all';
+                        elements.favoritesBtnRepeat.classList.add('active');
+                        elements.favoritesBtnRepeat.setAttribute('aria-label', 'Repetir todo');
+                    } else if (repeatMode === 'all') {
+                        repeatMode = 'one';
+                        elements.favoritesBtnRepeat.classList.add('repeat-one');
+                        elements.favoritesBtnRepeat.setAttribute('aria-label', 'Repetir una canción');
+                    } else {
+                        repeatMode = 'none';
+                        elements.favoritesBtnRepeat.classList.remove('active', 'repeat-one');
+                        elements.favoritesBtnRepeat.setAttribute('aria-label', 'Repetir');
+                    }
+                    console.log('Modo de repetición (favoritos):', repeatMode);
+                }
+            }
+
+            function toggleShuffle() {
+                if (elements.playerModal.style.display === 'flex') {
+                    isShuffled = !isShuffled;
+                    elements.btnShuffle.classList.toggle('active', isShuffled);
+                    elements.btnShuffle.setAttribute('aria-label', isShuffled ? 'Desactivar mezclar' : 'Mezclar');
+                    if (isShuffled) {
+                        const currentTrack = playlistConfig[currentTrackIndex];
+                        playlistConfig = shuffleArray([...playlistConfig]);
+                        currentTrackIndex = playlistConfig.findIndex(track => track.urls.mp3 === currentTrack.urls.mp3);
+                    } else {
+                        playlistConfig = [...originalPlaylist];
+                        currentTrackIndex = playlistConfig.findIndex(track => track.urls.mp3 === elements.audioPlayer.src);
+                    }
+                    renderPlaylist();
+                    console.log('Modo shuffle:', isShuffled);
+                } else if (elements.favoritesModal.style.display === 'flex') {
+                    isShuffled = !isShuffled;
+                    elements.favoritesBtnShuffle.classList.toggle('active', isShuffled);
+                    elements.favoritesBtnShuffle.setAttribute('aria-label', isShuffled ? 'Desactivar mezclar' : 'Mezclar');
+                    if (isShuffled) {
+                        const currentTrack = favoritesPlaylist[currentFavoritesTrackIndex];
+                        favoritesPlaylist = shuffleArray([...favoritesPlaylist]);
+                        currentFavoritesTrackIndex = favoritesPlaylist.findIndex(track => track.urls.mp3 === currentTrack.urls.mp3);
+                    } else {
+                        favoritesPlaylist = [...originalFavoritesPlaylist];
+                        currentFavoritesTrackIndex = favoritesPlaylist.findIndex(track => track.urls.mp3 === elements.favoritesAudioPlayer.src);
+                    }
+                    renderFavoritesPlaylist();
+                    console.log('Modo shuffle (favoritos):', isShuffled);
+                }
+            }
+
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
+            elements.btnPlay.addEventListener('click', togglePlay);
+            elements.btnNext.addEventListener('click', nextTrack);
+            elements.btnPrev.addEventListener('click', prevTrack);
+            elements.btnRepeat.addEventListener('click', toggleRepeat);
+            elements.btnShuffle.addEventListener('click', toggleShuffle);
+            elements.favoritesBtnPlay.addEventListener('click', togglePlay);
+            elements.favoritesBtnNext.addEventListener('click', nextTrack);
+            elements.favoritesBtnPrev.addEventListener('click', prevTrack);
+            elements.favoritesBtnRepeat.addEventListener('click', toggleRepeat);
+            elements.favoritesBtnShuffle.addEventListener('click', toggleShuffle);
+        });
+    </script>
+</body>
+</html>
