@@ -71,13 +71,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Asegura que los botones no tengan texto redundante junto al <i>
     document.querySelectorAll('.btn, .btn-small, .btn-favorite, .btn-remove-favorite, .btn-play')
-  .forEach(btn => {
-    const icons = btn.querySelectorAll('i');
-    if (icons.length) {
-      btn.innerHTML = '';
-      icons.forEach(i => btn.appendChild(i)); // mantiene play y pause
-    }
-  });
+      .forEach(btn => {
+        const icons = btn.querySelectorAll('i');
+        if (icons.length) {
+          btn.innerHTML = '';
+          icons.forEach(i => btn.appendChild(i)); // mantiene play y pause
+        }
+      });
 
     // ===== Constantes / estado =====
     const HQ_FORMATS = ['wav', 'flac', 'aiff', 'alac'];
@@ -109,7 +109,14 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentFormat = 'mp3';
     const paginationEnabled = false;
 
-    // ===== Interfaz de portada Modal Reproductor/Favoritos =====
+    // ===== Helpers UI =====
+    function eqMiniMarkup(){
+        return `
+          <div class="eq-mini" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>`;
+    }
+
     function setHero(scope, coverUrl, title, artist) {
         const isFav = scope === 'favorites';
         const hero = isFav ? elements.favoritesHero : elements.playerHero;
@@ -122,12 +129,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (hero) hero.style.setProperty('--cover-url', `url("${safeCover}")`);
         if (hTitle) hTitle.textContent = title || 'Sin título';
         if (hArtist) hArtist.textContent = artist || '';
-        if (legacyImg) legacyImg.src = safeCover; // compat JS existente
+        if (legacyImg) legacyImg.src = safeCover; // compat
     }
 
     function showFormatSelector(show, formats = []) {
         if (!elements.formatSelector) return;
-        elements.formatSelector.classList.add('format-selector');
+        elements.formatSelector.classList.add('format-selector'); // asegura estilo
         elements.formatSelector.style.display = show ? 'block' : 'none';
         if (show && formats.length) {
             elements.formatSelector.innerHTML = formats.map(f => {
@@ -583,8 +590,10 @@ document.addEventListener('DOMContentLoaded', function() {
         playlistConfig.forEach((track, index) => {
             const isHQ = HQ_FORMATS.includes(currentFormat);
             const isFav = favorites.some(fav => fav.urls && fav.urls.mp3 === track.urls.mp3);
+            const active = index === currentTrackIndex;
+
             const item = document.createElement('div');
-            item.className = `playlist-item${index === currentTrackIndex ? ' active' : ''}`;
+            item.className = `playlist-item${active ? ' active' : ''}`;
             item.innerHTML = `
                 <img src="${track.coverUrl}" alt="${track.title}" loading="lazy" />
                 <div class="playlist-item-info">
@@ -592,6 +601,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p>${track.artist}</p>
                 </div>
                 <div class="playlist-item-actions">
+                    ${eqMiniMarkup()}
                     ${isHQ ? '<span class="hq-indicator">HQ</span>' : ''}
                     <button class="btn-favorite${isFav ? ' active' : ''}" data-index="${index}" aria-label="${isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}">
                         <i class="${isFav ? 'fas fa-heart' : 'far fa-heart'}"></i>
@@ -599,7 +609,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             `;
 
-            item.querySelector('.btn-favorite').addEventListener('click', () => {
+            item.querySelector('.btn-favorite').addEventListener('click', (ev) => {
+                ev.stopPropagation();
                 const t = playlistConfig[index];
                 if (favorites.some(fav => fav.urls && fav.urls.mp3 === t.urls.mp3)) {
                     removeFromFavorites(t.urls.mp3);
@@ -721,8 +732,10 @@ document.addEventListener('DOMContentLoaded', function() {
         elements.favoritesPlaylistElement.innerHTML = '';
         favoritesPlaylist.forEach((track, index) => {
             const isHQ = HQ_FORMATS.includes(track.format);
+            const active = index === currentFavoritesTrackIndex;
+
             const item = document.createElement('div');
-            item.className = `playlist-item${index === currentFavoritesTrackIndex ? ' active' : ''}`;
+            item.className = `playlist-item${active ? ' active' : ''}`;
             item.innerHTML = `
                 <img src="${track.coverUrl}" alt="${track.title}" loading="lazy" />
                 <div class="playlist-item-info">
@@ -730,13 +743,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p>${track.artist}</p>
                 </div>
                 <div class="playlist-item-actions">
+                    ${eqMiniMarkup()}
                     ${isHQ ? '<span class="hq-indicator">HQ</span>' : ''}
                     <button class="btn-remove-favorite" data-index="${index}" aria-label="Quitar de favoritos">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
             `;
-            item.querySelector('.btn-remove-favorite').addEventListener('click', () => removeFromFavorites(track.urls.mp3));
+            item.querySelector('.btn-remove-favorite').addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                removeFromFavorites(track.urls.mp3);
+            });
             item.addEventListener('click', e => {
                 if (!e.target.closest('.btn-remove-favorite')) {
                     currentFavoritesTrackIndex = index;
