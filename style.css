@@ -222,5 +222,56 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 .seek-bar::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:12px; height:12px; background-color:#1db954; border-radius:50%; cursor:pointer; }
 .seek-bar::-moz-range-thumb{ width:12px; height:12px; background-color:#1db954; border-radius:50%; cursor:pointer; }
 
+
+
+
+
+
+/* SELECT de calidad — look moderno */
+#reproductor-container-sanavera .format-selector{
+  display:block;                /* lo mostramos cuando haga falta */
+  width:100%;
+  max-width:320px;
+  padding:10px 40px 10px 12px;  /* espacio para la flecha */
+  font-size:14px;
+  line-height:1.35;
+  color:#fff;
+  background:#282828;
+  border:1px solid #535353;
+  border-radius:8px;
+
+  -webkit-appearance:none;
+  appearance:none;
+  outline:none;
+
+  /* flecha */
+  background-image:
+    linear-gradient(180deg,transparent 0,transparent 60%,rgba(255,255,255,.08) 60%,rgba(255,255,255,.08) 100%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23dcdcdc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat:no-repeat;
+  background-position: left top, right 12px center;
+  background-size:auto, 14px;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);
+  margin:10px auto;
+  cursor:pointer;
+}
+#reproductor-container-sanavera .format-selector:hover,
+#reproductor-container-sanavera .format-selector:focus{
+  border-color:#1db954;
+}
+
+/* opciones internas */
+#reproductor-container-sanavera .format-selector option{
+  background:#1f1f1f;
+  color:#fff;
+}
+
+
+
+
+
+
+
+
 /* ===== Optimizaciones ===== */
 #reproductor-container-sanavera img{ loading:lazy; }
