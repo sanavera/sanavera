@@ -2,21 +2,32 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('DOMContentLoaded ejecutado');
 
     const elements = {
+        // Modales
         welcomeModal: document.getElementById('welcome-modal'),
         searchModal: document.getElementById('search-modal'),
         playerModal: document.getElementById('player-modal'),
         favoritesModal: document.getElementById('favorites-modal'),
+        // Búsqueda
         searchInput: document.getElementById('search-input'),
         searchButton: document.getElementById('search-button'),
         albumList: document.getElementById('album-list'),
         resultsCount: document.getElementById('results-count'),
         loading: document.getElementById('loading'),
         errorMessage: document.getElementById('error-message'),
+        // Player (legacy + hero)
         coverImage: document.getElementById('cover-image'),
         songTitle: document.getElementById('song-title'),
         songArtist: document.getElementById('song-artist'),
+        playerHero: document.getElementById('player-hero'),
+        heroSongTitle: document.getElementById('hero-song-title'),
+        heroSongArtist: document.getElementById('hero-song-artist'),
+        // Listas
         playlistElement: document.getElementById('playlist'),
+        favoritesPlaylistElement: document.getElementById('favorites-playlist'),
+        // Audio players
         audioPlayer: document.getElementById('audio-player'),
+        favoritesAudioPlayer: document.getElementById('favorites-audio-player'),
+        // Controles player
         btnPlay: document.getElementById('btn-play'),
         btnPrev: document.getElementById('btn-prev'),
         btnNext: document.getElementById('btn-next'),
@@ -27,14 +38,18 @@ document.addEventListener('DOMContentLoaded', function() {
         currentTimeElement: document.getElementById('current-time'),
         durationElement: document.getElementById('duration'),
         formatSelector: document.getElementById('format-selector'),
+        // FABs
         floatingSearchButton: document.getElementById('floating-search-button'),
         floatingPlayerButton: document.getElementById('floating-player-button'),
         floatingFavoritesButton: document.getElementById('floating-favorites-button'),
+        // Favoritos (legacy + hero)
         favoritesCoverImage: document.getElementById('favorites-cover-image'),
         favoritesSongTitle: document.getElementById('favorites-song-title'),
         favoritesSongArtist: document.getElementById('favorites-song-artist'),
-        favoritesPlaylistElement: document.getElementById('favorites-playlist'),
-        favoritesAudioPlayer: document.getElementById('favorites-audio-player'),
+        favoritesHero: document.getElementById('favorites-hero'),
+        favoritesHeroSongTitle: document.getElementById('favorites-hero-song-title'),
+        favoritesHeroSongArtist: document.getElementById('favorites-hero-song-artist'),
+        // Controles favoritos
         favoritesBtnPlay: document.getElementById('favorites-btn-play'),
         favoritesBtnPrev: document.getElementById('favorites-btn-prev'),
         favoritesBtnNext: document.getElementById('favorites-btn-next'),
@@ -46,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
         favoritesDuration: document.getElementById('favorites-duration')
     };
 
-    const missingElements = Object.entries(elements).filter(([key, value]) => !value);
+    const missingElements = Object.entries(elements).filter(([_, value]) => !value);
     if (missingElements.length > 0) {
         console.error('Elementos no encontrados:', missingElements.map(([key]) => key));
         document.body.innerHTML += '<p style="color: red;">Error: No se encontraron elementos clave en la página.</p>';
@@ -54,13 +69,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     console.log('Todos los elementos encontrados correctamente.');
 
+    // Asegura que los botones no tengan texto redundante junto al <i>
     document.querySelectorAll('.btn, .btn-small, .btn-play, .btn-favorite, .btn-remove-favorite').forEach(btn => {
-        if (btn.innerText.trim() !== '') {
-            btn.innerText = '';
-            btn.appendChild(btn.querySelector('i'));
-        }
+        const icon = btn.querySelector('i');
+        if (!icon) return;
+        btn.textContent = '';
+        btn.appendChild(icon);
     });
 
+    // ===== Constantes / estado =====
     const HQ_FORMATS = ['wav', 'flac', 'aiff', 'alac'];
 
     let mockAlbums = [
@@ -90,6 +107,36 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentFormat = 'mp3';
     const paginationEnabled = false;
 
+    // ===== Helpers UI =====
+    function setHero(scope, coverUrl, title, artist) {
+        const isFav = scope === 'favorites';
+        const hero = isFav ? elements.favoritesHero : elements.playerHero;
+        const hTitle = isFav ? elements.favoritesHeroSongTitle : elements.heroSongTitle;
+        const hArtist = isFav ? elements.favoritesHeroSongArtist : elements.heroSongArtist;
+        const legacyImg = isFav ? elements.favoritesCoverImage : elements.coverImage;
+
+        const safeCover = (coverUrl && coverUrl.trim()) ? coverUrl : 'https://via.placeholder.com/640x640?text=Sin+portada';
+
+        if (hero) hero.style.setProperty('--cover-url', `url("${safeCover}")`);
+        if (hTitle) hTitle.textContent = title || 'Sin título';
+        if (hArtist) hArtist.textContent = artist || '';
+        if (legacyImg) legacyImg.src = safeCover; // compat JS existente
+    }
+
+    function showFormatSelector(show, formats = []) {
+        if (!elements.formatSelector) return;
+        elements.formatSelector.classList.add('format-selector');
+        elements.formatSelector.style.display = show ? 'block' : 'none';
+        if (show && formats.length) {
+            elements.formatSelector.innerHTML = formats.map(f => {
+                const upper = f.toUpperCase();
+                const label = f === 'mp3' ? `${upper} (más rápido)` : `${upper} (alta calidad)`;
+                return `<option value="${f}"${f === currentFormat ? ' selected' : ''}>Calidad: ${label}</option>`;
+            }).join('');
+        }
+    }
+
+    // ===== Favoritos en storage =====
     try {
         const storedFavorites = localStorage.getItem('favorites');
         if (storedFavorites) {
@@ -103,21 +150,15 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('favorites', JSON.stringify([]));
     }
 
+    // ===== Utilidades =====
     function toggleBodyScroll(lock) {
-        if (lock) {
-            document.body.classList.add('modal-open');
-        } else {
-            document.body.classList.remove('modal-open');
-        }
+        if (lock) document.body.classList.add('modal-open');
+        else document.body.classList.remove('modal-open');
     }
-
     function truncateText(text, maxLength) {
-        if (text.length > maxLength) {
-            return text.substring(0, maxLength - 2) + '..';
-        }
+        if (text.length > maxLength) return text.substring(0, maxLength - 2) + '..';
         return text;
     }
-
     function formatTime(seconds) {
         if (isNaN(seconds) || seconds < 0) return '0:00';
         const minutes = Math.floor(seconds / 60);
@@ -125,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
     }
 
-    function setupPlayerTimeEvents(player, seekBar, currentTimeEl, durationEl, repeatBtn) {
+    function setupPlayerTimeEvents(player, seekBar, currentTimeEl, durationEl) {
         player.addEventListener('loadedmetadata', () => {
             durationEl.textContent = formatTime(player.duration);
             seekBar.value = 0;
@@ -141,8 +182,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (repeatMode === 'one') {
                 player.currentTime = 0;
                 player.play().catch(error => console.error('Error repeating track:', error));
-            } else if (repeatMode === 'all') {
-                nextTrack();
             } else {
                 nextTrack();
             }
@@ -156,41 +195,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    setupPlayerTimeEvents(elements.audioPlayer, elements.seekBar, elements.currentTimeElement, elements.durationElement, elements.btnRepeat);
-    setupPlayerTimeEvents(elements.favoritesAudioPlayer, elements.favoritesSeekBar, elements.favoritesCurrentTime, elements.favoritesDuration, elements.favoritesBtnRepeat);
+    setupPlayerTimeEvents(elements.audioPlayer, elements.seekBar, elements.currentTimeElement, elements.durationElement);
+    setupPlayerTimeEvents(elements.favoritesAudioPlayer, elements.favoritesSeekBar, elements.favoritesCurrentTime, elements.favoritesDuration);
 
     function setupFormatSelector(selector, player, btnDownload) {
         selector.addEventListener('change', () => {
             currentFormat = selector.value;
             console.log('Formato seleccionado:', currentFormat);
-            playlistConfig.forEach(track => {
-                track.format = currentFormat;
-            });
+            playlistConfig.forEach(track => { track.format = currentFormat; });
             const currentTrack = playlistConfig[currentTrackIndex];
-            if (currentTrack && currentTrack.urls[currentFormat]) {
-                player.src = currentTrack.urls[currentFormat] || currentTrack.urls.mp3;
-                btnDownload.setAttribute('href', currentTrack.urls[currentFormat] || currentTrack.urls.mp3);
-                btnDownload.setAttribute('download', `${currentTrack.title}.${currentFormat}`);
-                console.log('URL actualizada:', player.src);
-                renderPlaylist();
-                if (isPlaying) {
-                    player.play().catch(error => console.error('Error playing track with new format:', error));
-                }
-            } else {
-                console.warn(`Formato ${currentFormat} no disponible para ${currentTrack.title}, usando MP3`);
-                player.src = currentTrack.urls.mp3;
-                btnDownload.setAttribute('href', currentTrack.urls.mp3);
-                btnDownload.setAttribute('download', `${currentTrack.title}.mp3`);
-                renderPlaylist();
-                if (isPlaying) {
-                    player.play().catch(error => console.error('Error playing track:', error));
-                }
-            }
+            if (!currentTrack) return;
+            const url = currentTrack.urls[currentFormat] || currentTrack.urls.mp3;
+            player.src = url;
+            btnDownload.setAttribute('href', url);
+            btnDownload.setAttribute('download', `${currentTrack.title}.${currentFormat}`);
+            renderPlaylist();
+            if (isPlaying) player.play().catch(e => console.error('Error playing track with new format:', e));
         });
     }
 
     setupFormatSelector(elements.formatSelector, elements.audioPlayer, elements.btnDownload);
 
+    // ===== Bienvenida / arranque =====
     if (!sessionStorage.getItem('welcomeShown')) {
         console.log('Mostrando modal de bienvenida');
         elements.welcomeModal.style.display = 'flex';
@@ -221,6 +247,7 @@ document.addEventListener('DOMContentLoaded', function() {
         searchAlbums(currentQuery, currentPage, true);
     }
 
+    // ===== Navegación entre modales =====
     function showSearchModal() {
         elements.searchModal.style.display = 'flex';
         elements.playerModal.style.display = 'none';
@@ -268,27 +295,17 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleBodyScroll(false);
     }
 
-    elements.floatingSearchButton.addEventListener('click', () => {
-        console.log('Navegando a búsqueda');
-        showSearchModal();
-    });
+    // FABs
+    elements.floatingSearchButton.addEventListener('click', () => { console.log('Navegando a búsqueda'); showSearchModal(); });
+    elements.floatingPlayerButton.addEventListener('click', () => { console.log('Navegando a reproductor'); showPlayerModal(); });
+    elements.floatingFavoritesButton.addEventListener('click', () => { console.log('Navegando a favoritos'); showFavoritesModal(); });
 
-    elements.floatingPlayerButton.addEventListener('click', () => {
-        console.log('Navegando a reproductor');
-        showPlayerModal();
-    });
-
-    elements.floatingFavoritesButton.addEventListener('click', () => {
-        console.log('Navegando a favoritos');
-        showFavoritesModal();
-    });
-
+    // Búsqueda
     elements.searchButton.addEventListener('click', () => {
         const query = elements.searchInput.value.trim();
         if (query) {
             console.log('Búsqueda iniciada por botón:', query);
-            currentQuery = query;
-            currentPage = 1;
+            currentQuery = query; currentPage = 1;
             searchAlbums(currentQuery, currentPage, true);
         } else {
             console.error('Búsqueda vacía');
@@ -296,14 +313,12 @@ document.addEventListener('DOMContentLoaded', function() {
             elements.errorMessage.style.display = 'block';
         }
     });
-
     elements.searchInput.addEventListener('keypress', event => {
         if (event.key === 'Enter') {
             const query = elements.searchInput.value.trim();
             if (query) {
                 console.log('Búsqueda iniciada por Enter:', query);
-                currentQuery = query;
-                currentPage = 1;
+                currentQuery = query; currentPage = 1;
                 searchAlbums(currentQuery, currentPage, true);
             } else {
                 console.error('Búsqueda vacía');
@@ -313,6 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // ===== Búsqueda / resultados =====
     function searchAlbums(query, page, clearPrevious) {
         console.log('Ejecutando searchAlbums:', { query, page, clearPrevious });
         if (isLoading) return;
@@ -425,10 +441,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // ===== Player (abrir y preparar) =====
     function openPlayer(albumId) {
         console.log('Ejecutando openPlayer:', albumId);
         lastScrollPosition = elements.albumList.scrollTop;
         showPlayerModal();
+
+        // Reset UI
         elements.playlistElement.innerHTML = '<p>Cargando canciones...</p>';
         elements.songTitle.textContent = 'Selecciona una canción';
         elements.songArtist.textContent = '';
@@ -437,7 +456,9 @@ document.addEventListener('DOMContentLoaded', function() {
         elements.seekBar.value = 0;
         elements.currentTimeElement.textContent = '0:00';
         elements.durationElement.textContent = '0:00';
-        elements.formatSelector.style.display = 'none';
+        showFormatSelector(false);
+
+        // Reset estado
         playlistConfig = [];
         originalPlaylist = [];
         currentTrackIndex = 0;
@@ -452,68 +473,85 @@ document.addEventListener('DOMContentLoaded', function() {
         isShuffled = false;
         currentAlbumId = albumId;
 
+        // Carga mock
         if (albumId === 'queen_greatest_hits') {
             console.log('Cargando álbum de prueba: Queen');
-            elements.coverImage.src = mockAlbums[0].image;
-            elements.songArtist.textContent = 'Queen';
-            playlistConfig = mockTracks;
-            originalPlaylist = [...mockTracks];
+            const cover = mockAlbums[0].image;
+            const artist = 'Queen';
+            setHero('player', cover, 'Selecciona una canción', artist);
+            elements.songArtist.textContent = artist;
+
+            playlistConfig = mockTracks.map(t => ({ ...t }));
+            originalPlaylist = [...playlistConfig];
             availableFormats = ['mp3'];
-            elements.formatSelector.style.display = 'none';
+            showFormatSelector(false);
+
             initPlayer();
-        } else {
-            console.log('Consultando metadata para:', albumId);
-            fetch(`https://archive.org/metadata/${albumId}`, { headers: { 'User-Agent': 'Mozilla/5.0' } })
-                .then(response => {
-                    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Metadata recibida:', data);
-                    const coverUrl = `https://archive.org/services/img/${albumId}`;
-                    const artist = normalizeCreator(data.metadata?.creator || data.metadata?.artist || 'Desconocido');
-                    elements.songArtist.textContent = artist;
-                    const files = data.files.filter(file => file.name && (/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i.test(file.name)));
-                    console.log('Archivos de audio encontrados:', files);
-                    playlistConfig = files.reduce((tracks, file) => {
-                        const title = extractSongTitle(file.name);
-                        const format = file.name.match(/\.(\w+)$/i)[1].toLowerCase();
-                        const url = `https://archive.org/download/${albumId}/${encodeURIComponent(file.name).replace(/\+/g, '%20')}`;
-                        let track = tracks.find(t => t.title === title);
-                        if (!track) {
-                            track = { title, artist, coverUrl, urls: {}, format: currentFormat };
-                            tracks.push(track);
-                        }
-                        track.urls[format] = url;
-                        return tracks;
-                    }, []);
-                    availableFormats = [...new Set(files.map(file => file.name.match(/\.(\w+)$/i)[1].toLowerCase()))];
-                    console.log('Formatos disponibles:', availableFormats);
-                    elements.formatSelector.style.display = availableFormats.length > 1 ? 'block' : 'none';
-                    elements.formatSelector.innerHTML = availableFormats.map(format => `<option value="${format}"${format === currentFormat ? ' selected' : ''}>Calidad: ${format.toUpperCase()} (${format === 'mp3' ? 'más rápido' : 'alta calidad'})</option>`).join('');
-                    if (playlistConfig.length === 0) {
-                        console.warn('No se encontraron canciones de audio');
-                        elements.playlistElement.innerHTML = '<p>No se encontraron canciones de audio</p>';
-                        currentAlbumId = null;
-                        return;
-                    }
-                    originalPlaylist = [...playlistConfig];
-                    elements.coverImage.src = coverUrl;
-                    initPlayer();
-                })
-                .catch(error => {
-                    console.error('Error en openPlayer:', error);
-                    elements.playlistElement.innerHTML = `<p>Error al cargar canciones: ${error.message}. Usando datos de prueba.</p>`;
-                    playlistConfig = mockTracks;
-                    originalPlaylist = [...mockTracks];
-                    elements.coverImage.src = mockAlbums[0].image;
-                    elements.songArtist.textContent = 'Queen';
-                    currentAlbumId = 'queen_greatest_hits';
-                    availableFormats = ['mp3'];
-                    elements.formatSelector.style.display = 'none';
-                    initPlayer();
-                });
+            return;
         }
+
+        // Carga real
+        console.log('Consultando metadata para:', albumId);
+        fetch(`https://archive.org/metadata/${albumId}`, { headers: { 'User-Agent': 'Mozilla/5.0' } })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Metadata recibida:', data);
+                const coverUrl = `https://archive.org/services/img/${albumId}`;
+                const artist = normalizeCreator(data.metadata?.creator || data.metadata?.artist || 'Desconocido');
+
+                // Seteo hero con info mínima hasta que cargue track
+                setHero('player', coverUrl, 'Selecciona una canción', artist);
+                elements.songArtist.textContent = artist;
+
+                const files = (data.files || []).filter(file => file.name && (/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i.test(file.name)));
+                console.log('Archivos de audio encontrados:', files);
+
+                playlistConfig = files.reduce((tracks, file) => {
+                    const title = extractSongTitle(file.name);
+                    const format = file.name.match(/\.(\w+)$/i)[1].toLowerCase();
+                    const url = `https://archive.org/download/${albumId}/${encodeURIComponent(file.name).replace(/\+/g, '%20')}`;
+                    let track = tracks.find(t => t.title === title);
+                    if (!track) {
+                        track = { title, artist, coverUrl, urls: {}, format: currentFormat };
+                        tracks.push(track);
+                    }
+                    track.urls[format] = url;
+                    return tracks;
+                }, []);
+
+                availableFormats = [...new Set(files.map(file => file.name.match(/\.(\w+)$/i)[1].toLowerCase()))];
+
+                if (playlistConfig.length === 0) {
+                    console.warn('No se encontraron canciones de audio');
+                    elements.playlistElement.innerHTML = '<p>No se encontraron canciones de audio</p>';
+                    currentAlbumId = null;
+                    return;
+                }
+
+                originalPlaylist = [...playlistConfig];
+                elements.coverImage.src = coverUrl;
+
+                // Mostrar selector si hay más de un formato
+                showFormatSelector(availableFormats.length > 1, availableFormats);
+
+                initPlayer();
+            })
+            .catch(error => {
+                console.error('Error en openPlayer:', error);
+                elements.playlistElement.innerHTML = `<p>Error al cargar canciones: ${error.message}. Usando datos de prueba.</p>`;
+                playlistConfig = mockTracks.map(t => ({ ...t }));
+                originalPlaylist = [...playlistConfig];
+                const cover = mockAlbums[0].image;
+                setHero('player', cover, 'Selecciona una canción', 'Queen');
+                elements.songArtist.textContent = 'Queen';
+                currentAlbumId = 'queen_greatest_hits';
+                availableFormats = ['mp3'];
+                showFormatSelector(false);
+                initPlayer();
+            });
     }
 
     function extractSongTitle(fileName) {
@@ -539,8 +577,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderPlaylist() {
         elements.playlistElement.innerHTML = '';
         const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
         playlistConfig.forEach((track, index) => {
             const isHQ = HQ_FORMATS.includes(currentFormat);
+            const isFav = favorites.some(fav => fav.urls && fav.urls.mp3 === track.urls.mp3);
             const item = document.createElement('div');
             item.className = `playlist-item${index === currentTrackIndex ? ' active' : ''}`;
             item.innerHTML = `
@@ -551,19 +591,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="playlist-item-actions">
                     ${isHQ ? '<span class="hq-indicator">HQ</span>' : ''}
-                    <button class="btn-favorite${favorites.some(fav => fav.urls && fav.urls.mp3 === track.urls.mp3) ? ' active' : ''}" data-index="${index}" aria-label="${favorites.some(fav => fav.urls && fav.urls.mp3 === track.urls.mp3) ? 'Quitar de favoritos' : 'Agregar a favoritos'}">
-                        <i class="${favorites.some(fav => fav.urls && fav.urls.mp3 === track.urls.mp3) ? 'fas fa-heart' : 'far fa-heart'}"></i>
+                    <button class="btn-favorite${isFav ? ' active' : ''}" data-index="${index}" aria-label="${isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}">
+                        <i class="${isFav ? 'fas fa-heart' : 'far fa-heart'}"></i>
                     </button>
                 </div>
             `;
+
             item.querySelector('.btn-favorite').addEventListener('click', () => {
-                const track = playlistConfig[index];
-                if (favorites.some(fav => fav.urls && fav.urls.mp3 === track.urls.mp3)) {
-                    removeFromFavorites(track.urls.mp3);
+                const t = playlistConfig[index];
+                if (favorites.some(fav => fav.urls && fav.urls.mp3 === t.urls.mp3)) {
+                    removeFromFavorites(t.urls.mp3);
                 } else {
-                    addToFavorites(track);
+                    addToFavorites(t);
                 }
             });
+
             item.addEventListener('click', e => {
                 if (!e.target.closest('.btn-favorite')) {
                     currentTrackIndex = index;
@@ -582,6 +624,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }).catch(error => console.error('Error playing track:', error));
                 }
             });
+
             elements.playlistElement.appendChild(item);
         });
     }
@@ -590,22 +633,33 @@ document.addEventListener('DOMContentLoaded', function() {
         const track = playlistConfig[index];
         if (!track) return;
         console.log('Cargando pista:', track, 'Formato:', currentFormat);
+
         track.format = currentFormat;
+
+        // Texto legacy (debajo del hero)
         elements.songTitle.textContent = track.title;
         elements.songArtist.textContent = track.artist;
-        elements.coverImage.src = track.coverUrl;
+
+        // HERO (lo nuevo)
+        setHero('player', track.coverUrl, track.title, track.artist);
+
         const url = track.urls[currentFormat] || track.urls.mp3;
         elements.audioPlayer.src = url;
         elements.btnDownload.setAttribute('href', url);
         elements.btnDownload.setAttribute('download', `${track.title}.${currentFormat}`);
-        console.log('URL de reproducción:', url);
+
         elements.seekBar.value = 0;
         elements.currentTimeElement.textContent = '0:00';
         elements.durationElement.textContent = '0:00';
-        elements.formatSelector.value = currentFormat;
+
+        // Asegura selector coherente
+        showFormatSelector(availableFormats.length > 1, availableFormats);
+        if (elements.formatSelector) elements.formatSelector.value = currentFormat;
+
         renderPlaylist();
     }
 
+    // ===== Favoritos =====
     function addToFavorites(track) {
         const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
         if (!favorites.some(fav => fav.urls && fav.urls.mp3 === track.urls.mp3)) {
@@ -638,7 +692,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 elements.favoritesPlaylistElement.innerHTML = '<p>No hay canciones en favoritos.</p>';
                 elements.favoritesSongTitle.textContent = 'Selecciona una canción';
                 elements.favoritesSongArtist.textContent = '';
-                elements.favoritesCoverImage.src = '';
+                setHero('favorites', '', 'Selecciona una canción', '');
                 elements.favoritesAudioPlayer.src = '';
                 elements.favoritesSeekBar.value = 0;
                 elements.favoritesCurrentTime.textContent = '0:00';
@@ -707,19 +761,25 @@ document.addEventListener('DOMContentLoaded', function() {
         const track = favoritesPlaylist[index];
         if (!track) return;
         console.log('Cargando pista de favoritos:', track);
+
         elements.favoritesSongTitle.textContent = track.title;
         elements.favoritesSongArtist.textContent = track.artist;
-        elements.favoritesCoverImage.src = track.coverUrl;
+        setHero('favorites', track.coverUrl, track.title, track.artist);
+
         const format = track.format || 'mp3';
-        elements.favoritesAudioPlayer.src = track.urls[format] || track.urls.mp3;
-        elements.favoritesBtnDownload.setAttribute('href', track.urls[format] || track.urls.mp3);
+        const url = track.urls[format] || track.urls.mp3;
+        elements.favoritesAudioPlayer.src = url;
+        elements.favoritesBtnDownload.setAttribute('href', url);
         elements.favoritesBtnDownload.setAttribute('download', `${track.title}.${format}`);
+
         elements.favoritesSeekBar.value = 0;
         elements.favoritesCurrentTime.textContent = '0:00';
         elements.favoritesDuration.textContent = '0:00';
+
         renderFavoritesPlaylist();
     }
 
+    // ===== Controles =====
     function togglePlay() {
         if (elements.playerModal.style.display === 'flex') {
             if (isPlaying) {
@@ -769,29 +829,21 @@ document.addEventListener('DOMContentLoaded', function() {
             if (currentTrackIndex + 1 < playlistConfig.length) {
                 currentTrackIndex = (currentTrackIndex + 1) % playlistConfig.length;
                 loadTrack(currentTrackIndex);
-                if (isPlaying) {
-                    elements.audioPlayer.play().catch(error => console.error('Error playing next track:', error));
-                }
+                if (isPlaying) elements.audioPlayer.play().catch(error => console.error('Error playing next track:', error));
             } else if (repeatMode === 'all') {
                 currentTrackIndex = 0;
                 loadTrack(currentTrackIndex);
-                if (isPlaying) {
-                    elements.audioPlayer.play().catch(error => console.error('Error playing next track:', error));
-                }
+                if (isPlaying) elements.audioPlayer.play().catch(error => console.error('Error playing next track:', error));
             }
         } else if (elements.favoritesModal.style.display === 'flex') {
             if (currentFavoritesTrackIndex + 1 < favoritesPlaylist.length) {
                 currentFavoritesTrackIndex = (currentFavoritesTrackIndex + 1) % favoritesPlaylist.length;
                 loadFavoritesTrack(currentFavoritesTrackIndex);
-                if (isFavoritesPlaying) {
-                    elements.favoritesAudioPlayer.play().catch(error => console.error('Error playing next track:', error));
-                }
+                if (isFavoritesPlaying) elements.favoritesAudioPlayer.play().catch(error => console.error('Error playing next track:', error));
             } else if (repeatMode === 'all') {
                 currentFavoritesTrackIndex = 0;
                 loadFavoritesTrack(currentFavoritesTrackIndex);
-                if (isFavoritesPlaying) {
-                    elements.favoritesAudioPlayer.play().catch(error => console.error('Error playing next track:', error));
-                }
+                if (isFavoritesPlaying) elements.favoritesAudioPlayer.play().catch(error => console.error('Error playing next track:', error));
             }
         }
     }
@@ -853,7 +905,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentTrackIndex = playlistConfig.findIndex(track => track.urls.mp3 === currentTrack.urls.mp3);
             } else {
                 playlistConfig = [...originalPlaylist];
-                currentTrackIndex = playlistConfig.findIndex(track => track.urls.mp3 === elements.audioPlayer.src);
+                currentTrackIndex = Math.max(0, playlistConfig.findIndex(t => (t.urls[currentFormat] || t.urls.mp3) === elements.audioPlayer.src));
             }
             renderPlaylist();
             console.log('Modo shuffle:', isShuffled);
@@ -867,7 +919,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentFavoritesTrackIndex = favoritesPlaylist.findIndex(track => track.urls.mp3 === currentTrack.urls.mp3);
             } else {
                 favoritesPlaylist = [...originalFavoritesPlaylist];
-                currentFavoritesTrackIndex = favoritesPlaylist.findIndex(track => track.urls.mp3 === elements.favoritesAudioPlayer.src);
+                currentFavoritesTrackIndex = Math.max(0, favoritesPlaylist.findIndex(t => (t.urls[t.format || 'mp3']) === elements.favoritesAudioPlayer.src));
             }
             renderFavoritesPlaylist();
             console.log('Modo shuffle (favoritos):', isShuffled);
@@ -882,11 +934,13 @@ document.addEventListener('DOMContentLoaded', function() {
         return array;
     }
 
+    // Eventos de control
     elements.btnPlay.addEventListener('click', togglePlay);
     elements.btnNext.addEventListener('click', nextTrack);
     elements.btnPrev.addEventListener('click', prevTrack);
     elements.btnRepeat.addEventListener('click', toggleRepeat);
     elements.btnShuffle.addEventListener('click', toggleShuffle);
+
     elements.favoritesBtnPlay.addEventListener('click', togglePlay);
     elements.favoritesBtnNext.addEventListener('click', nextTrack);
     elements.favoritesBtnPrev.addEventListener('click', prevTrack);
