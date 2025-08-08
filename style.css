@@ -3,7 +3,7 @@
   --footer-safe: max(88px, 72px + env(safe-area-inset-bottom));
   --side-pad:10px;
   --grid-gap:10px;
-  --hero-max-h:44vh;
+  --hero-max-h:40vh; /* ↓ un toque para ganar espacio */
 }
 
 /* ===== Base tipografía ===== */
@@ -111,11 +111,11 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
   background:center/cover no-repeat var(--cover-url, #111); z-index:15; overflow:hidden;
 }
 #reproductor-container-sanavera .player-hero::before{
-  content:""; position:absolute; inset:0; background:rgba(0,0,0,.35); /* overlay */
+  content:""; position:absolute; inset:0; background:rgba(0,0,0,.35);
 }
 #reproductor-container-sanavera .player-hero::after{
   content:""; position:absolute; left:0; right:0; bottom:0; height:38%;
-  background:linear-gradient(to bottom, rgba(0,0,0,0) 0%, #181818 100%); /* degradé */
+  background:linear-gradient(to bottom, rgba(0,0,0,0) 0%, #181818 100%);
 }
 #reproductor-container-sanavera .hero-text{
   position:absolute; left:16px; right:16px; bottom:12px; display:flex; flex-direction:column; gap:6px; text-align:center;
@@ -129,21 +129,24 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 /* Oculta el avatar redondo viejo */
 #reproductor-container-sanavera .cover-container{ display:none; }
 
-/* ===== Info de audio (debajo del hero) ===== */
-#reproductor-container-sanavera .audio-info{ text-align:center; width:100%; margin:6px 0 4px; }
-#reproductor-container-sanavera .audio-info h2{ margin:0; font-size:clamp(17px,4vw,20px); font-weight:600; color:#fff; line-height:1.25; }
-#reproductor-container-sanavera .audio-info p{ margin:5px 0 0; font-size:clamp(13px,3.4vw,15px); font-weight:400; color:#b3b3b3; line-height:1.3; }
+/* ===== Info de audio (debajo del hero) –– OCULTO para evitar duplicado ===== */
+#reproductor-container-sanavera .audio-info{ display:none; }
 
-/* ===== Lista/ Favoritos (estilos comunes) ===== */
-#reproductor-container-sanavera .playlist-section{ flex:1; overflow-y:auto; margin-bottom:15px; width:100%; padding:0; box-sizing:border-box; }
+/* ===== Lista / Favoritos (estilos comunes) ===== */
+#reproductor-container-sanavera .playlist-section{ flex:1; overflow-y:auto; margin-bottom:10px; width:100%; padding:0; box-sizing:border-box; }
 #reproductor-container-sanavera .playlist,
 #reproductor-container-sanavera .favorites-list{
-  display:flex; flex-direction:column; gap:8px; padding:0; width:calc(100% - 20px); max-width:100%; margin:0 auto; box-sizing:border-box; overflow-x:hidden;
+  display:flex; flex-direction:column; gap:6px; /* ↓ gap */
+  padding:0; width:calc(100% - 20px); max-width:100%; margin:0 auto; box-sizing:border-box; overflow-x:hidden;
 }
 #reproductor-container-sanavera .playlist-item{
-  display:flex; align-items:center; gap:10px; width:100%; margin:8px 0; padding:10px; border-radius:10px; background:#2b2b2b;
-  box-shadow:0 1px 3px rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.06);
-  transition:background .15s ease, transform .05s ease; transform:none !important; position:static; box-sizing:border-box;
+  display:flex; align-items:center; gap:10px; width:100%;
+  margin:6px 0; padding:8px;            /* ↓ margen y padding */
+  border-radius:8px; background:#2b2b2b;
+  box-shadow:0 1px 2px rgba(0,0,0,.18);  /* ↓ sombra */
+  border:1px solid rgba(255,255,255,.06);
+  transition:background .15s ease, transform .05s ease;
+  transform:none !important; position:static; box-sizing:border-box;
 }
 #reproductor-container-sanavera .playlist-item:hover{ background:#323232; }
 #reproductor-container-sanavera .playlist-item:active{ transform:scale(.995); }
@@ -153,33 +156,38 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 #reproductor-container-sanavera .playlist-item.active i,
 #reproductor-container-sanavera .playlist-item.active .hq-indicator{ color:#fff; }
 #reproductor-container-sanavera .playlist-item.active .hq-indicator{ background:#158f41; }
-#reproductor-container-sanavera .playlist-item img{ width:44px; height:44px; flex:0 0 44px; object-fit:cover; border-radius:6px; background:#1f1f1f; }
+#reproductor-container-sanavera .playlist-item img{ width:42px; height:42px; flex:0 0 42px; object-fit:cover; border-radius:6px; background:#1f1f1f; }
 #reproductor-container-sanavera .playlist-item-info{ display:flex; flex-direction:column; min-width:0; gap:2px; }
-#reproductor-container-sanavera .playlist-item-info h3{ margin:0; font-size:clamp(13px,3.4vw,15px); font-weight:500; color:#fff; line-height:1.25; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+#reproductor-container-sanavera .playlist-item-info h3{ margin:0; font-size:clamp(13px,3.4vw,15px); font-weight:500; color:#fff; line-height:1.22; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 #reproductor-container-sanavera .playlist-item-info p{ margin:0; font-size:clamp(11.5px,3vw,13px); font-weight:400; color:#b3b3b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 #reproductor-container-sanavera .playlist-item-actions{ margin-left:auto; display:flex; align-items:center; gap:8px; }
 #reproductor-container-sanavera .playlist>.spacer,
 #reproductor-container-sanavera .playlist::after{ display:none !important; content:none !important; height:0 !important; }
 
-/* ===== Controles y tiempo (siempre visibles) ===== */
+/* ===== Controles y tiempo (compacto y sin “caja” pesada) ===== */
 #reproductor-container-sanavera .controls-section{
-  margin-top:5px; width:100%; padding:0; box-sizing:border-box;
+  width:100%; box-sizing:border-box;
   position:sticky; bottom:0;
-  background:#181818; z-index:16; /* debajo de los FABs (1001) */
-  box-shadow:0 -6px 16px rgba(0,0,0,.25);
-  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  background:#181818;
+  z-index:16;
+  box-shadow:0 -3px 10px rgba(0,0,0,.18);  /* ↓ sombra */
+  padding:6px 0 calc(6px + env(safe-area-inset-bottom)); /* ↓ padding */
+  margin-top:4px;
 }
 #reproductor-container-sanavera .controls{
-  display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:10px; padding:10px 0; width:100%;
+  display:flex; justify-content:center; align-items:center; gap:8px; /* ↓ gap */
+  margin-bottom:6px; padding:6px 0; width:100%;
 }
 #reproductor-container-sanavera .btn{
-  background-color:#282828; border:none; color:#fff; font-size:24px; cursor:pointer; width:40px; height:40px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,.3); transition:background-color .2s ease, transform .1s ease;
+  background-color:#282828; border:none; color:#fff; font-size:22px; cursor:pointer;
+  width:38px; height:38px; /* ↓ tamaño */
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  box-shadow:0 2px 4px rgba(0,0,0,.28); transition:background-color .2s ease, transform .1s ease;
 }
-#reproductor-container-sanavera .btn:hover{ background-color:#333; transform:scale(1.1); }
+#reproductor-container-sanavera .btn:hover{ background-color:#333; transform:scale(1.08); }
 #reproductor-container-sanavera .btn:active{ transform:scale(.95); }
 #reproductor-container-sanavera .btn-small{ font-size:18px; width:32px; height:32px; }
-#reproductor-container-sanavera .btn-play{ font-size:30px; width:48px; height:48px; }
+#reproductor-container-sanavera .btn-play{ font-size:28px; width:46px; height:46px; }
 #reproductor-container-sanavera .btn-play.playing .fa-play{ display:none; }
 #reproductor-container-sanavera .btn-play .fa-pause{ display:none; }
 #reproductor-container-sanavera .btn-play.playing .fa-pause{ display:inline; }
@@ -196,7 +204,7 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 }
 
 #reproductor-container-sanavera .footer-text{
-  text-align:center; font-size:12px; color:#b3b3b3; margin-top:8px; width:100%; padding:0 12px var(--side-pad);
+  text-align:center; font-size:12px; color:#b3b3b3; margin-top:6px; width:100%; padding:0 12px var(--side-pad);
 }
 
 /* ===== FABs ===== */
@@ -222,17 +230,12 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 .seek-bar::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:12px; height:12px; background-color:#1db954; border-radius:50%; cursor:pointer; }
 .seek-bar::-moz-range-thumb{ width:12px; height:12px; background-color:#1db954; border-radius:50%; cursor:pointer; }
 
-
-
-
-
-
-/* SELECT de calidad — look moderno */
+/* ===== SELECT de calidad — look moderno ===== */
 #reproductor-container-sanavera .format-selector{
-  display:block;                /* lo mostramos cuando haga falta */
+  display:block;
   width:100%;
   max-width:320px;
-  padding:10px 40px 10px 12px;  /* espacio para la flecha */
+  padding:10px 40px 10px 12px;
   font-size:14px;
   line-height:1.35;
   color:#fff;
@@ -252,26 +255,16 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
   background-position: left top, right 12px center;
   background-size:auto, 14px;
   box-shadow:0 1px 3px rgba(0,0,0,.25);
-  margin:10px auto;
+  margin:6px auto 8px; /* ↑ más cerca del hero */
   cursor:pointer;
 }
 #reproductor-container-sanavera .format-selector:hover,
 #reproductor-container-sanavera .format-selector:focus{
   border-color:#1db954;
 }
-
-/* opciones internas */
 #reproductor-container-sanavera .format-selector option{
-  background:#1f1f1f;
-  color:#fff;
+  background:#1f1f1f; color:#fff;
 }
-
-
-
-
-
-
-
 
 /* ===== Optimizaciones ===== */
 #reproductor-container-sanavera img{ loading:lazy; }
