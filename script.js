@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentFormat = 'mp3';
     const paginationEnabled = false;
 
-    // ===== Helpers UI =====
+    // ===== Interfaz de portada Modal Reproductor/Favoritos =====
     function setHero(scope, coverUrl, title, artist) {
         const isFav = scope === 'favorites';
         const hero = isFav ? elements.favoritesHero : elements.playerHero;
