@@ -1,140 +1,165 @@
-// buscador.js — resultados de álbumes y wiring de búsqueda
-(function(){
-  const el = {
+// =====================================
+// Sanavera MP3 – buscador.js
+// Nueva grilla de álbumes (2 por fila, estilo Spotify)
+// =====================================
+(function () {
+  const els = {
+    // contenedores del modal de búsqueda
     searchModal: document.getElementById('search-modal'),
-    searchInput: document.getElementById('search-input'),
-    searchButton: document.getElementById('search-button'),
-    albumList: document.getElementById('album-list'),
-    resultsCount: document.getElementById('results-count'),
-    loading: document.getElementById('loading'),
-    errorMessage: document.getElementById('error-message')
+    input:       document.getElementById('search-input'),
+    btn:         document.getElementById('search-button'),
+    list:        document.getElementById('album-list'),
+    results:     document.getElementById('results-count'),
+    loading:     document.getElementById('loading'),
+    error:       document.getElementById('error-message')
   };
 
-  const MOCK_ALBUMS = [
-    { id:'queen_greatest_hits', title:'Queen - Greatest Hits', artist:'Queen', image:'https://archive.org/services/img/queen_greatest_hits', relevance:0 }
-  ];
+  // si falta algo, salgo sin romper el resto
+  if (!els.list || !els.input || !els.btn) return;
 
+  // estado
   let isLoading = false;
-  let allAlbums = [];
   let currentQuery = '';
-  let currentPage = 1;
+  let currentPage  = 1;
+  let allAlbums = [];
 
-  function normalizeCreator(c){ return Array.isArray(c)? c.join(', ') : (c||'Desconocido'); }
-  function relevance(doc, q){
-    const t=(doc.title||'').toLowerCase(), c=normalizeCreator(doc.creator).toLowerCase(), qq=q.toLowerCase();
-    let r=0; if(t===qq) r+=300; else if(t.includes(qq)) r+=150; if(c.includes(qq)) r+=50; return r;
+  // eventos
+  els.btn.addEventListener('click', onSearch);
+  els.input.addEventListener('keypress', (e)=>{ if(e.key==='Enter') onSearch(); });
+
+  // búsqueda inicial mínima (si el inicio lo pide)
+  if (!els.input.value && els.results && /Resultados: 0/.test(els.results.textContent||'')) {
+    // no disparamos nada automático acá; inicio.js maneja el arranque
   }
-  function truncate(t, n){ t=t||''; return t.length>n? (t.slice(0,n-1)+'…') : t; }
 
-  function displayAlbums(albums){
-    if(!albums || !albums.length){
-      el.resultsCount.textContent='Resultados: 0';
-      el.albumList.innerHTML='<p style="padding:12px">No se encontraron álbumes.</p>';
+  function onSearch(){
+    const q = (els.input.value || '').trim();
+    if(!q){
+      showError('Por favor, ingresa un término de búsqueda.');
       return;
     }
-    albums.sort((a,b)=>b.relevance-a.relevance);
-    el.albumList.innerHTML='';
+    currentQuery = q;
+    currentPage  = 1;
+    searchAlbums(q, currentPage, true);
+  }
+
+  function searchAlbums(query, page, clear){
+    if(isLoading) return;
+    isLoading = true;
+    showLoading(true);
+    if (clear){
+      allAlbums = [];
+      els.list.innerHTML = '';
+      if (els.results) els.results.textContent = 'Resultados: 0';
+      hideError();
+    }
+
+    const url = `https://archive.org/advancedsearch.php?q=${
+      encodeURIComponent(query)
+    }+AND+mediatype:audio+AND+NOT+access-restricted-item:true&fl=identifier,title,creator,year,date&rows=5000&page=${
+      page
+    }&output=json`;
+
+    fetch(url, { headers:{'Accept':'application/json'} })
+      .then(r=>{ if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(data=>{
+        const docs = data?.response?.docs || [];
+        if (docs.length===0 && page===1){
+          showError('No se encontraron resultados. Probá con "Amar Azul" o "Queen Greatest Hits".');
+          renderAlbums([]);
+          isLoading=false; showLoading(false);
+          return;
+        }
+        const batch = docs.map(d => mapDocToAlbum(d, query));
+        allAlbums = dedupeByKey(allAlbums.concat(batch), a => `${a.title}|${a.artist}`);
+        renderAlbums(allAlbums);
+        isLoading=false; showLoading(false);
+      })
+      .catch(err=>{
+        isLoading=false; showLoading(false);
+        showError(`Error: ${err.message}`);
+      });
+  }
+
+  function mapDocToAlbum(doc, query){
+    const artist  = normalizeCreator(doc.creator);
+    const title   = doc.title || 'Sin título';
+    const image   = `https://archive.org/services/img/${doc.identifier}`;
+    const year    = pickYear(doc.year, doc.date);
+    const rel     = score(title, artist, query || '');
+    return { id: doc.identifier, title, artist, image, year, relevance: rel };
+  }
+
+  function normalizeCreator(c){
+    if (Array.isArray(c)) return c.join(', ');
+    return c || 'Desconocido';
+  }
+
+  function pickYear(y, date){
+    if (typeof y === 'string' && /^\d{4}$/.test(y)) return y;
+    if (Array.isArray(y) && y.length && /^\d{4}$/.test(y[0])) return y[0];
+    if (typeof date === 'string'){
+      const m = date.match(/(19|20)\d{2}/);
+      if (m) return m[0];
+    }
+    return '';
+  }
+
+  function score(title, artist, q){
+    const t = (title||'').toLowerCase();
+    const a = (artist||'').toLowerCase();
+    const s = (q||'').toLowerCase();
+    let r=0; if(t===s) r+=300; else if(t.includes(s)) r+=160; if(a.includes(s)) r+=50; return r;
+  }
+
+  function dedupeByKey(arr, keyFn){
+    const m = new Map();
+    arr.forEach(x => m.set(keyFn(x), x));
+    return Array.from(m.values());
+  }
+
+  function renderAlbums(albums){
+    // ordenamos por relevancia
+    albums.sort((a,b)=> b.relevance - a.relevance);
+
+    els.list.innerHTML = '';
     const frag = document.createDocumentFragment();
+
     albums.forEach(a=>{
-      const item = document.createElement('div');
-      item.className='album-item';
-      item.innerHTML = `
-        <img src="${a.image}" alt="${a.title}" loading="lazy">
-        <div class="album-item-info">
-          <h3>${truncate(a.title, 60)}</h3>
-          <p>${truncate(a.artist, 40)}</p>
+      const card = document.createElement('div');
+      card.className = 'album-card';
+      card.innerHTML = `
+        <div class="album-cover">
+          <img src="${a.image}" alt="${escapeHtml(a.title)}" loading="lazy">
+        </div>
+        <div class="album-meta">
+          <h3 class="album-title">${escapeHtml(a.title)}</h3>
+          <div class="album-artist">${escapeHtml(a.artist)}</div>
+          ${a.year ? `<div class="album-year">${a.year}</div>` : ``}
         </div>
       `;
-      item.addEventListener('click', ()=> {
+      card.addEventListener('click', ()=> {
         if (typeof window.openPlayer === 'function') {
           window.openPlayer(a.id);
         } else {
-          console.warn('openPlayer no disponible aún');
+          // fallback por si el módulo del reproductor todavía no está cargado
+          console.warn('openPlayer no disponible');
         }
       });
-      frag.appendChild(item);
+      frag.appendChild(card);
     });
-    el.albumList.appendChild(frag);
+
+    els.list.appendChild(frag);
+    if (els.results) els.results.textContent = `Resultados: ${albums.length}`;
   }
 
-  function searchAlbums(query, page=1, clearPrev=true){
-    if(isLoading) return;
-    isLoading = true;
-    el.loading.style.display='block';
-    el.errorMessage.style.display='none';
-    if(clearPrev){ el.albumList.innerHTML=''; allAlbums=[]; el.resultsCount.textContent='Resultados: 0'; }
+  // helpers UI
+  function showLoading(v){ if(els.loading) els.loading.style.display = v ? 'block':'none'; }
+  function showError(msg){ if(els.error){ els.error.textContent = msg; els.error.style.display='block'; } }
+  function hideError(){ if(els.error) els.error.style.display='none'; }
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
 
-    const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(query)}+AND+mediatype:audio+AND+NOT+access-restricted-item:true&fl=identifier,title,creator&rows=5000&page=${page}&output=json`;
+  // Exponemos la búsqueda para otros módulos si hace falta
+  window.searchAlbums = searchAlbums;
 
-    fetch(url,{headers:{'User-Agent':'Mozilla/5.0','Accept':'application/json'}})
-      .then(r=>{ if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(data=>{
-        isLoading=false; el.loading.style.display='none';
-        const docs = data.response?.docs||[];
-        if(docs.length===0 && page===1){
-          el.errorMessage.textContent='No se encontraron resultados. Probá con "Amar Azul" o "Queen Greatest Hits".';
-          el.errorMessage.style.display='block';
-          displayAlbums(MOCK_ALBUMS);
-          return;
-        }
-        const albums = docs.map(d=>({
-          id:d.identifier,
-          title:d.title||'Sin título',
-          artist:normalizeCreator(d.creator),
-          image:`https://archive.org/services/img/${d.identifier}`,
-          relevance:relevance(d, query)
-        }));
-        allAlbums = allAlbums.concat(albums);
-        // Unicos por Título|Artista
-        const unique = Array.from(new Map(allAlbums.map(a=>[`${a.title}|${a.artist}`, a])).values());
-        el.resultsCount.textContent=`Resultados: ${unique.length}`;
-        displayAlbums(unique);
-      })
-      .catch(err=>{
-        isLoading=false; el.loading.style.display='none';
-        console.error(err);
-        if(allAlbums.length===0){
-          el.errorMessage.textContent=`Error: ${err.message}. Mostrando datos de prueba.`;
-          el.errorMessage.style.display='block';
-          displayAlbums(MOCK_ALBUMS);
-        }else{
-          el.errorMessage.textContent=`Error: ${err.message}.`;
-          el.errorMessage.style.display='block';
-        }
-      });
-  }
-
-  // Listeners
-  if (el.searchButton) {
-    el.searchButton.addEventListener('click', ()=>{
-      const q = el.searchInput.value.trim();
-      if(!q){
-        el.errorMessage.textContent='Por favor, ingresa un término de búsqueda.';
-        el.errorMessage.style.display='block';
-        return;
-      }
-      currentQuery=q; currentPage=1; searchAlbums(q,1,true);
-    });
-  }
-  if (el.searchInput) {
-    el.searchInput.addEventListener('keypress', (e)=>{
-      if(e.key==='Enter'){
-        const q = el.searchInput.value.trim();
-        if(!q){
-          el.errorMessage.textContent='Por favor, ingresa un término de búsqueda.';
-          el.errorMessage.style.display='block';
-          return;
-        }
-        currentQuery=q; currentPage=1; searchAlbums(q,1,true);
-      }
-    });
-  }
-
-  // Exponemos la función para que inicio.js dispare la búsqueda inicial
-  window.buscador = {
-    buscar: (q)=> {
-      currentQuery = q || '';
-      searchAlbums(currentQuery || 'Queen Greatest Hits', 1, true);
-    }
-  };
 })();
