@@ -1,104 +1,124 @@
-// =====================================
+// ========================================================
 // Sanavera MP3 - utilidades.js
-// Helpers y namespaces globales
-// =====================================
+// Helpers compartidos + estado global
+// ========================================================
+
 (function () {
-  // Namespace global para compartir estado y elementos
-  window.SV = window.SV || {};
-  SV.el = {};            // cache de nodos (se setea en inicio.js)
-  SV.state = {           // estado compartido simple
-    HQ_FORMATS: ['wav', 'flac', 'aiff', 'alac'],
-    currentFormat: 'mp3',
-    availableFormats: ['mp3'],
-    repeatMode: 'none',
-    isShuffled: false,
-    // Player principal
-    playlist: [],
-    originalPlaylist: [],
-    idx: 0,
-    isPlaying: false,
-    currentAlbumId: null,
-    // Favoritos
-    favList: [],
-    favOriginal: [],
-    favIdx: 0,
-    isFavPlaying: false,
-    // Búsqueda
-    isLoading: false,
-    allAlbums: [],
-    currentQuery: '',
-    currentPage: 1
-  };
+  // ---------- Helpers DOM ----------
+  const $ = (id) => document.getElementById(id);
+  const qs = (sel, root = document) => root.querySelector(sel);
+  const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-  // ---------- Helpers básicos ----------
-  SV.byId = function byId(id){ return document.getElementById(id); };
-
-  SV.toggleBodyScroll = function toggleBodyScroll(lock){
+  // ---------- UI ----------
+  function toggleBodyScroll(lock) {
     document.body.classList.toggle('modal-open', !!lock);
-  };
+  }
+  function show(el, on = true, asFlex = true) {
+    if (!el) return;
+    el.style.display = on ? (asFlex ? 'flex' : 'block') : 'none';
+  }
 
-  SV.fmtTime = function fmtTime(s){
-    if (isNaN(s) || s < 0) return '0:00';
+  // ---------- Texto / tiempo ----------
+  function truncate(text, max) {
+    text = String(text || '');
+    return text.length > max ? text.slice(0, max - 1) + '…' : text;
+  }
+  function formatTime(sec) {
+    const s = Math.max(0, Math.floor(Number(sec) || 0));
     const m = Math.floor(s / 60);
-    const ss = Math.floor(s % 60);
-    return `${m}:${ss < 10 ? '0' : ''}${ss}`;
-  };
-
-  SV.normalizeCreator = function normalizeCreator(c){
-    return Array.isArray(c) ? c.join(', ') : (c || 'Desconocido');
-  };
-
-  SV.escapeHtml = function escapeHtml(s){
-    return (s || '').replace(/[&<>"']/g, m => ({
+    const r = s % 60;
+    return `${m}:${r < 10 ? '0' : ''}${r}`;
+  }
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, (m) => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[m]));
-  };
+    })[m]);
+  }
 
-  SV.unique = function unique(arr){ return [...new Set(arr)]; };
-
-  SV.shuffle = function shuffle(a){
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  };
-
-  SV.qualityIsHQ = function qualityIsHQ(fmt){
-    return SV.state.HQ_FORMATS.includes((fmt || '').toLowerCase());
-  };
-
-  // Limpieza agresiva de título
-  SV.extractSongTitle = function extractSongTitle(fileName){
-    try{
-      let name = fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i,'');
-      name = name.replace(/^.*\//,'');
-      name = name.replace(/_/g,' ').replace(/\s+/g,' ').trim();
+  // ---------- Limpieza de metadatos ----------
+  function normalizeCreator(c) {
+    return Array.isArray(c) ? c.join(', ') : (c || 'Desconocido');
+  }
+  function extractSongTitle(fileName) {
+    try {
+      let name = fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac|mp4|m4b)$/i, '');
+      name = name.replace(/^.*\//, '').replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+      // prefijos tipo 01 -, (01), 1.
       name = name.replace(/^[\[(]?\s*\d{1,2}\s*[\])\-.]\s*/,'');
-      if (name.includes(' - ')){
-        const parts = name.split(' - ').map(s=>s.trim()).filter(Boolean);
+      // si hay " - ", quedate con la última parte (suele ser la pista)
+      if (name.includes(' - ')) {
+        const parts = name.split(' - ').map(s => s.trim()).filter(Boolean);
         if (parts.length > 1) name = parts[parts.length - 1];
       }
-      name = name.replace(/\s*[\[(]?\b(19|20)\d{2}\b[\])]?$/,'').trim();
+      // Quita año al final
+      name = name.replace(/\s*[\[(]?(19|20)\d{2}[\])]?$/,'').trim();
       return name || fileName;
-    }catch(_){
-      return fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i,'').replace(/_/g,' ');
+    } catch {
+      return fileName;
+    }
+  }
+
+  // ---------- Red / API ----------
+  const IA = {
+    // Busca álbumes
+    buscarAlbums(query, page = 1) {
+      const url =
+        `https://archive.org/advancedsearch.php?q=${
+          encodeURIComponent(query)
+        }+AND+mediatype:audio+AND+NOT+access-restricted-item:true&fl=identifier,title,creator&rows=5000&page=${page}&output=json`;
+      return fetch(url, { headers: { 'Accept': 'application/json' } })
+        .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+        .then(data => (data.response && data.response.docs) ? data.response.docs : []);
+    },
+
+    // Metadata de un ítem (álbum)
+    metadata(id) {
+      return fetch(`https://archive.org/metadata/${id}`, { headers: { 'Accept': 'application/json' } })
+        .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); });
     }
   };
 
-  // Cambia la “hero” (portada grande + títulos)
-  SV.setHero = function setHero(scope, coverUrl, title, artist){
-    const el = SV.el;
-    const isFav = scope === 'favorites';
-    const hero       = isFav ? el.favoritesHero : el.playerHero;
-    const hTitle     = isFav ? el.favoritesHeroSongTitle : el.heroSongTitle;
-    const hArtist    = isFav ? el.favoritesHeroSongArtist  : el.heroSongArtist;
-    const legacyImg  = isFav ? el.favoritesCoverImage      : el.coverImage;
+  // ---------- Estado global compartido entre módulos ----------
+  const App = {
+    // refs a nodos (se setean en inicio.js)
+    ui: {},
 
-    const safe = (coverUrl && coverUrl.trim()) ? coverUrl : 'https://via.placeholder.com/800x800?text=Sin+portada';
-    if (hero)   hero.style.setProperty('--cover-url', `url("${safe}")`);
-    if (hTitle) hTitle.textContent  = title  || 'Selecciona una canción';
-    if (hArtist)hArtist.textContent = artist || '';
-    if (legacyImg) legacyImg.src = safe; // fallback/compat
+    // estado reproductor
+    playlist: [],
+    originalPlaylist: [],
+    currentIndex: 0,
+    isPlaying: false,
+    availableFormats: ['mp3'],
+    currentFormat: 'mp3',
+    repeatMode: 'none',
+    shuffled: false,
+    currentAlbumId: null,
+
+    // estado favoritos
+    favList: [],
+    favOriginal: [],
+    favIndex: 0,
+    isFavPlaying: false,
+
+    // util persistencia
+    getFavorites() {
+      try {
+        return JSON.parse(localStorage.getItem('favorites') || '[]')
+          .filter(f => f && f.title && f.artist && f.urls && f.urls.mp3);
+      } catch { return []; }
+    },
+    setFavorites(list) {
+      localStorage.setItem('favorites', JSON.stringify(list || []));
+    },
+  };
+
+  // ---------- Exponer ----------
+  window.$U = {
+    $, qs, qsa,
+    show, toggleBodyScroll,
+    truncate, formatTime, escapeHtml,
+    normalizeCreator, extractSongTitle,
+    IA,
+    App
   };
 })();
