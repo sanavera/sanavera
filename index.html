@@ -34,11 +34,17 @@
             <img src="https://cdn.jsdelivr.net/gh/sanavera/sanavera@main/20250803_143726.png" alt="Sanavera Mp3 Logo" />
           </div>
         </div>
+
         <div class="search-container">
-          <input type="text" id="search-input" placeholder="Buscar álbumes o canciones" autocomplete="off" />
+          <input type="text" id="search-input" placeholder="Buscar álbumes (ej. Rata Blanca)" autocomplete="off" />
           <button id="search-button">Buscar</button>
+        </div>
+
+        <!-- Sugerencias -->
+        <div id="suggestions" class="suggestions">
           <ul id="suggestions-list"></ul>
         </div>
+
         <div id="results-count">Resultados: 0</div>
         <div id="album-list" class="album-list"></div>
         <div id="loading" class="loading">Cargando...</div>
@@ -49,7 +55,7 @@
     <!-- Reproductor -->
     <div id="player-modal" class="modal">
       <div class="modal-content is-player">
-        <!-- HERO portada full-bleed -->
+        <!-- HERO portada -->
         <div class="player-hero" id="player-hero" style="--cover-url: url('');">
           <div class="hero-text">
             <h2 id="hero-song-title">Selecciona una canción</h2>
@@ -58,14 +64,31 @@
         </div>
 
         <div class="player-section">
+          <!-- (compatibilidad con JS; oculto por CSS) -->
           <div class="cover-container">
             <img id="cover-image" src="" alt="Portada del álbum" />
           </div>
+
+          <!-- Info duplicada (se oculta por CSS para no repetir título) -->
           <div class="audio-info">
             <h2 id="song-title">Selecciona una canción</h2>
             <p id="song-artist"></p>
           </div>
-          <button id="quality-button" class="quality-btn">HQ</button>
+
+          <!-- Botón Calidad + popover -->
+          <div class="quality-row">
+            <button id="quality-btn" class="quality-btn">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>Calidad</span>
+              <i class="fa-solid fa-chevron-down chevron"></i>
+            </button>
+            <div id="quality-popover" class="quality-popover" role="menu" aria-hidden="true"></div>
+          </div>
+
+          <!-- selector viejo oculto por CSS -->
+          <select id="format-selector" class="format-selector">
+            <option value="mp3" selected>Calidad: MP3 (más rápido)</option>
+          </select>
         </div>
 
         <div class="playlist-section">
@@ -98,24 +121,29 @@
     <!-- Favoritos -->
     <div id="favorites-modal" class="modal">
       <div class="modal-content is-favorites">
+        <!-- HERO portada -->
         <div class="player-hero" id="favorites-hero" style="--cover-url: url('');">
           <div class="hero-text">
             <h2 id="favorites-hero-song-title">Selecciona una canción</h2>
             <p id="favorites-hero-song-artist"></p>
           </div>
         </div>
+
         <div class="player-section">
           <div class="cover-container">
             <img id="favorites-cover-image" src="" alt="Portada de la canción" />
           </div>
+
           <div class="audio-info">
             <h2 id="favorites-song-title">Selecciona una canción</h2>
             <p id="favorites-song-artist"></p>
           </div>
         </div>
+
         <div class="playlist-section">
           <div class="playlist" id="favorites-playlist"></div>
         </div>
+
         <div class="controls-section">
           <div class="controls">
             <button class="btn btn-small" id="favorites-btn-repeat" aria-label="Repetir"><i class="fas fa-repeat"></i></button>
@@ -133,6 +161,7 @@
             </div>
           </div>
         </div>
+
         <div class="footer-text">Código escrito por Sebastián Sanavera ®</div>
         <audio id="favorites-audio-player"></audio>
       </div>
