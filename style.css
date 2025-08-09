@@ -345,4 +345,3 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 @media (min-width:1024px){
   #album-list{ grid-template-columns: repeat(4, minmax(0,1fr)); }
 }
-```0
