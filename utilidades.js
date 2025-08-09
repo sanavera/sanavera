@@ -1,75 +1,98 @@
-// utilidades.js
+// utilidades.js  — CORE COMPARTIDO
+(() => {
+  // helper
+  const byId = (id) => document.getElementById(id);
 
-// Formatea segundos a mm:ss
-function formatTime(seconds) {
-    if (isNaN(seconds) || seconds < 0) return "00:00";
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
+  // mapa único de elementos que usan los demás módulos
+  const el = {
+    // modales
+    welcomeModal: byId('welcome-modal'),
+    searchModal: byId('search-modal'),
+    playerModal: byId('player-modal'),
+    favoritesModal: byId('favorites-modal'),
 
-// Carga imagen de portada con fallback
-function loadCoverImage(imgElement, url, fallback) {
-    imgElement.src = url;
-    imgElement.onerror = () => {
-        imgElement.src = fallback;
-    };
-}
+    // buscador
+    searchInput: byId('search-input'),
+    searchButton: byId('search-button'),
+    albumList: byId('album-list'),
+    resultsCount: byId('results-count'),
+    loading: byId('loading'),
+    errorMessage: byId('error-message'),
 
-// Obtiene parámetros de URL
-function getQueryParam(param) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param);
-}
+    // hero player
+    playerHero: byId('player-hero'),
+    heroSongTitle: byId('hero-song-title'),
+    heroSongArtist: byId('hero-song-artist'),
+    coverImage: byId('cover-image'),          // legado (puede estar oculto)
+    songTitle: byId('song-title'),
+    songArtist: byId('song-artist'),
 
-// Guarda en localStorage
-function saveToStorage(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
-}
+    // listas
+    playlist: byId('playlist'),
+    favoritesPlaylist: byId('favorites-playlist'),
 
-// Lee de localStorage
-function loadFromStorage(key) {
-    const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : null;
-}
+    // audio
+    audio: byId('audio-player'),
+    favAudio: byId('favorites-audio-player'),
 
-// Quita texto innecesario de títulos (artista/álbum)
-function cleanSongTitle(title) {
-    if (!title) return '';
-    return title
-        .replace(/\s*\([^)]*\)/g, '') // elimina paréntesis
-        .replace(/\s*-\s*.*$/, '')    // elimina después de guiones
-        .trim();
-}
+    // controles player
+    btnPlay: byId('btn-play'),
+    btnPrev: byId('btn-prev'),
+    btnNext: byId('btn-next'),
+    btnRepeat: byId('btn-repeat'),
+    btnShuffle: byId('btn-shuffle'),
+    btnDownload: byId('btn-download'),
+    seek: byId('seek-bar'),
+    curTime: byId('current-time'),
+    durTime: byId('duration'),
 
-// Agrega clase animación a canción activa
-function highlightPlayingSong(element) {
-    document.querySelectorAll('.song-item').forEach(item => {
-        item.classList.remove('playing');
-        const anim = item.querySelector('.song-animation');
-        if (anim) anim.remove();
-    });
+    // controles favoritos
+    favBtnPlay: byId('favorites-btn-play'),
+    favBtnPrev: byId('favorites-btn-prev'),
+    favBtnNext: byId('favorites-btn-next'),
+    favBtnRepeat: byId('favorites-btn-repeat'),
+    favBtnShuffle: byId('favorites-btn-shuffle'),
+    favBtnDownload: byId('favorites-btn-download'),
+    favSeek: byId('favorites-seek-bar'),
+    favCurTime: byId('favorites-current-time'),
+    favDurTime: byId('favorites-duration'),
 
-    if (element) {
-        element.classList.add('playing');
-        const anim = document.createElement('div');
-        anim.className = 'song-animation';
-        anim.innerHTML = `
-            <span></span><span></span><span></span>
-        `;
-        element.prepend(anim);
-    }
-}
+    // hero favoritos
+    favoritesHero: byId('favorites-hero'),
+    favoritesHeroSongTitle: byId('favorites-hero-song-title'),
+    favoritesHeroSongArtist: byId('favorites-hero-song-artist'),
+    favoritesCoverImage: byId('favorites-cover-image'),
+    favoritesSongTitle: byId('favorites-song-title'),
+    favoritesSongArtist: byId('favorites-song-artist'),
 
-// Elimina duplicados de un array por propiedad
-function removeDuplicates(array, key) {
-    return array.filter((obj, index, self) =>
-        index === self.findIndex(o => o[key] === obj[key])
-    );
-}
+    // FABs
+    fabSearch: byId('floating-search-button'),
+    fabPlayer: byId('floating-player-button'),
+    fabFav: byId('floating-favorites-button'),
 
-// Detecta si el formato es HQ
-function isHighQuality(format) {
-    const hqFormats = ['flac', 'wav', 'ape', 'alac'];
-    return hqFormats.includes(format.toLowerCase());
-}
+    // calidad
+    qualityBtn: byId('quality-btn'),
+    qualityMenu: byId('quality-menu'),
+    qualityBackdrop: byId('quality-backdrop'),
+    qualityList: byId('quality-options'),
+  };
+
+  // utilidades básicas que comparten módulos
+  const toggleBodyScroll = (lock) =>
+    document.body.classList.toggle('modal-open', !!lock);
+
+  const fmtTime = (s) => {
+    if (isNaN(s) || s < 0) return '0:00';
+    const m = Math.floor(s / 60);
+    const ss = Math.floor(s % 60);
+    return `${m}:${ss < 10 ? '0' : ''}${ss}`;
+  };
+
+  // expongo en window ANTES de que carguen los demás .js
+  window.S = { el, byId, toggleBodyScroll, fmtTime };
+
+  // señal de listo por si algún módulo decide esperar
+  document.addEventListener('DOMContentLoaded', () => {
+    window.S.ready = true;
+  });
+})();
