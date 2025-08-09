@@ -214,3 +214,16 @@ img{max-width:100%; display:block}
 
 /* ===== Accesibilidad / performance ===== */
 #reproductor-container-sanavera img{loading:lazy}
+
+
+
+
+/* Ocultar portada cuadrada legacy en player y favoritos */
+#reproductor-container-sanavera .cover-container,
+#reproductor-container-sanavera .cover-container img{
+  display: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
