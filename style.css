@@ -1,93 +1,348 @@
+/* =====================================
+   Sanavera MP3 - style.css (COMPLETO)
+   ===================================== */
+
+/* -------- Variables base -------- */
 :root{
-  --bg:#121212; --card:#1b1b1b; --muted:#b3b3b3; --text:#fff;
-  --brand:#1DB954; --brand-2:#1ed760; --hr:#222;
+  --bg:#121212;
+  --elev:#181818;
+  --tile:#1e1e1e;
+  --tile-hover:#262626;
+  --muted:#b3b3b3;
+  --text:#ffffff;
+  --brand:#1db954;
+  --brand-2:#18a348;
+  --line:#303030;
+
+  --header-h: 110px;
+  --hero-max-h: 44vh;
+  --footer-safe: max(88px, 64px + env(safe-area-inset-bottom));
+  --side-pad: 14px;
 }
-*{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial}
-.modal{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg)}
-.modal .scroll-area{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:12px 16px}
-.modal .scroll-area.with-controls{padding-bottom:140px}
 
-/* Bienvenida */
-#welcome-modal{justify-content:center;align-items:center;z-index:3000}
-.welcome-box{width:min(520px,90%);background:linear-gradient(180deg,#0f0f0f,#171717);padding:24px 20px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.5);text-align:center}
-.brand{margin:0 0 8px 0;color:var(--brand);font-weight:800;letter-spacing:.3px}
-.brand.small{font-size:22px;margin:0}
-.progress{height:8px;background:#222;border-radius:999px;overflow:hidden;margin:12px 0}
-.progress .bar{height:100%;width:0;background:var(--brand);transition:width .3s ease}
-.sub{color:var(--muted);margin:0}
+/* -------- Reset suave -------- */
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Inter","Helvetica Neue",Arial,"Noto Sans",sans-serif;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+}
+a{ color:inherit; text-decoration:none; }
+img{ display:block; max-width:100%; height:auto; }
 
-/* Topbar búsqueda */
-.topbar{position:sticky;top:0;z-index:10;background:var(--bg);padding:10px 16px;border-bottom:1px solid var(--hr)}
-.search-row{display:flex;gap:8px;align-items:center;margin-top:8px}
-.search-row input{flex:1;height:44px;border-radius:12px;background:#1d1d1d;border:1px solid #2a2a2a;color:#ddd;padding:0 14px}
-.search-row .btn-solid{height:44px;border-radius:12px;padding:0 14px;background:var(--brand);border:none;color:#0b0b0b;font-weight:700}
-.results-line{color:#9a9a9a;margin-top:8px}
+/* Bloqueo de scroll cuando hay modal */
+body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 
-/* Grilla de álbumes 2 col clean */
-.album-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 12px}
-.album-item{display:grid;grid-template-columns:92px 1fr;gap:10px;align-items:center}
-.album-item img{width:92px;height:92px;border-radius:12px;object-fit:cover;display:block;background:#0e0e0e}
-.album-item-info h3{margin:0 0 4px 0;font-size:16px;line-height:1.2}
-.album-item-info p{margin:0;color:#9a9a9a;font-size:12px}
+/* -------- Contenedor raíz -------- */
+#reproductor-container-sanavera{
+  position:relative; width:100%; height:100vh; overflow:hidden;
+}
 
-/* HERO */
-.hero{position:sticky;top:0;z-index:5;height:210px;background:#0d0d0d url('') center/cover no-repeat}
-.hero::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.75))}
-.hero .hero-overlay{position:absolute;left:16px;right:16px;bottom:18px}
-.hero h2{margin:0 0 6px 0;font-size:26px;text-shadow:0 2px 18px rgba(0,0,0,.7)}
-.hero p{margin:0;color:#cfcfcf}
+/* =====================================
+   MODALES BASE
+   ===================================== */
+#reproductor-container-sanavera .modal{
+  display:none; position:fixed; inset:0; z-index:1000;
+  background:rgba(0,0,0,.82);
+  justify-content:center; align-items:center;
+}
+#reproductor-container-sanavera .modal-content{
+  background:var(--elev); width:100%; max-width:100%;
+  height:100vh; padding:0; border:none; outline:none;
+  display:flex; flex-direction:column; overflow:hidden;
+}
 
-/* Lista pistas */
-.list{display:flex;flex-direction:column;gap:8px}
-.playlist-item{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;background:#171717;border:1px solid #202020;border-radius:14px;padding:10px}
-.playlist-item img{width:56px;height:56px;border-radius:10px;object-fit:cover}
-.playlist-item-info h3{margin:0 0 4px 0;font-size:16px;font-weight:800}
-.playlist-item-info p{margin:0;color:#9a9a9a;font-size:12px}
-.playlist-item.active{outline:2px solid rgba(29,185,84,.55)}
-.hq-indicator{display:inline-block;font-size:11px;padding:3px 6px;border-radius:8px;background:rgba(29,185,84,.16);border:1px solid rgba(29,185,84,.55);color:#7dffb0;margin-left:6px;vertical-align:middle}
+/* =====================================
+   WELCOME
+   ===================================== */
+#reproductor-container-sanavera .welcome-content{
+  height:100%; width:100%; padding:20px;
+  display:flex; align-items:center; justify-content:center; flex-direction:column; gap:18px;
+}
+#reproductor-container-sanavera .welcome-image{
+  width:200px; height:200px; object-fit:contain;
+}
+#reproductor-container-sanavera .welcome-text{
+  font-size:18px; color:#fff; text-align:center;
+}
+#reproductor-container-sanavera .progress-container{ width:100%; max-width:420px; }
+#reproductor-container-sanavera .progress-bar{ width:100%; height:4px; background:#444; border-radius:2px; overflow:hidden; }
+#reproductor-container-sanavera .progress{
+  width:0; height:100%; background:var(--brand);
+  animation:welcome-progress 10s linear forwards;
+}
+@keyframes welcome-progress{ from{width:0} to{width:100%} }
+@keyframes fadeOut{ from{opacity:1} to{opacity:0} }
 
-/* mini EQ */
-.eq{display:inline-grid;grid-template-columns:4px 4px 4px;gap:3px;width:17px;height:12px;margin-right:8px}
-.eq span{display:block;width:100%;align-self:end;background:var(--brand);border-radius:2px;animation:bm 1s infinite ease-in-out}
-.eq span:nth-child(2){animation-delay:.15s}
-.eq span:nth-child(3){animation-delay:.3s}
-@keyframes bm{0%,100%{height:20%}50%{height:100%}}
+/* =====================================
+   BUSCADOR (HEADER + GRID)
+   ===================================== */
+#reproductor-container-sanavera .search-modal .modal-content{
+  padding-bottom: var(--footer-safe);
+}
 
-/* Controles */
-.controls{background:#121212;border-top:1px solid var(--hr)}
-.sticky-bottom{position:sticky;bottom:0;z-index:6}
-.timeline{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:8px 12px}
-.timeline input[type=range]{width:100%}
-.buttons{display:flex;justify-content:center;gap:12px;padding:8px 12px 16px}
-.btn-ctrl{width:50px;height:50px;border-radius:50%;background:#1a1a1a;border:1px solid #2a2a2a;color:#e8e8e8}
-.btn-ctrl.play{background:#262626;border-color:#333}
-.footer-note{color:#7e7e7e;text-align:center;font-size:11px;padding:6px 0 10px}
+/* Topbar fijo */
+#reproductor-container-sanavera .topbar{
+  position:sticky; top:0; z-index:30;
+  background:var(--elev);
+  padding:10px var(--side-pad) 12px;
+  border-bottom:1px solid var(--line);
+  box-shadow:0 6px 16px rgba(0,0,0,.25);
+}
+#reproductor-container-sanavera .brand{
+  display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:10px;
+}
+#brand-logo{ height:28px; width:auto; }
+#brand-text{ font-weight:700; letter-spacing:.2px; }
 
-/* Fab */
-.fab{position:fixed;right:18px;width:66px;height:66px;border-radius:50%;border:none;background:#0f0f0f;color:var(--brand);box-shadow:0 10px 30px rgba(0,0,0,.45);z-index:2600}
-.fab i{font-size:24px}
-.fab-search{bottom:18px}
-.fab-player{bottom:94px}
-.fab-fav{bottom:170px}
+/* Buscador */
+#reproductor-container-sanavera .search-row{
+  display:flex; gap:10px; align-items:center;
+}
+#search-input{
+  flex:1; background:#222; color:#fff; border:1px solid #333; border-radius:24px;
+  padding:10px 14px; font-size:15px; outline:none;
+}
+#search-input::placeholder{ color:#888; }
+#search-button{
+  background:var(--brand); color:#fff; border:none; border-radius:999px;
+  padding:10px 16px; font-weight:600; cursor:pointer;
+}
+#search-button:active{ transform:scale(.98); }
+#results-count{
+  margin-top:8px; font-size:12px; color:var(--muted); text-align:center;
+}
 
-/* Calidad popup */
-.quality-wrap{position:sticky;top:210px;z-index:6;padding:10px 16px;background:linear-gradient(to bottom,rgba(18,18,18,1),rgba(18,18,18,.65),rgba(18,18,18,0))}
-.chip{border-radius:20px;background:#1a1a1a;border:1px solid #2a2a2a;color:#e8e8e8;padding:8px 12px}
-#quality-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:4000}
-#quality-backdrop.show{display:block}
-.quality-menu{position:fixed;left:50%;transform:translateX(-50%);bottom:94px;width:min(580px,92vw);background:#181818;border:1px solid #262626;border-radius:16px;box-shadow:0 14px 50px rgba(0,0,0,.5);display:none;z-index:4010}
-.quality-menu.show{display:block}
-.quality-title{padding:14px 16px;border-bottom:1px solid #242424;color:#dcdcdc;font-weight:700}
-.quality-options{display:flex;flex-direction:column;padding:8px}
-.quality-option{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#202020;border:1px solid #2b2b2b;color:#f0f0f0;padding:14px;border-radius:12px;margin:6px 0}
-.quality-option .badge-hq{background:rgba(29,185,84,.16);border:1px solid rgba(29,185,84,.55);color:#7dffb0;border-radius:8px;padding:2px 6px;font-size:11px}
-.quality-option .check{opacity:.2}
+/* Lista de álbumes (grid limpio, sin cards pesados) */
+#album-list{
+  height: calc(100vh - var(--header-h));
+  overflow:auto; padding:12px var(--side-pad) 20px;
+  display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:14px;
+}
+.album-item{
+  cursor:pointer;
+}
+.album-item img{
+  width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:10px;
+  background:#222;
+}
+.album-item-info{ padding:6px 2px 0; }
+.album-item-info h3{
+  margin:0; font-size:14px; line-height:1.25; font-weight:600;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.album-item-info p{
+  margin:4px 0 0; font-size:12px; color:var(--muted);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
 
-/* Mensajitos */
-.loading,.msg{text-align:center;color:#cfcfcf;padding:16px}
-.spacer{height:8px}
+/* Loading / error */
+.loading, .error-message{
+  text-align:center; padding:10px; color:var(--muted);
+}
 
-/* Ocultos de legado */
-#cover-image,#song-title,#song-artist,#favorites-cover-image,#favorites-song-title,#favorites-song-artist{display:none}
+/* =====================================
+   REPRODUCTOR / FAVORITOS
+   ===================================== */
+
+/* HERO fijo arriba (no se va al hacer scroll) */
+.player-hero{
+  position:sticky; top:0; z-index:25;
+  width:100%; aspect-ratio:16/9; max-height: var(--hero-max-h);
+  background: center/cover no-repeat var(--elev);
+  background-image: var(--cover-url);
+}
+.player-hero::before{
+  content:""; position:absolute; inset:0; background: linear-gradient(to bottom, rgba(0,0,0,.25), rgba(0,0,0,.55));
+}
+.hero-text{
+  position:absolute; left:16px; right:16px; bottom:12px; text-align:center;
+}
+.hero-text h2{ margin:0 0 4px; font-size:clamp(18px,4.8vw,22px); font-weight:700; }
+.hero-text p{ margin:0; font-size:clamp(12px,3.4vw,14px); color:#eaeaea; }
+
+/* Ocultamos info legacy (para evitar título duplicado bajo el HERO) */
+.audio-info{ display:none !important; }
+
+/* Lista (scroll) */
+.playlist-section{
+  flex:1; overflow:auto; padding:8px var(--side-pad) 120px; /* deja espacio para controles fijos */
+}
+
+/* Fila de tema estilo “Spotify” */
+.playlist{
+  display:flex; flex-direction:column; gap:6px;
+}
+.playlist-item{
+  display:flex; align-items:center; gap:10px; padding:8px 6px; border-radius:8px;
+}
+.playlist-item:hover{ background:#1b1b1b; }
+.playlist-item.active h3{ color:var(--brand); }
+
+.playlist-item img{
+  width:44px; height:44px; border-radius:6px; object-fit:cover; flex:0 0 44px; background:#222;
+}
+.playlist-item-info{ min-width:0; flex:1; }
+.playlist-item-info h3{
+  margin:0; font-size:14px; line-height:1.25; font-weight:600;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:8px;
+}
+.playlist-item-info p{
+  margin:2px 0 0; font-size:12px; color:var(--muted);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* Indicador HQ (a la izquierda, casi pegado a la animación) */
+.hq-indicator{
+  display:inline-block; font-size:10px; font-weight:700; color:#0b331a;
+  background:var(--brand); border-radius:4px; padding:2px 4px; letter-spacing:.2px;
+}
+
+/* Ecualizador mini (solo cuando está reproduciendo) */
+.eq{
+  display:inline-flex; align-items:flex-end; gap:2px; width:14px; height:12px;
+}
+.eq span{
+  display:block; width:2px; height:100%; background:#fff; opacity:.9; border-radius:1px;
+  animation:bar 1s ease-in-out infinite;
+}
+.eq span:nth-child(2){ animation-delay:.15s; }
+.eq span:nth-child(3){ animation-delay:.3s; }
+@keyframes bar{
+  0%,100%{ transform:scaleY(.2); }
+  50%{ transform:scaleY(1); }
+}
+
+/* Acciones en item (favorito) */
+.playlist-item-actions{
+  margin-left:auto; display:flex; align-items:center; gap:8px;
+}
+.btn-favorite,.btn-remove-favorite{
+  background:none; border:none; padding:6px; cursor:pointer; color:#fff; font-size:16px;
+}
+.btn-favorite.active i{ color:#ff3b3b; }
+
+/* Controles y progreso pegados abajo siempre visibles */
+.controls-section{
+  position:sticky; bottom:0; z-index:26; background:var(--elev);
+  padding:10px var(--side-pad) calc(10px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--line);
+  box-shadow:0 -10px 30px rgba(0,0,0,.35);
+}
+.controls{
+  display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:8px;
+}
+.btn{
+  background:#252525; border:none; color:#fff; cursor:pointer;
+  width:40px; height:40px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:20px;
+}
+.btn-small{ width:34px; height:34px; font-size:16px; }
+.btn-play{ width:50px; height:50px; font-size:26px; }
+.btn-play .fa-pause{ display:none; }
+.btn-play.playing .fa-play{ display:none; }
+.btn-play.playing .fa-pause{ display:inline-block; }
+.btn.active{ color:var(--brand); }
+.btn.repeat-one{ position:relative; }
+.btn.repeat-one::after{
+  content:'1'; position:absolute; right:6px; bottom:6px; font-size:10px; color:var(--brand);
+}
+
+/* Progreso + tiempos (subimos un toque para que no “corte” abajo) */
+.progress-container{ width:100%; }
+.seek-bar{
+  width:100%; height:4px; background:#444; border-radius:2px; outline:none; -webkit-appearance:none; appearance:none;
+}
+.seek-bar::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none; width:12px; height:12px; background:var(--brand); border-radius:50%;
+}
+.seek-bar::-moz-range-thumb{
+  width:12px; height:12px; background:var(--brand); border-radius:50%;
+}
+.time-info{
+  display:flex; justify-content:space-between; font-size:12px; color:var(--muted);
+  padding:4px 2px 0;
+}
+
+/* Créditos */
+.footer-text{
+  text-align:center; font-size:12px; color:var(--muted); padding-top:6px;
+}
+
+/* =====================================
+   SELECTOR DE CALIDAD (menú flotante)
+   ===================================== */
+#quality-btn{
+  position:absolute; right:12px; top:12px; z-index:28;
+  background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.15);
+  color:#fff; padding:6px 10px; border-radius:999px; font-size:12px; cursor:pointer;
+  backdrop-filter: blur(6px);
+}
+#quality-btn.active{ border-color:var(--brand); color:#fff; }
+
+/* Backdrop clickeable para cerrar */
+#quality-backdrop{
+  position:fixed; inset:0; background:transparent; z-index:27; display:none;
+}
+#quality-backdrop.show{ display:block; }
+
+/* Menú */
+#quality-menu{
+  position:absolute; left:50%; transform:translateX(-50%);
+  min-width:220px; background:#202020; border:1px solid #2f2f2f; border-radius:12px;
+  box-shadow:0 20px 60px rgba(0,0,0,.6); z-index:29; display:none;
+}
+#quality-menu.show{ display:block; }
+#quality-menu .title{
+  padding:10px 12px; font-size:12px; color:#ddd; border-bottom:1px solid #2a2a2a;
+}
+#quality-options{
+  display:flex; flex-direction:column; padding:6px;
+  max-height:50vh; overflow:auto;
+}
+.quality-option{
+  display:flex; align-items:center; justify-content:space-between;
+  width:100%; padding:10px 10px; border-radius:8px; border:none; background:transparent; color:#fff; cursor:pointer;
+}
+.quality-option:hover{ background:#2a2a2a; }
+.quality-option .center{ display:flex; align-items:center; gap:8px; }
+.badge-hq{
+  display:inline-block; font-size:10px; font-weight:700; color:#0b331a;
+  background:var(--brand); border-radius:4px; padding:2px 4px; letter-spacing:.2px;
+}
+.check{ opacity:.25; }
+.quality-option:hover .check{ opacity:.6; }
+
+/* =====================================
+   FABs
+   ===================================== */
+#floating-search-button,
+#floating-player-button,
+#floating-favorites-button{
+  position:fixed; right:18px; z-index:1001;
+  width:56px; height:56px; border-radius:50%; border:none; cursor:pointer;
+  background:#181818; box-shadow:0 8px 28px rgba(0,0,0,.35);
+  display:flex; align-items:center; justify-content:center;
+}
+#floating-favorites-button{ bottom:26px; }
+#floating-player-button{ bottom:96px; }
+#floating-search-button{ bottom:166px; }
+#floating-search-button i,
+#floating-player-button i,
+#floating-favorites-button i{ color:var(--brand); font-size:22px; }
+
+/* =====================================
+   Utilidades
+   ===================================== */
+.hide{ display:none !important; }
+
+/* Responsive tweaks */
+@media (min-width:680px){
+  #album-list{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+}
+@media (min-width:1024px){
+  #album-list{ grid-template-columns: repeat(4, minmax(0,1fr)); }
+}
+```0
