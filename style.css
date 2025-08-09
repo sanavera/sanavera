@@ -1,171 +1,93 @@
-/* ===============================
-   Sanavera MP3 – Estilos base + grilla de álbumes tipo Spotify
-   =============================== */
 :root{
-  --bg:#121212;
-  --panel:#181818;
-  --panel-2:#1e1e1e;
-  --txt:#eaeaea;
-  --muted:#b3b3b3;
-  --muted-2:#9a9a9a;
-  --brand:#1db954;
-  --shadow: 0 8px 30px rgba(0,0,0,.35);
-  --radius:16px;
+  --bg:#121212; --card:#1b1b1b; --muted:#b3b3b3; --text:#fff;
+  --brand:#1DB954; --brand-2:#1ed760; --hr:#222;
 }
-
-*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--txt);background:var(--bg)}
-img{display:block;max-width:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial}
+.modal{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg)}
+.modal .scroll-area{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:12px 16px}
+.modal .scroll-area.with-controls{padding-bottom:140px}
 
-/* ===== Modales ===== */
-.modal{position:fixed;inset:0;display:none;align-items:flex-start;justify-content:center;overflow:auto;background:transparent;z-index:10}
-.modal-open{overflow:hidden}
-.modal-content{width:min(980px,100%);margin:16px auto 32px;background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+/* Bienvenida */
+#welcome-modal{justify-content:center;align-items:center;z-index:3000}
+.welcome-box{width:min(520px,90%);background:linear-gradient(180deg,#0f0f0f,#171717);padding:24px 20px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.5);text-align:center}
+.brand{margin:0 0 8px 0;color:var(--brand);font-weight:800;letter-spacing:.3px}
+.brand.small{font-size:22px;margin:0}
+.progress{height:8px;background:#222;border-radius:999px;overflow:hidden;margin:12px 0}
+.progress .bar{height:100%;width:0;background:var(--brand);transition:width .3s ease}
+.sub{color:var(--muted);margin:0}
 
-/* ===== Hero (portada) ===== */
-.player-hero{
-  position: sticky; top:0; z-index:5;
-  height:min(48vh,420px);
-  background:#0b0b0b center/cover no-repeat;
-  background-image: var(--cover-url, none);
-  display:flex; align-items:flex-end;
-  border-bottom-left-radius:16px; border-bottom-right-radius:16px;
-}
-.player-hero::after{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(to bottom,rgba(0,0,0,.0) 0%,rgba(0,0,0,.6) 55%,rgba(0,0,0,.85) 100%);
-}
-.player-hero .hero-text{position:relative;z-index:1;padding:16px 18px 22px}
-.player-hero h2{margin:0 0 8px;font-size:clamp(22px,4.8vw,34px);line-height:1.15;font-weight:800;letter-spacing:.2px;text-shadow:0 2px 14px rgba(0,0,0,.55)}
-.player-hero p{margin:0;color:var(--muted);font-weight:600;letter-spacing:.3px}
+/* Topbar búsqueda */
+.topbar{position:sticky;top:0;z-index:10;background:var(--bg);padding:10px 16px;border-bottom:1px solid var(--hr)}
+.search-row{display:flex;gap:8px;align-items:center;margin-top:8px}
+.search-row input{flex:1;height:44px;border-radius:12px;background:#1d1d1d;border:1px solid #2a2a2a;color:#ddd;padding:0 14px}
+.search-row .btn-solid{height:44px;border-radius:12px;padding:0 14px;background:var(--brand);border:none;color:#0b0b0b;font-weight:700}
+.results-line{color:#9a9a9a;margin-top:8px}
 
-/* oculta la segunda portada/títulos legacy bajo el hero */
-.cover-container,.audio-info{display:none!important}
+/* Grilla de álbumes 2 col clean */
+.album-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 12px}
+.album-item{display:grid;grid-template-columns:92px 1fr;gap:10px;align-items:center}
+.album-item img{width:92px;height:92px;border-radius:12px;object-fit:cover;display:block;background:#0e0e0e}
+.album-item-info h3{margin:0 0 4px 0;font-size:16px;line-height:1.2}
+.album-item-info p{margin:0;color:#9a9a9a;font-size:12px}
 
-/* ===== Secciones del player ===== */
-.player-section{padding:16px 16px 8px}
-.playlist-section{padding:0 8px 120px} /* espacio p/ que no tape la botonera */
-.controls-section{
-  position: sticky; bottom:0; z-index:6;
-  padding:10px 8px 14px;
-  background:linear-gradient( to top, rgba(24,24,24,1) 70%, rgba(24,24,24,0) );
-  backdrop-filter: blur(2px);
-}
+/* HERO */
+.hero{position:sticky;top:0;z-index:5;height:210px;background:#0d0d0d url('') center/cover no-repeat}
+.hero::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.75))}
+.hero .hero-overlay{position:absolute;left:16px;right:16px;bottom:18px}
+.hero h2{margin:0 0 6px 0;font-size:26px;text-shadow:0 2px 18px rgba(0,0,0,.7)}
+.hero p{margin:0;color:#cfcfcf}
 
-/* ===== Lista de canciones ===== */
-.playlist{display:block}
-.playlist-item{
-  display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:center;
-  padding:12px 8px;border-radius:12px
-}
-.playlist-item:hover{background:#1a1a1a}
-.playlist-item.active h3{color:var(--brand)}
-.playlist-item img{width:64px;height:64px;border-radius:8px;object-fit:cover}
-.playlist-item-info h3{
-  margin:0 0 4px;font-size:18px;font-weight:800;letter-spacing:.2px;
-  display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
-}
-.playlist-item-info p{margin:0;color:var(--muted);font-weight:600;letter-spacing:.2px}
-.playlist-item-actions{display:flex;align-items:center;gap:10px;padding-right:6px}
+/* Lista pistas */
+.list{display:flex;flex-direction:column;gap:8px}
+.playlist-item{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;background:#171717;border:1px solid #202020;border-radius:14px;padding:10px}
+.playlist-item img{width:56px;height:56px;border-radius:10px;object-fit:cover}
+.playlist-item-info h3{margin:0 0 4px 0;font-size:16px;font-weight:800}
+.playlist-item-info p{margin:0;color:#9a9a9a;font-size:12px}
+.playlist-item.active{outline:2px solid rgba(29,185,84,.55)}
+.hq-indicator{display:inline-block;font-size:11px;padding:3px 6px;border-radius:8px;background:rgba(29,185,84,.16);border:1px solid rgba(29,185,84,.55);color:#7dffb0;margin-left:6px;vertical-align:middle}
 
-/* fav buttons (oscuro, sin cuadrado blanco) */
-.playlist-item-actions .btn-favorite,
-.playlist-item-actions .btn-remove-favorite{
-  -webkit-appearance:none;appearance:none;
-  width:44px;height:44px;border-radius:12px;
-  display:grid;place-items:center;
-  background:#202020;border:1px solid #2a2a2a;color:#e6e6e6;cursor:pointer
-}
-.playlist-item-actions .btn-favorite.active{color:var(--brand);border-color:#2f2f2f;background:#1c1c1c}
+/* mini EQ */
+.eq{display:inline-grid;grid-template-columns:4px 4px 4px;gap:3px;width:17px;height:12px;margin-right:8px}
+.eq span{display:block;width:100%;align-self:end;background:var(--brand);border-radius:2px;animation:bm 1s infinite ease-in-out}
+.eq span:nth-child(2){animation-delay:.15s}
+.eq span:nth-child(3){animation-delay:.3s}
+@keyframes bm{0%,100%{height:20%}50%{height:100%}}
 
-/* mini ecualizador */
-.eq{display:inline-flex;align-items:flex-end;gap:2px;width:14px;height:12px}
-.eq span{width:3px;height:100%;background:var(--brand);border-radius:2px;opacity:.95;transform-origin:bottom}
-.playlist-item.active .eq span:nth-child(1){animation:eqBars .9s .0s infinite ease-in-out}
-.playlist-item.active .eq span:nth-child(2){animation:eqBars .9s .1s infinite ease-in-out}
-.playlist-item.active .eq span:nth-child(3){animation:eqBars .9s .2s infinite ease-in-out}
-@keyframes eqBars{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+/* Controles */
+.controls{background:#121212;border-top:1px solid var(--hr)}
+.sticky-bottom{position:sticky;bottom:0;z-index:6}
+.timeline{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:8px 12px}
+.timeline input[type=range]{width:100%}
+.buttons{display:flex;justify-content:center;gap:12px;padding:8px 12px 16px}
+.btn-ctrl{width:50px;height:50px;border-radius:50%;background:#1a1a1a;border:1px solid #2a2a2a;color:#e8e8e8}
+.btn-ctrl.play{background:#262626;border-color:#333}
+.footer-note{color:#7e7e7e;text-align:center;font-size:11px;padding:6px 0 10px}
 
-/* insignia HQ */
-.hq-indicator{display:inline-block;padding:2px 6px;border:1px solid rgba(30,215,96,.65);color:var(--brand);border-radius:8px;font-size:11px;font-weight:800;transform:translateY(-1px)}
+/* Fab */
+.fab{position:fixed;right:18px;width:66px;height:66px;border-radius:50%;border:none;background:#0f0f0f;color:var(--brand);box-shadow:0 10px 30px rgba(0,0,0,.45);z-index:2600}
+.fab i{font-size:24px}
+.fab-search{bottom:18px}
+.fab-player{bottom:94px}
+.fab-fav{bottom:170px}
 
-/* ===== Botonera ===== */
-.controls{display:flex;justify-content:center;align-items:center;gap:16px;padding:10px 0 6px}
-.btn{background:#232323;border:none;border-radius:999px;width:56px;height:56px;display:inline-grid;place-items:center;color:#eee;box-shadow:0 4px 14px rgba(0,0,0,.25)}
-.btn-small{width:42px;height:42px}
-.btn:hover{background:#272727}
-.btn-play{width:64px;height:64px}
-.btn-play i.fa-play{display:inline}
-.btn-play i.fa-pause{display:none}
-.btn-play.playing i.fa-play{display:none}
-.btn-play.playing i.fa-pause{display:inline}
-.btn.active,.btn.repeat-one{color:var(--brand)}
+/* Calidad popup */
+.quality-wrap{position:sticky;top:210px;z-index:6;padding:10px 16px;background:linear-gradient(to bottom,rgba(18,18,18,1),rgba(18,18,18,.65),rgba(18,18,18,0))}
+.chip{border-radius:20px;background:#1a1a1a;border:1px solid #2a2a2a;color:#e8e8e8;padding:8px 12px}
+#quality-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:4000}
+#quality-backdrop.show{display:block}
+.quality-menu{position:fixed;left:50%;transform:translateX(-50%);bottom:94px;width:min(580px,92vw);background:#181818;border:1px solid #262626;border-radius:16px;box-shadow:0 14px 50px rgba(0,0,0,.5);display:none;z-index:4010}
+.quality-menu.show{display:block}
+.quality-title{padding:14px 16px;border-bottom:1px solid #242424;color:#dcdcdc;font-weight:700}
+.quality-options{display:flex;flex-direction:column;padding:8px}
+.quality-option{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#202020;border:1px solid #2b2b2b;color:#f0f0f0;padding:14px;border-radius:12px;margin:6px 0}
+.quality-option .badge-hq{background:rgba(29,185,84,.16);border:1px solid rgba(29,185,84,.55);color:#7dffb0;border-radius:8px;padding:2px 6px;font-size:11px}
+.quality-option .check{opacity:.2}
 
-/* seekbar + tiempos */
-.progress-container{padding:8px 12px 0}
-.seek-bar{width:100%;appearance:none;height:4px;border-radius:999px;background:#2b2b2b;outline:none}
-.seek-bar::-webkit-slider-thumb{appearance:none;width:18px;height:18px;background:var(--brand);border-radius:50%;border:none;margin-top:-7px}
-.time-info{display:flex;justify-content:space-between;color:var(--muted);font-weight:700;padding:2px 2px 0}
+/* Mensajitos */
+.loading,.msg{text-align:center;color:#cfcfcf;padding:16px}
+.spacer{height:8px}
 
-/* ===== FABs ===== */
-#floating-search-button,#floating-player-button,#floating-favorites-button{
-  position:fixed;right:16px;width:60px;height:60px;border:none;border-radius:999px;background:#0f0f0f;color:var(--brand);
-  display:grid;place-items:center;box-shadow:var(--shadow);z-index:50
-}
-#floating-search-button{bottom:16px}
-#floating-player-button{bottom:88px}
-#floating-favorites-button{bottom:160px}
-#floating-search-button i,#floating-player-button i,#floating-favorites-button i{font-size:22px}
-
-/* ===== BÚSQUEDA – grilla de álbumes (2 por fila, sin card grueso) ===== */
-.search-modal-content{padding:14px 14px 26px}
-#results-count{margin:8px 2px 12px;color:var(--muted);font-weight:700}
-
-/* contenedor grilla */
-#album-list{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:18px 16px;
-  padding:0 2px 18px
-}
-
-/* tarjeta liviana */
-.album-card{cursor:pointer}
-.album-cover{
-  position:relative;width:100%;aspect-ratio:1/1;border-radius:14px;overflow:hidden;background:#101010;
-  box-shadow:0 8px 24px rgba(0,0,0,.28);transition:transform .18s ease,box-shadow .18s ease
-}
-.album-cover img{width:100%;height:100%;object-fit:cover;display:block;transform:translateZ(0)}
-.album-card:active .album-cover,.album-card:hover .album-cover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(0,0,0,.34)}
-
-/* meta (altura consistente para que no “salte”) */
-.album-meta{padding:10px 2px 0}
-.album-title{
-  margin:0 0 4px;font-weight:900;letter-spacing:.2px;font-size:clamp(14px,3.8vw,18px);line-height:1.25;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:calc(1.25em*2)
-}
-.album-artist{margin:0;color:var(--muted);font-weight:700;letter-spacing:.2px;font-size:13px;line-height:1.25;min-height:1.25em}
-.album-year{margin-top:2px;color:var(--muted-2);font-weight:700;font-size:12px}
-
-/* responsive */
-@media (min-width:760px){
-  #album-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 18px}
-}
-@media (min-width:1100px){
-  #album-list{grid-template-columns:repeat(4,minmax(0,1fr));gap:24px 20px}
-}
-
-/* ===== Quality menu (popover) ===== */
-.quality-bar{display:flex;align-items:center;gap:10px;padding:12px 14px 8px}
-#quality-btn{display:inline-flex;align-items:center;gap:8px;background:#222;color:#eee;border:1px solid #2b2b2b;border-radius:999px;padding:10px 14px;font-weight:800}
-#quality-btn.active{border-color:#2f2f2f;background:#262626}
-#quality-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .15s ease;z-index:40}
-#quality-backdrop.show{opacity:1;pointer-events:auto}
-#quality-menu{position:absolute;left:50%;transform:translateX(-50%);width:min(420px,92vw);background:#171717;border:1px solid #2b2b2b;border-radius:16px;padding:10px 10px 6px;box-shadow:0 24px 70px rgba(0,0,0,.55);z-index:50;display:none}
-#quality-menu.show{display:block}
-#quality-menu h4{margin:6px 6px 8px;color:#d8d8d8;font-size:14px;letter-spacing:.3px}
-.quality-option{width:100%;background:#1b1b1b;border:1px solid #2a2a2a;color:#ededed;display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:12px;padding:14px;margin:6px 0;font-weight:800}
-.quality-option .center{display:flex;align-items:center;gap:10px}
-.quality-option .check{opacity:.15}
-.quality-option:hover{background:#202020}
+/* Ocultos de legado */
+#cover-image,#song-title,#song-artist,#favorites-cover-image,#favorites-song-title,#favorites-song-artist{display:none}
