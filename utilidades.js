@@ -1,183 +1,75 @@
-// utilidades.js  — helpers y estado global compartido
+// utilidades.js
 
-// ---- Selección corta
-export const byId = (id) => document.getElementById(id);
-export const qs = (s, r = document) => r.querySelector(s);
-export const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
-
-// ---- Formatos / tiempo
-export const fmtTime = (s) => {
-  if (isNaN(s) || s < 0) return '0:00';
-  const m = Math.floor(s / 60);
-  const ss = Math.floor(s % 60);
-  return `${m}:${ss < 10 ? '0' : ''}${ss}`;
-};
-
-export const isHQ = (fmt) => ['wav','flac','aiff','alac'].includes(String(fmt||'').toLowerCase());
-
-// ---- Estado global (sobrevive entre modales)
-export const state = {
-  // búsqueda
-  currentQuery: '',
-  isSearching: false,
-
-  // reproductor
-  playlist: [],
-  originalPlaylist: [],
-  idx: 0,
-  isPlaying: false,
-  repeatMode: 'none',
-  isShuffled: false,
-  availableFormats: ['mp3'],
-  currentFormat: 'mp3',
-  currentAlbumId: null,
-
-  // favoritos
-  favList: [],
-  favOriginal: [],
-  favIdx: 0,
-  isFavPlaying: false,
-
-  // refs a audios (se cargan desde reproductor/favoritos)
-  audio: null,
-  favAudio: null
-};
-
-// ---- Pub/Sub súper simple (para avisos entre módulos)
-const topics = {};
-export const bus = {
-  on(ev, fn){ (topics[ev] ||= []).push(fn); return () => bus.off(ev, fn); },
-  off(ev, fn){ topics[ev] = (topics[ev]||[]).filter(f => f!==fn); },
-  emit(ev, data){ (topics[ev]||[]).forEach(f => { try{ f(data); }catch(_){} }); }
-};
-
-// ---- Scroll lock para modales
-export const lockScroll = (lock) => {
-  document.body.classList.toggle('modal-open', !!lock);
-};
-
-// ---- Cerrar panel al tocar fuera
-export function onOutsideClick(panelEl, backdropEl, closeFn){
-  const handler = (e) => {
-    const target = e.target;
-    if (!panelEl.contains(target)) { closeFn(); }
-  };
-  const open = () => {
-    backdropEl?.classList.add('show');
-    document.addEventListener('mousedown', handler);
-    document.addEventListener('touchstart', handler, {passive:true});
-  };
-  const close = () => {
-    backdropEl?.classList.remove('show');
-    document.removeEventListener('mousedown', handler);
-    document.removeEventListener('touchstart', handler);
-  };
-  return { open, close };
+// Formatea segundos a mm:ss
+function formatTime(seconds) {
+    if (isNaN(seconds) || seconds < 0) return "00:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
-// ---- Debounce
-export const debounce = (fn, delay=250) => {
-  let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), delay); };
-};
-
-// ---- Logo (imagen o texto fallback)
-export function setBrand({imgId='brand-logo', src, alt='Sanavera Mp3', textId='brand-text'} = {}){
-  const img = byId(imgId);
-  const txt = byId(textId);
-  if (img && src) {
-    img.src = src;
-    img.alt = alt;
-    img.style.display = 'block';
-    if (txt) txt.style.display = 'none';
-  } else if (txt) {
-    txt.textContent = alt;
-    txt.style.display = 'block';
-    if (img) img.style.display = 'none';
-  }
+// Carga imagen de portada con fallback
+function loadCoverImage(imgElement, url, fallback) {
+    imgElement.src = url;
+    imgElement.onerror = () => {
+        imgElement.src = fallback;
+    };
 }
 
-// ---- Bienvenida: barra + salida exacta a los N ms
-export function runWelcomeProgress({barId='welcome-progress', durationMs=10000, onDone=()=>{}} = {}){
-  const bar = byId(barId);
-  if (!bar) { setTimeout(onDone, durationMs); return; }
+// Obtiene parámetros de URL
+function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+}
 
-  let start = performance.now();
-  let rafId = 0;
+// Guarda en localStorage
+function saveToStorage(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+}
 
-  const tick = (now) => {
-    const elapsed = Math.min(1, (now - start) / durationMs);
-    bar.style.transform = `scaleX(${elapsed})`;
-    if (elapsed < 1) {
-      rafId = requestAnimationFrame(tick);
-    } else {
-      cancelAnimationFrame(rafId);
-      onDone();
+// Lee de localStorage
+function loadFromStorage(key) {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
+}
+
+// Quita texto innecesario de títulos (artista/álbum)
+function cleanSongTitle(title) {
+    if (!title) return '';
+    return title
+        .replace(/\s*\([^)]*\)/g, '') // elimina paréntesis
+        .replace(/\s*-\s*.*$/, '')    // elimina después de guiones
+        .trim();
+}
+
+// Agrega clase animación a canción activa
+function highlightPlayingSong(element) {
+    document.querySelectorAll('.song-item').forEach(item => {
+        item.classList.remove('playing');
+        const anim = item.querySelector('.song-animation');
+        if (anim) anim.remove();
+    });
+
+    if (element) {
+        element.classList.add('playing');
+        const anim = document.createElement('div');
+        anim.className = 'song-animation';
+        anim.innerHTML = `
+            <span></span><span></span><span></span>
+        `;
+        element.prepend(anim);
     }
-  };
-  // estilos mínimos de seguridad (por si falta CSS)
-  bar.style.transformOrigin = 'left center';
-  bar.style.transform = 'scaleX(0)';
-  rafId = requestAnimationFrame(tick);
 }
 
-// ---- LocalStorage favoritos
-export function getFavorites(){
-  try{
-    return JSON.parse(localStorage.getItem('favorites')||'[]')
-      .filter(f=>f && f.title && f.artist && f.urls && f.urls.mp3);
-  }catch(_){ return []; }
-}
-export function setFavorites(list){ localStorage.setItem('favorites', JSON.stringify(list||[])); }
-export function addFav(track){
-  const favs = getFavorites();
-  if (!favs.some(f=>f.urls && f.urls.mp3===track.urls.mp3)){
-    favs.unshift(track); setFavorites(favs);
-  }
-  bus.emit('fav:changed');
-}
-export function removeFav(mp3Url){
-  let favs = getFavorites().filter(f=>!(f.urls && f.urls.mp3===mp3Url));
-  setFavorites(favs);
-  bus.emit('fav:changed');
+// Elimina duplicados de un array por propiedad
+function removeDuplicates(array, key) {
+    return array.filter((obj, index, self) =>
+        index === self.findIndex(o => o[key] === obj[key])
+    );
 }
 
-// ---- Utilidad común para formatear título de archivo → nombre de canción
-export function extractSongTitle(fileName){
-  try{
-    let name = fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i,'');
-    name = name.replace(/^.*\//,'');
-    name = name.replace(/_/g,' ').replace(/\s+/g,' ').trim();
-    name = name.replace(/^[\[(]?\s*\d{1,2}\s*[\])\-.]\s*/,'');
-    if(name.includes(' - ')){
-      const parts = name.split(' - ').map(s=>s.trim()).filter(Boolean);
-      if(parts.length>1) name = parts[parts.length-1];
-    }
-    name = name.replace(/\s*[\[(]?\b(19|20)\d{2}\b[\])]?$/,'').trim();
-    return name || fileName;
-  }catch(_){
-    return fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i,'').replace(/_/g,' ');
-  }
+// Detecta si el formato es HQ
+function isHighQuality(format) {
+    const hqFormats = ['flac', 'wav', 'ape', 'alac'];
+    return hqFormats.includes(format.toLowerCase());
 }
-
-export function normalizeCreator(c){ return Array.isArray(c)? c.join(', ') : (c||'Desconocido'); }
-
-// ---- Pequeña ayuda para setear portada/títulos del hero
-export function setHero({scope='player', coverUrl, title, artist}){
-  const isFav = scope==='favorites';
-  const hero = byId(isFav? 'favorites-hero' : 'player-hero');
-  const hTitle = byId(isFav? 'favorites-hero-song-title' : 'hero-song-title');
-  const hArtist= byId(isFav? 'favorites-hero-song-artist': 'hero-song-artist');
-  const safe = coverUrl && coverUrl.trim()? coverUrl : 'https://via.placeholder.com/800x800?text=Sin+portada';
-  if(hero) hero.style.setProperty('--cover-url', `url("${safe}")`);
-  if(hTitle) hTitle.textContent = title || 'Selecciona una canción';
-  if(hArtist) hArtist.textContent = artist || '';
-}
-
-// ---- Exponer por si alguna plantilla vieja lo necesita
-window.utils = {
-  byId, qs, qsa, fmtTime, isHQ,
-  state, bus, lockScroll, onOutsideClick, debounce,
-  setBrand, runWelcomeProgress,
-  getFavorites, setFavorites, addFav, removeFav,
-  extractSongTitle, normalizeCreator, setHero
-};
