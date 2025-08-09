@@ -34,12 +34,11 @@
             <img src="https://cdn.jsdelivr.net/gh/sanavera/sanavera@main/20250803_143726.png" alt="Sanavera Mp3 Logo" />
           </div>
         </div>
-
         <div class="search-container">
-          <input type="text" id="search-input" placeholder="Buscar álbumes (ej. Rata Blanca)" />
+          <input type="text" id="search-input" placeholder="Buscar álbumes o canciones" autocomplete="off" />
           <button id="search-button">Buscar</button>
+          <ul id="suggestions-list"></ul>
         </div>
-
         <div id="results-count">Resultados: 0</div>
         <div id="album-list" class="album-list"></div>
         <div id="loading" class="loading">Cargando...</div>
@@ -59,23 +58,14 @@
         </div>
 
         <div class="player-section">
-          <!-- Mantengo para compat con JS legacy; se oculta por CSS -->
           <div class="cover-container">
             <img id="cover-image" src="" alt="Portada del álbum" />
           </div>
-
-          <!-- Info debajo (accesibilidad / fallback) -->
           <div class="audio-info">
             <h2 id="song-title">Selecciona una canción</h2>
             <p id="song-artist"></p>
           </div>
-
-          <!-- Botón de calidad (reemplaza al <select>) -->
-          <div class="quality-row">
-            <button id="quality-button" class="quality-btn" aria-haspopup="dialog" aria-controls="quality-sheet">
-              <i class="fa-solid fa-signal"></i><span>Calidad</span>
-            </button>
-          </div>
+          <button id="quality-button" class="quality-btn">HQ</button>
         </div>
 
         <div class="playlist-section">
@@ -108,36 +98,24 @@
     <!-- Favoritos -->
     <div id="favorites-modal" class="modal">
       <div class="modal-content is-favorites">
-        <!-- HERO portada full-bleed -->
         <div class="player-hero" id="favorites-hero" style="--cover-url: url('');">
           <div class="hero-text">
             <h2 id="favorites-hero-song-title">Selecciona una canción</h2>
             <p id="favorites-hero-song-artist"></p>
           </div>
         </div>
-
         <div class="player-section">
-          <!-- Mantengo para compat con JS legacy; se oculta por CSS -->
           <div class="cover-container">
             <img id="favorites-cover-image" src="" alt="Portada de la canción" />
           </div>
-
           <div class="audio-info">
             <h2 id="favorites-song-title">Selecciona una canción</h2>
             <p id="favorites-song-artist"></p>
           </div>
-
-          <div class="quality-row">
-            <button id="favorites-quality-button" class="quality-btn" aria-haspopup="dialog" aria-controls="favorites-quality-sheet">
-              <i class="fa-solid fa-signal"></i><span>Calidad</span>
-            </button>
-          </div>
         </div>
-
         <div class="playlist-section">
           <div class="playlist" id="favorites-playlist"></div>
         </div>
-
         <div class="controls-section">
           <div class="controls">
             <button class="btn btn-small" id="favorites-btn-repeat" aria-label="Repetir"><i class="fas fa-repeat"></i></button>
@@ -155,29 +133,8 @@
             </div>
           </div>
         </div>
-
         <div class="footer-text">Código escrito por Sebastián Sanavera ®</div>
         <audio id="favorites-audio-player"></audio>
-      </div>
-    </div>
-
-    <!-- Bottom Sheet – Formatos (Player) -->
-    <div id="quality-sheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="quality-title">
-      <div class="sheet-card">
-        <div class="sheet-handle"></div>
-        <h3 id="quality-title">Elegir calidad</h3>
-        <div id="quality-options" class="sheet-options"><!-- botones por JS --></div>
-        <button class="sheet-close" id="quality-close">Cerrar</button>
-      </div>
-    </div>
-
-    <!-- Bottom Sheet – Formatos (Favoritos) -->
-    <div id="favorites-quality-sheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="favorites-quality-title">
-      <div class="sheet-card">
-        <div class="sheet-handle"></div>
-        <h3 id="favorites-quality-title">Elegir calidad</h3>
-        <div id="favorites-quality-options" class="sheet-options"><!-- botones por JS --></div>
-        <button class="sheet-close" id="favorites-quality-close">Cerrar</button>
       </div>
     </div>
 
