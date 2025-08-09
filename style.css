@@ -145,7 +145,7 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
    REPRODUCTOR / FAVORITOS
    ===================================== */
 
-/* HERO fijo arriba (no se va al hacer scroll) */
+/* HERO fijo arriba */
 .player-hero{
   position:sticky; top:0; z-index:25;
   width:100%; aspect-ratio:16/9; max-height: var(--hero-max-h);
@@ -153,7 +153,16 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
   background-image: var(--cover-url);
 }
 .player-hero::before{
-  content:""; position:absolute; inset:0; background: linear-gradient(to bottom, rgba(0,0,0,.25), rgba(0,0,0,.55));
+  content:"";
+  position:absolute;
+  inset:0;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,.65) 0%,
+    rgba(0,0,0,.35) 45%,
+    rgba(0,0,0,0)   100%
+  );
+  pointer-events:none;
 }
 .hero-text{
   position:absolute; left:16px; right:16px; bottom:12px; text-align:center;
@@ -161,13 +170,12 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 .hero-text h2{ margin:0 0 4px; font-size:clamp(18px,4.8vw,22px); font-weight:700; }
 .hero-text p{ margin:0; font-size:clamp(12px,3.4vw,14px); color:#eaeaea; }
 
-/* Ocultamos COMPLETO el bloque legacy para evitar portada/título duplicados */
 .player-section{ display:none !important; }
 .audio-info{ display:none !important; }
 
 /* Lista (scroll) */
 .playlist-section{
-  flex:1; overflow:auto; padding:8px var(--side-pad) 120px; /* espacio para controles fijos */
+  flex:1; overflow:auto; padding:8px var(--side-pad) 120px;
 }
 
 /* Fila de tema */
@@ -191,13 +199,11 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 
-/* Indicador HQ pegado a la animación */
 .hq-indicator{
   display:inline-block; font-size:10px; font-weight:700; color:#0b331a;
   background:var(--brand); border-radius:4px; padding:2px 4px; letter-spacing:.2px;
 }
 
-/* Ecualizador mini (solo cuando está reproduciendo) */
 .eq{
   display:inline-flex; align-items:flex-end; gap:2px; width:14px; height:12px;
 }
@@ -209,19 +215,32 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 .eq span:nth-child(3){ animation-delay:.3s; }
 @keyframes bar{ 0%,100%{ transform:scaleY(.2); } 50%{ transform:scaleY(1); } }
 
-/* Acciones en item (favorito) */
 .playlist-item-actions{ margin-left:auto; display:flex; align-items:center; gap:8px; }
 .btn-favorite,.btn-remove-favorite{
   background:none; border:none; padding:6px; cursor:pointer; color:#fff; font-size:16px;
 }
 .btn-favorite.active i{ color:#ff3b3b; }
 
-/* Controles y progreso pegados abajo */
+/* Controles y progreso */
 .controls-section{
   position:sticky; bottom:0; z-index:26; background:var(--elev);
   padding:10px var(--side-pad) calc(10px + env(safe-area-inset-bottom));
   border-top:1px solid var(--line);
   box-shadow:0 -10px 30px rgba(0,0,0,.35);
+}
+.controls-section::before{
+  content:"";
+  position:absolute;
+  left:0; right:0;
+  top:-56px;
+  height:56px;
+  background: linear-gradient(
+    to top,
+    var(--elev) 0%,
+    rgba(24,24,24,.85) 50%,
+    rgba(24,24,24,0)   100%
+  );
+  pointer-events:none;
 }
 .controls{ display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:8px; }
 .btn{
@@ -240,7 +259,6 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
   content:'1'; position:absolute; right:6px; bottom:6px; font-size:10px; color:var(--brand);
 }
 
-/* Botón Calidad: como parte de .controls */
 #quality-btn{
   background:#252525; border:none; color:#fff; cursor:pointer;
   width:34px; height:34px; border-radius:50%;
@@ -248,7 +266,6 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 }
 #quality-btn.active{ outline:1px solid var(--brand); }
 
-/* Progreso + tiempos */
 .progress-container{ width:100%; }
 .seek-bar{
   width:100%; height:4px; background:#444; border-radius:2px; outline:none; -webkit-appearance:none; appearance:none;
@@ -264,7 +281,7 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 .footer-text{ text-align:center; font-size:12px; color:var(--muted); padding-top:6px; }
 
 /* =====================================
-   SELECTOR DE CALIDAD (menú flotante)
+   SELECTOR DE CALIDAD
    ===================================== */
 #quality-backdrop{
   position:fixed; inset:0; background:transparent; z-index:2000; display:none;
@@ -315,7 +332,6 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
    ===================================== */
 .hide{ display:none !important; }
 
-/* Responsive tweaks */
 @media (min-width:680px){
   #album-list{ grid-template-columns: repeat(3, minmax(0,1fr)); }
 }
