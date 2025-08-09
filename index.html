@@ -6,7 +6,8 @@
   <title>Sanavera MP3</title>
 
   <!-- Iconos -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
 
@@ -20,7 +21,6 @@
     <div id="welcome-modal" class="modal" style="display:none;">
       <div class="modal-content">
         <div class="welcome-content">
-          <!-- Logo en raíz del proyecto -->
           <img src="./logo.png" alt="Sanavera MP3" class="welcome-image" />
           <p class="welcome-text">Bienvenidos a Sanavera MP3</p>
           <div class="progress-container">
@@ -34,21 +34,24 @@
 
     <!-- ============== MODAL: Búsqueda ============== -->
     <div id="search-modal" class="modal" style="display:none;">
-      <div class="search-modal-content">
-        <div class="header">
-          <div class="autor">
-            <img src="./logo.png" alt="Sanavera MP3" />
+      <div class="modal-content">
+        <!-- Topbar -->
+        <div class="topbar">
+          <div class="brand">
+            <img id="brand-logo" src="./logo.png" alt="Sanavera MP3" />
+            <span id="brand-text">Sanavera MP3</span>
           </div>
+          <div class="search-row">
+            <input type="text" id="search-input" placeholder="Buscar álbumes (ej. Amar Azul)" />
+            <button id="search-button">Buscar</button>
+          </div>
+          <div id="results-count">Resultados: 0</div>
         </div>
 
-        <div class="search-container">
-          <input type="text" id="search-input" placeholder="Buscar álbumes (ej. Amar Azul)" />
-          <button id="search-button">Buscar</button>
-        </div>
+        <!-- Grid de álbumes -->
+        <div id="album-list"></div>
 
-        <div id="results-count">Resultados: 0</div>
-        <div id="album-list" class="album-list"></div>
-
+        <!-- Estados -->
         <div id="loading" class="loading" style="display:none;">Cargando…</div>
         <div id="error-message" class="error-message" style="display:none;"></div>
       </div>
@@ -66,7 +69,7 @@
           </div>
         </div>
 
-        <!-- Sección info (mantengo elementos legado ocultos por CSS) -->
+        <!-- Info legado (oculto por CSS) -->
         <div class="player-section">
           <div class="cover-container">
             <img id="cover-image" src="" alt="Portada del álbum" />
@@ -91,7 +94,7 @@
             <button class="btn" id="btn-next" aria-label="Siguiente"><i class="fas fa-forward-step"></i></button>
             <button class="btn btn-small" id="btn-shuffle" aria-label="Mezclar"><i class="fas fa-shuffle"></i></button>
 
-            <!-- Botón Calidad (abre menú) -->
+            <!-- Calidad a la IZQUIERDA de repeat/shuffle (botón integrado) -->
             <button class="btn btn-small" id="quality-btn" aria-label="Calidad"><i class="fas fa-bolt"></i></button>
 
             <!-- Descargar -->
@@ -113,12 +116,10 @@
     </div>
 
     <!-- Menú de calidad (overlay global) -->
-    <div id="quality-backdrop" class="quality-backdrop"></div>
-    <div id="quality-menu" class="quality-menu">
-      <div class="quality-menu-inner">
-        <div class="quality-title">Elegí la calidad</div>
-        <div id="quality-options" class="quality-options"></div>
-      </div>
+    <div id="quality-backdrop"></div>
+    <div id="quality-menu">
+      <div class="title">Elegí la calidad</div>
+      <div id="quality-options"></div>
     </div>
 
     <!-- ============== MODAL: Favoritos ============== -->
@@ -183,6 +184,5 @@
 
   <!-- ============== SCRIPTS (orden crítico) ============== -->
   <script defer src="script.js"></script>
-  
 </body>
 </html>
