@@ -139,15 +139,12 @@ document.addEventListener('DOMContentLoaded', () => {
       let name = fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i,'');
       name = name.replace(/^.*\//,'');             // quita path
       name = name.replace(/_/g,' ').replace(/\s+/g,' ').trim();
-      // quita prefijos tipo [01], (01), 01-, 1.
-      name = name.replace(/^[\[(]?\s*\d{1,2}\s*[\])\-.]\s*/,'');
-      // si hay separadores " - ", preferimos la última parte (suele ser la pista)
+      name = name.replace(/^[\[(]?\s*\d{1,2}\s*[\])\-.]\s*/,''); // [01], 01-, etc.
       if(name.includes(' - ')){
         const parts = name.split(' - ').map(s=>s.trim()).filter(Boolean);
         if(parts.length>1) name = parts[parts.length-1];
       }
-      // quita año en paréntesis al final
-      name = name.replace(/\s*[\[(]?\b(19|20)\d{2}\b[\])]?$/,'').trim();
+      name = name.replace(/\s*[\[(]?\b(19|20)\d{2}\b[\])]?$/,'').trim(); // año al final
       return name || fileName;
     }catch(_){
       return fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i,'').replace(/_/g,' ');
@@ -227,16 +224,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function openQualityMenu(){
-    if(!el.qualityMenu) return;
+    if(!el.qualityMenu || !el.qualityBtn || !el.qualityBackdrop) return;
     el.qualityBtn.classList.add('active');
     el.qualityBackdrop.classList.add('show');
-    // Colocamos el menú bajo el botón y centrado (top dinámico)
     const rect = el.qualityBtn.getBoundingClientRect();
     const top = Math.min(window.innerHeight-180, rect.bottom + 10);
     el.qualityMenu.style.top = `${top + window.scrollY}px`;
     el.qualityMenu.classList.add('show');
   }
   function closeQualityMenu(){
+    if(!el.qualityMenu || !el.qualityBtn || !el.qualityBackdrop) return;
     el.qualityBtn.classList.remove('active');
     el.qualityBackdrop.classList.remove('show');
     el.qualityMenu.classList.remove('show');
@@ -278,8 +275,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if(el.qualityMenu.classList.contains('show')) closeQualityMenu(); else openQualityMenu();
   });
   el.qualityBackdrop.addEventListener('click', closeQualityMenu);
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeQualityMenu(); });
 
   // ---------- Bienvenida ----------
+  const START_QUERY = 'Amar Azul';
   if(!sessionStorage.getItem('welcomeShown')){
     el.welcomeModal.style.display='flex';
     el.searchModal.style.display='none';
@@ -294,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(()=>{
         el.welcomeModal.style.display='none';
         showSearch();
-        currentQuery='juan_chota_dura';
+        currentQuery=START_QUERY;
         el.searchInput.value='';
         searchAlbums(currentQuery,1,true);
         sessionStorage.setItem('welcomeShown','true');
@@ -302,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
     },10000);
   }else{
     showSearch();
-    currentQuery='juan_chota_dura';
+    currentQuery=START_QUERY;
     el.searchInput.value='';
     searchAlbums(currentQuery,1,true);
   }
@@ -397,7 +396,6 @@ document.addEventListener('DOMContentLoaded', () => {
           relevance:relevance(d, query)
         }));
         allAlbums = allAlbums.concat(albums);
-        // Unicos por Título|Artista
         const unique = Array.from(new Map(allAlbums.map(a=>[`${a.title}|${a.artist}`, a])).values());
         el.resultsCount.textContent=`Resultados: ${unique.length}`;
         displayAlbums(unique);
@@ -467,7 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
       playlist = MOCK_TRACKS.map(t=>({...t}));
       originalPlaylist=[...playlist];
       availableFormats=['mp3'];
-      buildQualityMenu(); // prepara lista (igual no se muestra hasta tocar botón)
+      buildQualityMenu();
       renderPlaylist();
       loadTrack(0);
       return;
@@ -556,9 +554,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <img src="${t.coverUrl}" alt="${t.title}" loading="lazy">
         <div class="playlist-item-info">
           <h3>
-            ${active?`<span class="eq"><span></span><span></span><span></span></span>`:''}
+            ${active && isPlaying ? `<span class="eq"><span></span><span></span><span></span></span>` : ''}
+            ${showHQ?`<span class="hq-indicator">HQ</span> `:''}
             ${escapeHtml(t.title)}
-            ${showHQ?` <span class="hq-indicator">HQ</span>`:''}
           </h3>
           <p>${escapeHtml(t.artist)}</p>
         </div>
@@ -647,9 +645,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <img src="${t.coverUrl}" alt="${t.title}" loading="lazy">
         <div class="playlist-item-info">
           <h3>
-            ${active?`<span class="eq"><span></span><span></span><span></span></span>`:''}
+            ${active && isFavPlaying ? `<span class="eq"><span></span><span></span><span></span></span>` : ''}
+            ${isHQ?`<span class="hq-indicator">HQ</span> `:''}
             ${escapeHtml(t.title)}
-            ${isHQ?` <span class="hq-indicator">HQ</span>`:''}
           </h3>
           <p>${escapeHtml(t.artist)}</p>
         </div>
