@@ -1,208 +1,140 @@
-// =====================================
-// Sanavera MP3 - inicio.js
-// Boot general, cache de elementos y navegación
-// =====================================
-(function(){
-  const { SV } = window;
-  const st = SV.state;
+// =========================================================
+// Sanavera MP3 - inicio.js (bootstrap / rescate)
+// =========================================================
+(() => {
+  const $ = (id) => document.getElementById(id);
 
-  document.addEventListener('DOMContentLoaded', () => {
-    // ---------- Cache de elementos ----------
-    SV.el = {
-      // Modales
-      welcomeModal: SV.byId('welcome-modal'),
-      searchModal: SV.byId('search-modal'),
-      playerModal: SV.byId('player-modal'),
-      favoritesModal: SV.byId('favorites-modal'),
+  // Nodos base
+  const ui = {
+    welcome: $('welcome-modal'),
+    search:  $('search-modal'),
+    player:  $('player-modal'),
+    favs:    $('favorites-modal'),
+    fabSearch:  $('floating-search-button'),
+    fabPlayer:  $('floating-player-button'),
+    fabFavs:    $('floating-favorites-button'),
+    // por si quedó abierto el selector de calidad
+    qBackdrop: $('quality-backdrop'),
+    qMenu:     $('quality-menu'),
+    qBtn:      $('quality-btn'),
+  };
 
-      // Header/búsqueda
-      searchInput: SV.byId('search-input'),
-      searchButton: SV.byId('search-button'),
-      albumList: SV.byId('album-list'),
-      resultsCount: SV.byId('results-count'),
-      loading: SV.byId('loading'),
-      errorMessage: SV.byId('error-message'),
+  // Util
+  const show = (el, on=true) => { if (el) el.style.display = on ? 'flex' : 'none'; };
+  const bodyScroll = (lock) => document.body.classList.toggle('modal-open', !!lock);
 
-      // Player hero + info (player)
-      playerHero: SV.byId('player-hero'),
-      heroSongTitle: SV.byId('hero-song-title'),
-      heroSongArtist: SV.byId('hero-song-artist'),
-      coverImage: SV.byId('cover-image'),
-      songTitle: SV.byId('song-title'),
-      songArtist: SV.byId('song-artist'),
+  // Cierra cualquier overlay de calidad que haya quedado colgado
+  function cerrarSelectorCalidad() {
+    if (ui.qBackdrop) ui.qBackdrop.classList.remove('show');
+    if (ui.qMenu)     ui.qMenu.classList.remove('show');
+    if (ui.qBtn)      ui.qBtn.classList.remove('active');
+  }
 
-      // Listas
-      playlistEl: SV.byId('playlist'),
-      favoritesPlaylist: SV.byId('favorites-playlist'),
+  // Navegación básica (sin depender de otros módulos)
+  function irABusqueda() {
+    cerrarSelectorCalidad();
+    show(ui.search, true);
+    show(ui.player, false);
+    show(ui.favs,   false);
+    show(ui.welcome,false);
+    if (ui.fabSearch) ui.fabSearch.style.display = 'none';
+    if (ui.fabPlayer) ui.fabPlayer.style.display = 'none';
+    if (ui.fabFavs)   ui.fabFavs.style.display   = 'block';
+    bodyScroll(true);
+  }
+  function irAPlayer() {
+    cerrarSelectorCalidad();
+    show(ui.search, false);
+    show(ui.player, true);
+    show(ui.favs,   false);
+    show(ui.welcome,false);
+    if (ui.fabSearch) ui.fabSearch.style.display = 'block';
+    if (ui.fabPlayer) ui.fabPlayer.style.display = 'none';
+    if (ui.fabFavs)   ui.fabFavs.style.display   = 'block';
+    bodyScroll(true);
+  }
+  function irAFavoritos() {
+    cerrarSelectorCalidad();
+    show(ui.search, false);
+    show(ui.player, false);
+    show(ui.favs,   true);
+    show(ui.welcome,false);
+    if (ui.fabSearch) ui.fabSearch.style.display = 'block';
+    if (ui.fabPlayer) ui.fabPlayer.style.display = 'block';
+    if (ui.fabFavs)   ui.fabFavs.style.display   = 'none';
+    bodyScroll(true);
+  }
 
-      // Audios
-      audio: SV.byId('audio-player'),
-      favAudio: SV.byId('favorites-audio-player'),
+  // Exponer para que otros módulos llamen si quieren
+  window.__UI__ = { irABusqueda, irAPlayer, irAFavoritos, cerrarSelectorCalidad };
 
-      // Controles player
-      btnPlay: SV.byId('btn-play'),
-      btnPrev: SV.byId('btn-prev'),
-      btnNext: SV.byId('btn-next'),
-      btnRepeat: SV.byId('btn-repeat'),
-      btnShuffle: SV.byId('btn-shuffle'),
-      btnDownload: SV.byId('btn-download'),
-      seek: SV.byId('seek-bar'),
-      curTime: SV.byId('current-time'),
-      durTime: SV.byId('duration'),
+  // Cablear FABs (aunque los otros módulos también lo hagan)
+  ui.fabSearch && ui.fabSearch.addEventListener('click', irABusqueda);
+  ui.fabPlayer && ui.fabPlayer.addEventListener('click', irAPlayer);
+  ui.fabFavs   && ui.fabFavs.addEventListener('click', irAFavoritos);
 
-      // Controles favoritos
-      favBtnPlay: SV.byId('favorites-btn-play'),
-      favBtnPrev: SV.byId('favorites-btn-prev'),
-      favBtnNext: SV.byId('favorites-btn-next'),
-      favBtnRepeat: SV.byId('favorites-btn-repeat'),
-      favBtnShuffle: SV.byId('favorites-btn-shuffle'),
-      favBtnDownload: SV.byId('favorites-btn-download'),
-      favSeek: SV.byId('favorites-seek-bar'),
-      favCurTime: SV.byId('favorites-current-time'),
-      favDurTime: SV.byId('favorites-duration'),
+  // Estado inicial seguro
+  (function arrancar() {
+    try {
+      // Si ya se mostró bienvenida antes en esta sesión, vamos directo a búsqueda
+      const shown = sessionStorage.getItem('welcomeShown') === 'true';
+      if (!shown && ui.welcome) {
+        // Mostrar bienvenida y programar salida a búsqueda
+        show(ui.welcome, true);
+        show(ui.search,  false);
+        show(ui.player,  false);
+        show(ui.favs,    false);
+        if (ui.fabSearch) ui.fabSearch.style.display = 'none';
+        if (ui.fabPlayer) ui.fabPlayer.style.display = 'none';
+        if (ui.fabFavs)   ui.fabFavs.style.display   = 'none';
+        bodyScroll(true);
 
-      // Hero favoritos
-      favoritesHero: SV.byId('favorites-hero'),
-      favoritesHeroSongTitle: SV.byId('favorites-hero-song-title'),
-      favoritesHeroSongArtist: SV.byId('favorites-hero-song-artist'),
-      favoritesCoverImage: SV.byId('favorites-cover-image'),
-      favoritesSongTitle: SV.byId('favorites-song-title'),
-      favoritesSongArtist: SV.byId('favorites-song-artist'),
-
-      // FABs
-      fabSearch: SV.byId('floating-search-button'),
-      fabPlayer: SV.byId('floating-player-button'),
-      fabFav: SV.byId('floating-favorites-button'),
-
-      // Calidad (botón y menú)
-      qualityBtn: SV.byId('quality-btn'),
-      qualityMenu: SV.byId('quality-menu'),
-      qualityBackdrop: SV.byId('quality-backdrop'),
-      qualityList: SV.byId('quality-options')
-    };
-
-    // Validación mínima
-    const miss = Object.entries(SV.el).filter(([,v]) => v == null).map(([k]) => k);
-    if (miss.length) {
-      console.error('Faltan elementos:', miss);
-      document.body.insertAdjacentHTML('beforeend',
-        `<p style="color:#f55;padding:8px">Error de plantilla: faltan elementos (${miss.join(', ')})</p>`);
-      return;
-    }
-
-    // Limpia botones con <i>
-    document.querySelectorAll('.btn,.btn-small,.btn-play,.btn-favorite,.btn-remove-favorite')
-      .forEach(b=>{
-        const icons=[...b.querySelectorAll('i')];
-        if(icons.length){
-          b.innerHTML='';
-          icons.forEach(i=>b.appendChild(i));
+        // Failsafe: a los 11s vamos a búsqueda sí o sí
+        setTimeout(() => {
+          try { sessionStorage.setItem('welcomeShown', 'true'); } catch {}
+          show(ui.welcome, false);
+          irABusqueda();
+          // Disparar búsqueda inicial si existe el buscador
+          const input = document.getElementById('search-input');
+          const btn   = document.getElementById('search-button');
+          if (input && btn) {
+            input.value = '';
+            // Si el módulo de buscador está, llamá su función pública
+            if (window.Buscador && typeof window.Buscador.buscarInicio === 'function') {
+              window.Buscador.buscarInicio('juan_chota_dura');
+            } else {
+              // fallback: click al botón para no dejar la pantalla vacía
+              btn.click();
+            }
+          }
+        }, 11000);
+      } else {
+        // Ir directo a búsqueda
+        irABusqueda();
+        // lanzar búsqueda inicial si el módulo está
+        const input = document.getElementById('search-input');
+        const btn   = document.getElementById('search-button');
+        if (input && btn) {
+          input.value = '';
+          if (window.Buscador && typeof window.Buscador.buscarInicio === 'function') {
+            window.Buscador.buscarInicio('juan_chota_dura');
+          }
         }
-      });
-
-    // Inicializar módulos
-    Player.init();            // player + calidad
-    // favoritos: bind de controles se hace en su módulo con DOMContentLoaded
-
-    // ---------- Navegación (FABs y vistas) ----------
-    SV.el.fabSearch.addEventListener('click', showSearch);
-    SV.el.fabPlayer.addEventListener('click', showPlayer);
-    SV.el.fabFav.addEventListener('click', showFavorites);
-
-    function showSearch(){
-      SV.el.searchModal.style.display='flex';
-      SV.el.playerModal.style.display='none';
-      SV.el.favoritesModal.style.display='none';
-      SV.el.welcomeModal.style.display='none';
-      SV.el.fabSearch.style.display='none';
-      SV.el.fabPlayer.style.display=(st.isPlaying||st.isFavPlaying)?'block':'none';
-      SV.el.fabFav.style.display='block';
-      SV.toggleBodyScroll(true);
-      closeQualityMenuIfOpen();
-    }
-    function showPlayer(){
-      SV.el.searchModal.style.display='none';
-      SV.el.playerModal.style.display='flex';
-      SV.el.favoritesModal.style.display='none';
-      SV.el.fabSearch.style.display='block';
-      SV.el.fabPlayer.style.display='none';
-      SV.el.fabFav.style.display='block';
-      closeQualityMenuIfOpen();
-    }
-    function showFavorites(){
-      SV.el.searchModal.style.display='none';
-      SV.el.playerModal.style.display='none';
-      SV.el.favoritesModal.style.display='flex';
-      SV.el.fabSearch.style.display='block';
-      SV.el.fabPlayer.style.display=(st.isPlaying||st.isFavPlaying)?'block':'none';
-      SV.el.fabFav.style.display='none';
-      Favoritos.loadAndRender();
-      closeQualityMenuIfOpen();
-    }
-    function closeQualityMenuIfOpen(){
-      const menu = SV.el.qualityMenu;
-      if (menu && menu.classList.contains('show')){
-        SV.el.qualityBackdrop.classList.remove('show');
-        SV.el.qualityBtn.classList.remove('active');
-        menu.classList.remove('show');
       }
-    }
 
-    // Exponer para otros módulos
-    window.Inicio = { showSearch, showPlayer, showFavorites };
-
-    // ---------- Bienvenida / arranque ----------
-    if (!sessionStorage.getItem('welcomeShown')){
-      SV.el.welcomeModal.style.display='flex';
-      SV.el.searchModal.style.display='none';
-      SV.el.playerModal.style.display='none';
-      SV.el.favoritesModal.style.display='none';
-      SV.el.fabSearch.style.display='none';
-      SV.el.fabPlayer.style.display='none';
-      SV.el.fabFav.style.display='none';
-      SV.toggleBodyScroll(true);
-      setTimeout(()=>{
-        SV.el.welcomeModal.style.animation='fadeOut .4s forwards';
-        setTimeout(()=>{
-          SV.el.welcomeModal.style.display='none';
-          showSearch();
-          st.currentQuery = 'juan_chota_dura';
-          SV.el.searchInput.value = '';
-          Buscador.search(st.currentQuery, 1, true);
-          sessionStorage.setItem('welcomeShown','true');
-        }, 400);
-      }, 10000);
-    } else {
-      showSearch();
-      st.currentQuery = 'juan_chota_dura';
-      SV.el.searchInput.value = '';
-      Buscador.search(st.currentQuery, 1, true);
-    }
-
-    // ---------- Búsqueda ----------
-    SV.el.searchButton.addEventListener('click', ()=>{
-      const q = SV.el.searchInput.value.trim();
-      if (!q){
-        SV.el.errorMessage.textContent='Por favor, ingresa un término de búsqueda.';
-        SV.el.errorMessage.style.display='block';
-        return;
+      // Por las dudas: si no hay ningún modal visible, habilitar scroll
+      const algoVisible = [ui.search, ui.player, ui.favs, ui.welcome].some(n => n && getComputedStyle(n).display !== 'none');
+      if (!algoVisible) {
+        bodyScroll(false);
+        irABusqueda();
       }
-      st.currentQuery = q; st.currentPage = 1;
-      Buscador.search(q, 1, true);
-    });
-    SV.el.searchInput.addEventListener('keypress', (e)=>{
-      if (e.key === 'Enter'){
-        const q = SV.el.searchInput.value.trim();
-        if (!q){
-          SV.el.errorMessage.textContent='Por favor, ingresa un término de búsqueda.';
-          SV.el.errorMessage.style.display='block';
-          return;
-        }
-        st.currentQuery = q; st.currentPage = 1;
-        Buscador.search(q, 1, true);
-      }
-    });
 
-    console.log('Sanavera MP3 modular listo');
-  });
+      // Asegurar que el backdrop de calidad no tape todo
+      cerrarSelectorCalidad();
+    } catch(e) {
+      console.error('inicio.js bootstrap error:', e);
+      // Fallback mínimo a búsqueda
+      irABusqueda();
+    }
+  })();
 })();
