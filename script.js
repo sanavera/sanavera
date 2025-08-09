@@ -139,12 +139,12 @@ document.addEventListener('DOMContentLoaded', () => {
       let name = fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i,'');
       name = name.replace(/^.*\//,'');             // quita path
       name = name.replace(/_/g,' ').replace(/\s+/g,' ').trim();
-      name = name.replace(/^[\[(]?\s*\d{1,2}\s*[\])\-.]\s*/,''); // [01], 01-, etc.
+      name = name.replace(/^[\[(]?\s*\d{1,2}\s*[\])\-.]\s*/,''); // [01], 01-, etc
       if(name.includes(' - ')){
         const parts = name.split(' - ').map(s=>s.trim()).filter(Boolean);
         if(parts.length>1) name = parts[parts.length-1];
       }
-      name = name.replace(/\s*[\[(]?\b(19|20)\d{2}\b[\])]?$/,'').trim(); // año al final
+      name = name.replace(/\s*[\[(]?\b(19|20)\d{2}\b[\])]?$/,'').trim();
       return name || fileName;
     }catch(_){
       return fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i,'').replace(/_/g,' ');
@@ -202,8 +202,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function buildQualityMenu(){
     if(!el.qualityList) return;
     el.qualityList.innerHTML = '';
-    const fmts = [...availableFormats];
-    if(!fmts.includes('mp3')) fmts.unshift('mp3'); // aseguramos mp3 al frente
+    const fmts = [...(availableFormats && availableFormats.length ? availableFormats : ['mp3'])];
+    if(!fmts.includes('mp3')) fmts.unshift('mp3');
     const frag = document.createDocumentFragment();
     fmts.forEach(f=>{
       const li = document.createElement('button');
@@ -224,16 +224,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function openQualityMenu(){
-    if(!el.qualityMenu || !el.qualityBtn || !el.qualityBackdrop) return;
+    if(!el.qualityMenu) return;
     el.qualityBtn.classList.add('active');
     el.qualityBackdrop.classList.add('show');
-    const rect = el.qualityBtn.getBoundingClientRect();
-    const top = Math.min(window.innerHeight-180, rect.bottom + 10);
-    el.qualityMenu.style.top = `${top + window.scrollY}px`;
+    // Posición bajo el botón (menú es fixed)
+    const r = el.qualityBtn.getBoundingClientRect();
+    const top = Math.min(window.innerHeight-220, r.bottom + 8);
+    el.qualityMenu.style.top = `${top}px`;
     el.qualityMenu.classList.add('show');
   }
   function closeQualityMenu(){
-    if(!el.qualityMenu || !el.qualityBtn || !el.qualityBackdrop) return;
     el.qualityBtn.classList.remove('active');
     el.qualityBackdrop.classList.remove('show');
     el.qualityMenu.classList.remove('show');
@@ -241,7 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function selectQuality(fmt){
     currentFormat = fmt;
-    // Actualizamos la pista actual
     if(el.playerModal.style.display==='flex'){
       const t = playlist[idx];
       if(t){
@@ -269,16 +268,15 @@ document.addEventListener('DOMContentLoaded', () => {
     closeQualityMenu();
   }
 
+  // Abrir/cerrar SIN traba (siempre construye la lista)
   el.qualityBtn.addEventListener('click', ()=>{
-    if(!availableFormats || availableFormats.length===0) return;
     buildQualityMenu();
-    if(el.qualityMenu.classList.contains('show')) closeQualityMenu(); else openQualityMenu();
+    if(el.qualityMenu.classList.contains('show')) closeQualityMenu();
+    else openQualityMenu();
   });
   el.qualityBackdrop.addEventListener('click', closeQualityMenu);
-  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeQualityMenu(); });
 
   // ---------- Bienvenida ----------
-  const START_QUERY = 'Amar Azul';
   if(!sessionStorage.getItem('welcomeShown')){
     el.welcomeModal.style.display='flex';
     el.searchModal.style.display='none';
@@ -293,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(()=>{
         el.welcomeModal.style.display='none';
         showSearch();
-        currentQuery=START_QUERY;
+        currentQuery='juan_chota_dura';
         el.searchInput.value='';
         searchAlbums(currentQuery,1,true);
         sessionStorage.setItem('welcomeShown','true');
@@ -301,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
     },10000);
   }else{
     showSearch();
-    currentQuery=START_QUERY;
+    currentQuery='juan_chota_dura';
     el.searchInput.value='';
     searchAlbums(currentQuery,1,true);
   }
@@ -328,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
     el.fabSearch.style.display='block';
     el.fabPlayer.style.display='none';
     el.fabFav.style.display='block';
-    closeQualityMenu(); // por las dudas
+    closeQualityMenu();
   }
   function showFavorites(){
     el.searchModal.style.display='none';
@@ -554,9 +552,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <img src="${t.coverUrl}" alt="${t.title}" loading="lazy">
         <div class="playlist-item-info">
           <h3>
-            ${active && isPlaying ? `<span class="eq"><span></span><span></span><span></span></span>` : ''}
-            ${showHQ?`<span class="hq-indicator">HQ</span> `:''}
+            ${(active && isPlaying)?`<span class="eq"><span></span><span></span><span></span></span>`:''}
             ${escapeHtml(t.title)}
+            ${showHQ?` <span class="hq-indicator">HQ</span>`:''}
           </h3>
           <p>${escapeHtml(t.artist)}</p>
         </div>
@@ -587,6 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
           el.btnPlay.setAttribute('aria-label','Pausar');
           if(isFavPlaying){ el.favAudio.pause(); isFavPlaying=false; el.favBtnPlay.classList.remove('playing'); el.favBtnPlay.setAttribute('aria-label','Reproducir'); }
           el.fabPlayer.style.display='none';
+          renderPlaylist(); // refresca eq en activo
         }).catch(console.error);
       });
 
@@ -645,9 +644,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <img src="${t.coverUrl}" alt="${t.title}" loading="lazy">
         <div class="playlist-item-info">
           <h3>
-            ${active && isFavPlaying ? `<span class="eq"><span></span><span></span><span></span></span>` : ''}
-            ${isHQ?`<span class="hq-indicator">HQ</span> `:''}
+            ${(active && isFavPlaying)?`<span class="eq"><span></span><span></span><span></span></span>`:''}
             ${escapeHtml(t.title)}
+            ${isHQ?` <span class="hq-indicator">HQ</span>`:''}
           </h3>
           <p>${escapeHtml(t.artist)}</p>
         </div>
@@ -668,6 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
           el.favBtnPlay.setAttribute('aria-label','Pausar');
           if(isPlaying){ el.audio.pause(); isPlaying=false; el.btnPlay.classList.remove('playing'); el.btnPlay.setAttribute('aria-label','Reproducir'); }
           el.fabPlayer.style.display='none';
+          renderFavorites(); // refresca eq en activo
         }).catch(console.error);
       });
       el.favoritesPlaylist.appendChild(row);
@@ -716,9 +716,9 @@ document.addEventListener('DOMContentLoaded', () => {
           isPlaying=true; el.btnPlay.classList.add('playing'); el.btnPlay.setAttribute('aria-label','Pausar');
           if(isFavPlaying){ el.favAudio.pause(); isFavPlaying=false; el.favBtnPlay.classList.remove('playing'); el.favBtnPlay.setAttribute('aria-label','Reproducir'); }
           el.fabPlayer.style.display='none';
+          renderPlaylist();
         }).catch(console.error);
       }
-      renderPlaylist();
     }else if(scope==='favorites' && el.favoritesModal.style.display==='flex'){
       if(isFavPlaying){
         el.favAudio.pause(); isFavPlaying=false; el.favBtnPlay.classList.remove('playing'); el.favBtnPlay.setAttribute('aria-label','Reproducir');
@@ -727,9 +727,9 @@ document.addEventListener('DOMContentLoaded', () => {
           isFavPlaying=true; el.favBtnPlay.classList.add('playing'); el.favBtnPlay.setAttribute('aria-label','Pausar');
           if(isPlaying){ el.audio.pause(); isPlaying=false; el.btnPlay.classList.remove('playing'); el.btnPlay.setAttribute('aria-label','Reproducir'); }
           el.fabPlayer.style.display='none';
+          renderFavorites();
         }).catch(console.error);
       }
-      renderFavorites();
     }
   }
 
