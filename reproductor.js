@@ -1,429 +1,473 @@
-// ========================================================
+// =====================================
 // Sanavera MP3 - reproductor.js
-// Lógica del reproductor (álbum → pistas, calidad, EQ, etc.)
-// Depende de: utilidades.js
-// Expuesto como: window.Player
-// ========================================================
-
+// Lógica del reproductor (álbum abierto)
+// =====================================
 (function () {
-  const { $, qs, qsa, show, toggleBodyScroll, truncate, formatTime, escapeHtml,
-          normalizeCreator, extractSongTitle, IA, App } = window.$U;
+  // ---------- Helpers básicos (usan utilidades si existen) ----------
+  const $id = (id) => document.getElementById(id);
+  const escapeHtml = (s) =>
+    (s || "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+  const fmtTime = (s) => {
+    if (isNaN(s) || s < 0) return "0:00";
+    const m = Math.floor(s / 60), ss = Math.floor(s % 60);
+    return `${m}:${ss < 10 ? "0" : ""}${ss}`;
+  };
+  const normalizeCreator = (c) => (Array.isArray(c) ? c.join(", ") : (c || "Desconocido"));
+  const unique = (arr) => [...new Set(arr)];
+  const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
-  // ------- Referencias UI (player modal) -------
-  const UI = {
-    playerModal: $('player-modal'),
+  // Título prolijo desde nombre de archivo
+  function extractSongTitle(fileName) {
+    try {
+      let name = fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i, "");
+      name = name.replace(/^.*\//, "").replace(/_/g, " ").replace(/\s+/g, " ").trim();
+      name = name.replace(/^[\[(]?\s*\d{1,2}\s*[\])\-.]\s*/, "");
+      if (name.includes(" - ")) {
+        const parts = name.split(" - ").map((s) => s.trim()).filter(Boolean);
+        if (parts.length > 1) name = parts[parts.length - 1];
+      }
+      name = name.replace(/\s*[\[(]?\b(19|20)\d{2}\b[\])]?$/, "").trim();
+      return name || fileName;
+    } catch {
+      return fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i, "").replace(/_/g, " ");
+    }
+  }
 
-    // HERO
-    hero: $('player-hero'),
-    heroTitle: $('hero-song-title'),
-    heroArtist: $('hero-song-artist'),
-
-    // Legacy (oculto por CSS pero usado como fallback accesibilidad)
-    legacyCover: $('cover-image'),
-    legacyTitle: $('song-title'),
-    legacyArtist: $('song-artist'),
-
-    // Lista + tiempos
-    playlist: $('playlist'),
-    audio: $('audio-player'),
-    seek: $('seek-bar'),
-    cur: $('current-time'),
-    dur: $('duration'),
-
+  // ---------- DOM cache ----------
+  const el = {
+    // Modal
+    playerModal: $id("player-modal"),
+    // Hero
+    playerHero: $id("player-hero"),
+    heroTitle: $id("hero-song-title"),
+    heroArtist: $id("hero-song-artist"),
+    // (compatibilidad/oculto por CSS)
+    legacyCover: $id("cover-image"),
+    legacyTitle: $id("song-title"),
+    legacyArtist: $id("song-artist"),
+    // Lista
+    playlist: $id("playlist"),
+    // Audio
+    audio: $id("audio-player"),
     // Controles
-    btnPlay: $('btn-play'),
-    btnPrev: $('btn-prev'),
-    btnNext: $('btn-next'),
-    btnRepeat: $('btn-repeat'),
-    btnShuffle: $('btn-shuffle'),
-    btnDownload: $('btn-download'),
-
-    // Calidad
-    qualityBtn: $('quality-btn'),
-    qualityMenu: $('quality-menu'),
-    qualityBackdrop: $('quality-backdrop'),
-    qualityList: $('quality-options'),
+    btnPlay: $id("btn-play"),
+    btnPrev: $id("btn-prev"),
+    btnNext: $id("btn-next"),
+    btnRepeat: $id("btn-repeat"),
+    btnShuffle: $id("btn-shuffle"),
+    btnDownload: $id("btn-download"),
+    seek: $id("seek-bar"),
+    curTime: $id("current-time"),
+    durTime: $id("duration"),
+    // FABs (para mostrar/ocultar)
+    fabSearch: $id("floating-search-button"),
+    fabPlayer: $id("floating-player-button"),
+    fabFav: $id("floating-favorites-button"),
+    // Menú de calidad
+    qualityBtn: $id("quality-btn"),
+    qualityMenu: $id("quality-menu"),
+    qualityBackdrop: $id("quality-backdrop"),
+    qualityList: $id("quality-options"),
   };
 
-  // ------- Util -------
-  const HQ_FORMATS = ['wav','flac','aiff','alac'];
-  const MOCK_ALBUMS = [
-    { id:'queen_greatest_hits', title:'Queen - Greatest Hits', artist:'Queen',
-      image:'https://indiehoy.com/wp-content/uploads/2022/05/queen-queen-ii.jpg' }
-  ];
-  const MOCK_TRACKS = [
-    { title:'Bohemian Rhapsody', artist:'Queen',
-      urls:{ mp3:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
-      coverUrl:MOCK_ALBUMS[0].image, format:'mp3' },
-    { title:'Another One Bites the Dust', artist:'Queen',
-      urls:{ mp3:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
-      coverUrl:MOCK_ALBUMS[0].image, format:'mp3' },
-  ];
-
-  const qualityIsHQ = (f) => HQ_FORMATS.includes((f||'').toLowerCase());
-
-  function setHero(coverUrl, title, artist){
-    const safe = (coverUrl && coverUrl.trim())
-      ? coverUrl
-      : 'https://via.placeholder.com/1200x1200?text=Sanavera';
-    if (UI.hero) UI.hero.style.setProperty('--cover-url', `url("${safe}")`);
-    if (UI.heroTitle) UI.heroTitle.textContent = title || 'Selecciona una canción';
-    if (UI.heroArtist) UI.heroArtist.textContent = artist || '';
-    if (UI.legacyCover) UI.legacyCover.src = safe;
-    if (UI.legacyTitle) UI.legacyTitle.textContent = title || '';
-    if (UI.legacyArtist) UI.legacyArtist.textContent = artist || '';
+  // Validación mínima
+  const faltan = Object.entries(el).filter(([, v]) => !v).map(([k]) => k);
+  if (faltan.length) {
+    console.error("reproductor.js: faltan elementos:", faltan);
+    // No rompemos, solo salimos silenciosos para que otras secciones sigan
+    return;
   }
 
-  function wireTime(player, seek, cur, dur, scope){
-    player.addEventListener('loadedmetadata', ()=>{
-      dur.textContent = formatTime(player.duration);
-      seek.value = 0;
+  // ---------- Estado ----------
+  const HQ_FORMATS = ["wav", "flac", "aiff", "alac"];
+  const qualityIsHQ = (fmt) => HQ_FORMATS.includes((fmt || "").toLowerCase());
+
+  let playlist = [];
+  let originalPlaylist = [];
+  let idx = 0;
+  let isPlaying = false;
+
+  let repeatMode = "none";
+  let isShuffled = false;
+
+  let availableFormats = ["mp3"];
+  let currentFormat = "mp3";
+  let currentAlbumId = null;
+
+  // ---------- Hero ----------
+  function setHero(coverUrl, title, artist) {
+    const safe = coverUrl && coverUrl.trim() ? coverUrl : "https://via.placeholder.com/800x800?text=Sin+portada";
+    el.playerHero.style.setProperty("--cover-url", `url("${safe}")`);
+    el.heroTitle.textContent = title || "Selecciona una canción";
+    el.heroArtist.textContent = artist || "";
+    if (el.legacyCover) el.legacyCover.src = safe; // compat
+    if (el.legacyTitle) el.legacyTitle.textContent = title || "Selecciona una canción";
+    if (el.legacyArtist) el.legacyArtist.textContent = artist || "";
+  }
+
+  // ---------- Tiempo / barra ----------
+  function wireTime() {
+    el.audio.addEventListener("loadedmetadata", () => {
+      el.durTime.textContent = fmtTime(el.audio.duration);
+      el.seek.value = 0;
     });
-    player.addEventListener('timeupdate', ()=>{
-      if (!isNaN(player.duration) && player.duration > 0) {
-        cur.textContent = formatTime(player.currentTime);
-        seek.value = (player.currentTime / player.duration) * 100;
+    el.audio.addEventListener("timeupdate", () => {
+      if (!isNaN(el.audio.duration) && el.audio.duration > 0) {
+        el.curTime.textContent = fmtTime(el.audio.currentTime);
+        el.seek.value = (el.audio.currentTime / el.audio.duration) * 100;
       }
     });
-    player.addEventListener('ended', ()=>{
-      if (App.repeatMode === 'one') {
-        player.currentTime = 0; player.play().catch(console.error);
+    el.audio.addEventListener("ended", () => {
+      if (repeatMode === "one") {
+        el.audio.currentTime = 0;
+        el.audio.play().catch(console.error);
       } else {
-        next('player');
+        nextTrack();
       }
     });
-    seek.addEventListener('input', ()=>{
-      if (!isNaN(player.duration) && player.duration > 0) {
-        const t = (player.duration * seek.value) / 100;
-        player.currentTime = t; cur.textContent = formatTime(t);
+    el.seek.addEventListener("input", () => {
+      if (!isNaN(el.audio.duration) && el.audio.duration > 0) {
+        const t = (el.audio.duration * el.seek.value) / 100;
+        el.audio.currentTime = t;
+        el.curTime.textContent = fmtTime(t);
       }
     });
   }
-  wireTime(UI.audio, UI.seek, UI.cur, UI.dur, 'player');
+  wireTime();
 
-  // ------- Calidad (menú flotante) -------
-  function buildQualityMenu(){
-    if (!UI.qualityList) return;
-    UI.qualityList.innerHTML = '';
-    const fmts = [...App.availableFormats];
-    if (!fmts.includes('mp3')) fmts.unshift('mp3');
+  // ---------- Menú de calidad ----------
+  function buildQualityMenu() {
+    if (!el.qualityList) return;
+    el.qualityList.innerHTML = "";
+    const fmts = [...availableFormats];
+    if (!fmts.includes("mp3")) fmts.unshift("mp3");
     const frag = document.createDocumentFragment();
-    fmts.forEach(f=>{
-      const btn = document.createElement('button');
-      btn.className = 'quality-option';
-      btn.type = 'button';
-      btn.setAttribute('data-format', f);
+    fmts.forEach((f) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "quality-option";
+      btn.setAttribute("data-format", f);
       btn.innerHTML = `
         <span>${f.toUpperCase()}</span>
         <div class="center">
-          ${qualityIsHQ(f)?'<span class="badge-hq">HQ</span>':''}
-          <i class="fa-solid fa-check check" style="${f===App.currentFormat?'opacity:1':'opacity:.2'}"></i>
-        </div>`;
-      btn.addEventListener('click', ()=> selectQuality(f));
+          ${qualityIsHQ(f) ? `<span class="badge-hq">HQ</span>` : ""}
+          <i class="fa-solid fa-check check" style="${f === currentFormat ? "opacity:1" : "opacity:.2"}"></i>
+        </div>
+      `;
+      btn.addEventListener("click", () => selectQuality(f));
       frag.appendChild(btn);
     });
-    UI.qualityList.appendChild(frag);
+    el.qualityList.appendChild(frag);
   }
-  function openQualityMenu(){
-    if (!UI.qualityMenu) return;
-    buildQualityMenu();
-    UI.qualityBtn?.classList.add('active');
-    UI.qualityBackdrop?.classList.add('show');
-    const rect = UI.qualityBtn?.getBoundingClientRect?.();
-    const top = rect ? Math.min(window.innerHeight-220, rect.bottom + 10) : 80;
-    UI.qualityMenu.style.top = `${top + window.scrollY}px`;
-    UI.qualityMenu.classList.add('show');
-  }
-  function closeQualityMenu(){
-    UI.qualityBtn?.classList.remove('active');
-    UI.qualityBackdrop?.classList.remove('show');
-    UI.qualityMenu?.classList.remove('show');
-  }
-  function selectQuality(fmt){
-    App.currentFormat = fmt;
 
-    // Actualiza pista actual
-    const t = App.playlist[App.currentIndex];
+  function openQualityMenu() {
+    if (!availableFormats || !availableFormats.length) return;
+    buildQualityMenu();
+    el.qualityBtn.classList.add("active");
+    el.qualityBackdrop.classList.add("show");
+
+    // Posición bajo el botón
+    const rect = el.qualityBtn.getBoundingClientRect();
+    const top = Math.min(window.innerHeight - 220, rect.bottom + 10);
+    el.qualityMenu.style.top = `${top + window.scrollY}px`;
+    el.qualityMenu.classList.add("show");
+  }
+  function closeQualityMenu() {
+    el.qualityBtn.classList.remove("active");
+    el.qualityBackdrop.classList.remove("show");
+    el.qualityMenu.classList.remove("show");
+  }
+  function selectQuality(fmt) {
+    currentFormat = fmt;
+
+    const t = playlist[idx];
     if (t) {
-      const url = t.urls[App.currentFormat] || t.urls.mp3;
-      UI.audio.src = url;
-      UI.btnDownload.setAttribute('href', url);
-      UI.btnDownload.setAttribute('download', `${t.title}.${App.currentFormat}`);
-      if (App.isPlaying) UI.audio.play().catch(console.error);
+      const url = t.urls[currentFormat] || t.urls.mp3;
+      el.audio.src = url;
+      el.btnDownload.setAttribute("href", url);
+      el.btnDownload.setAttribute("download", `${t.title}.${currentFormat}`);
+      if (isPlaying) el.audio.play().catch(console.error);
     }
     renderPlaylist();
     buildQualityMenu();
     closeQualityMenu();
   }
-
-  // Cerrar por backdrop o ESC
-  UI.qualityBtn?.addEventListener('click', ()=>{
-    if (!App.availableFormats.length) return;
-    if (UI.qualityMenu.classList.contains('show')) closeQualityMenu(); else openQualityMenu();
+  // Abrir/cerrar por UI
+  el.qualityBtn && el.qualityBtn.addEventListener("click", () => {
+    if (el.qualityMenu.classList.contains("show")) closeQualityMenu();
+    else openQualityMenu();
   });
-  UI.qualityBackdrop?.addEventListener('click', closeQualityMenu);
-  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeQualityMenu(); });
+  el.qualityBackdrop && el.qualityBackdrop.addEventListener("click", closeQualityMenu);
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && el.qualityMenu.classList.contains("show")) closeQualityMenu();
+  });
 
-  // ------- Covers: buscar la mejor imagen grande -------
-  function pickBestCover(files, albumId){
-    // 1) intentá con archivos de imagen grandes
-    const imgs = (files||[]).filter(f => /\.(jpg|jpeg|png)$/i.test(f.name||''));
-    if (imgs.length) {
-      // priorizá nombres "front|cover|large" y mayor tamaño
-      imgs.sort((a,b)=>{
-        const ta = (a.name||'').toLowerCase();
-        const tb = (b.name||'').toLowerCase();
-        const score = (s)=> (/(front|cover|large|original)/.test(s)?2:0);
-        const sa = score(ta), sb = score(tb);
-        if (sa!==sb) return sb-sa;
-        const la = Number(a.size)||0, lb = Number(b.size)||0;
-        return lb-la;
-      });
-      const best = imgs[0];
-      return `https://archive.org/download/${albumId}/${encodeURIComponent(best.name).replace(/\+/g,'%20')}`;
-    }
-    // 2) fallback a services/img
-    return `https://archive.org/services/img/${albumId}`;
-  }
+  // ---------- Render de lista ----------
+  function renderPlaylist() {
+    el.playlist.innerHTML = "";
+    const favs = getFavorites();
+    const showHQ = qualityIsHQ(currentFormat);
 
-  // ------- Render playlist -------
-  function renderPlaylist(){
-    const favs = App.getFavorites();
-    UI.playlist.innerHTML = '';
+    playlist.forEach((t, i) => {
+      const active = i === idx;
+      const isFav = favs.some((f) => f.urls && f.urls.mp3 === t.urls.mp3);
 
-    App.playlist.forEach((t, i) => {
-      const active = (i === App.currentIndex);
-      const showHQ = qualityIsHQ(App.currentFormat);
-      const row = document.createElement('div');
-      row.className = `playlist-item${active?' active':''}`;
+      const row = document.createElement("div");
+      row.className = `playlist-item${active ? " active" : ""}`;
       row.innerHTML = `
         <img src="${t.coverUrl}" alt="${escapeHtml(t.title)}" loading="lazy">
         <div class="playlist-item-info">
           <h3>
-            ${active ? `<span class="eq"><span></span><span></span><span></span></span>` : ''}
-            ${showHQ ? `<span class="hq-indicator">HQ</span>` : ''}
+            ${active ? `<span class="eq"><span></span><span></span><span></span></span>` : ""}
+            ${showHQ ? ` <span class="hq-indicator">HQ</span>` : ""}
             ${escapeHtml(t.title)}
           </h3>
           <p>${escapeHtml(t.artist)}</p>
         </div>
         <div class="playlist-item-actions">
-          <button class="btn-favorite ${favs.some(f=>f.urls && f.urls.mp3===t.urls.mp3)?'active':''}"
-                  aria-label="Favorito">
-            <i class="${favs.some(f=>f.urls && f.urls.mp3===t.urls.mp3)?'fas fa-heart':'far fa-heart'}"></i>
+          <button class="btn-favorite${isFav ? " active" : ""}" aria-label="${isFav ? "Quitar de favoritos" : "Agregar a favoritos"}">
+            <i class="${isFav ? "fas fa-heart" : "far fa-heart"}"></i>
           </button>
         </div>
       `;
 
-      // fav
-      row.querySelector('.btn-favorite').addEventListener('click', (e)=>{
+      // Favoritos
+      row.querySelector(".btn-favorite").addEventListener("click", (e) => {
         e.stopPropagation();
-        const now = App.getFavorites();
-        if (now.some(f=>f.urls && f.urls.mp3===t.urls.mp3)) {
-          const next = now.filter(f=>!(f.urls && f.urls.mp3===t.urls.mp3));
-          App.setFavorites(next);
+        const now = getFavorites();
+        if (now.some((f) => f.urls && f.urls.mp3 === t.urls.mp3)) {
+          setFavorites(now.filter((f) => !(f.urls && f.urls.mp3 === t.urls.mp3)));
         } else {
-          App.setFavorites([{...t, format: App.currentFormat}, ...now]);
+          now.unshift({ ...t, format: currentFormat });
+          setFavorites(now);
         }
         renderPlaylist();
-        // si está abierto favoritos, que se actualice allá
-        window.Favoritos?.refresh();
+        // Si la vista de favoritos está abierta, que se refresque (favoritos.js lo gestiona escuchando storage o con API)
+        window.FavoritosAPI && window.FavoritosAPI.refresh && window.FavoritosAPI.refresh();
       });
 
-      // play
-      row.addEventListener('click', ()=>{
+      // Selección de pista
+      row.addEventListener("click", () => {
         loadTrack(i);
-        UI.audio.play().then(()=>{
-          App.isPlaying = true;
-          UI.btnPlay.classList.add('playing');
-          UI.btnPlay.setAttribute('aria-label','Pausar');
-          // pausá favoritos si sonaba
-          if (App.isFavPlaying) {
-            window.Favoritos?.pause();
-          }
+        el.audio.play().then(() => {
+          isPlaying = true;
+          el.btnPlay.classList.add("playing");
+          el.btnPlay.setAttribute("aria-label", "Pausar");
+          // Ocultamos fab player si estaba
+          el.fabPlayer && (el.fabPlayer.style.display = "none");
+          renderPlaylist(); // para mostrar la animación solo en la activa
         }).catch(console.error);
       });
 
-      UI.playlist.appendChild(row);
+      el.playlist.appendChild(row);
     });
   }
 
-  // ------- Cargar pista -------
-  function loadTrack(i){
-    App.currentIndex = i;
-    const t = App.playlist[i];
+  // ---------- Carga de pista ----------
+  function loadTrack(i) {
+    idx = i;
+    const t = playlist[idx];
     if (!t) return;
 
+    // Hero + textos
     setHero(t.coverUrl, t.title, t.artist);
 
-    const url = t.urls[App.currentFormat] || t.urls.mp3;
-    UI.audio.src = url;
-    UI.btnDownload.setAttribute('href', url);
-    UI.btnDownload.setAttribute('download', `${t.title}.${App.currentFormat}`);
+    // Audio
+    const url = t.urls[currentFormat] || t.urls.mp3;
+    el.audio.src = url;
+    el.btnDownload.setAttribute("href", url);
+    el.btnDownload.setAttribute("download", `${t.title}.${currentFormat}`);
 
-    UI.seek.value = 0; UI.cur.textContent='0:00'; UI.dur.textContent='0:00';
+    // Reset tiempos
+    el.seek.value = 0;
+    el.curTime.textContent = "0:00";
+    el.durTime.textContent = "0:00";
+
     renderPlaylist();
   }
 
-  // ------- Controles -------
-  function togglePlay(){
-    if (UI.playerModal.style.display !== 'flex') return;
-    if (App.isPlaying) {
-      UI.audio.pause();
-      App.isPlaying = false;
-      UI.btnPlay.classList.remove('playing');
-      UI.btnPlay.setAttribute('aria-label','Reproducir');
+  // ---------- Controles ----------
+  function togglePlay() {
+    if (el.playerModal.style.display !== "flex") return;
+    if (isPlaying) {
+      el.audio.pause();
+      isPlaying = false;
+      el.btnPlay.classList.remove("playing");
+      el.btnPlay.setAttribute("aria-label", "Reproducir");
     } else {
-      UI.audio.play().then(()=>{
-        App.isPlaying = true;
-        UI.btnPlay.classList.add('playing');
-        UI.btnPlay.setAttribute('aria-label','Pausar');
-        // parar favoritos si venía sonando
-        if (App.isFavPlaying) window.Favoritos?.pause();
+      el.audio.play().then(() => {
+        isPlaying = true;
+        el.btnPlay.classList.add("playing");
+        el.btnPlay.setAttribute("aria-label", "Pausar");
+        el.fabPlayer && (el.fabPlayer.style.display = "none");
       }).catch(console.error);
     }
     renderPlaylist();
   }
-
-  function next(){
-    if (UI.playerModal.style.display !== 'flex') return;
-    if (App.currentIndex + 1 < App.playlist.length) {
-      App.currentIndex = (App.currentIndex + 1) % App.playlist.length;
-      loadTrack(App.currentIndex);
-      if (App.isPlaying) UI.audio.play().catch(console.error);
-    } else if (App.repeatMode === 'all') {
-      App.currentIndex = 0;
-      loadTrack(App.currentIndex);
-      if (App.isPlaying) UI.audio.play().catch(console.error);
+  function nextTrack() {
+    if (idx + 1 < playlist.length) {
+      idx = (idx + 1) % playlist.length;
+      loadTrack(idx);
+      if (isPlaying) el.audio.play().catch(console.error);
+    } else if (repeatMode === "all") {
+      idx = 0;
+      loadTrack(idx);
+      if (isPlaying) el.audio.play().catch(console.error);
     }
   }
-
-  function prev(){
-    if (UI.playerModal.style.display !== 'flex') return;
-    App.currentIndex = (App.currentIndex - 1 + App.playlist.length) % App.playlist.length;
-    loadTrack(App.currentIndex);
-    if (App.isPlaying) UI.audio.play().catch(console.error);
+  function prevTrack() {
+    idx = (idx - 1 + playlist.length) % playlist.length;
+    loadTrack(idx);
+    if (isPlaying) el.audio.play().catch(console.error);
   }
-
-  function toggleRepeat(){
-    if (App.repeatMode === 'none') {
-      App.repeatMode = 'all'; UI.btnRepeat.classList.add('active');
-    } else if (App.repeatMode === 'all') {
-      App.repeatMode = 'one'; UI.btnRepeat.classList.add('repeat-one');
+  function toggleRepeat() {
+    if (repeatMode === "none") {
+      repeatMode = "all";
+      el.btnRepeat.classList.add("active");
+      el.btnRepeat.setAttribute("aria-label", "Repetir todo");
+    } else if (repeatMode === "all") {
+      repeatMode = "one";
+      el.btnRepeat.classList.add("repeat-one");
+      el.btnRepeat.setAttribute("aria-label", "Repetir una canción");
     } else {
-      App.repeatMode = 'none'; UI.btnRepeat.classList.remove('active','repeat-one');
+      repeatMode = "none";
+      el.btnRepeat.classList.remove("active", "repeat-one");
+      el.btnRepeat.setAttribute("aria-label", "Repetir");
     }
   }
-
-  function toggleShuffle(){
-    if (UI.playerModal.style.display !== 'flex') return;
-    App.shuffled = !App.shuffled;
-    UI.btnShuffle.classList.toggle('active', App.shuffled);
-    if (App.shuffled) {
-      const cur = App.playlist[App.currentIndex];
-      App.playlist = shuffle([...App.playlist]);
-      App.currentIndex = App.playlist.findIndex(t => t.urls.mp3 === cur.urls.mp3);
+  function toggleShuffle() {
+    isShuffled = !isShuffled;
+    el.btnShuffle.classList.toggle("active", isShuffled);
+    if (isShuffled) {
+      const cur = playlist[idx];
+      playlist = shuffle([...playlist]);
+      idx = playlist.findIndex((t) => t.urls.mp3 === cur.urls.mp3);
     } else {
-      App.playlist = [...App.originalPlaylist];
-      const curUrl = UI.audio.src;
-      App.currentIndex = Math.max(0, App.playlist.findIndex(t => (t.urls[App.currentFormat]||t.urls.mp3) === curUrl));
+      playlist = [...originalPlaylist];
+      const curUrl = el.audio.src;
+      idx = Math.max(0, playlist.findIndex((t) => (t.urls[currentFormat] || t.urls.mp3) === curUrl));
     }
     renderPlaylist();
   }
-  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 
-  // ------- Abrir álbum -------
-  async function open(albumId){
+  el.btnPlay.addEventListener("click", togglePlay);
+  el.btnNext.addEventListener("click", nextTrack);
+  el.btnPrev.addEventListener("click", prevTrack);
+  el.btnRepeat.addEventListener("click", toggleRepeat);
+  el.btnShuffle.addEventListener("click", toggleShuffle);
+
+  // ---------- Apertura de álbum (API pública) ----------
+  async function openPlayer(albumId) {
+    // Mostrar modal (inicio.js debería encargarse, pero por las dudas)
+    const showPlayer = () => {
+      $id("search-modal") && ($id("search-modal").style.display = "none");
+      el.playerModal.style.display = "flex";
+      $id("favorites-modal") && ($id("favorites-modal").style.display = "none");
+      el.fabSearch && (el.fabSearch.style.display = "block");
+      el.fabPlayer && (el.fabPlayer.style.display = "none");
+      el.fabFav && (el.fabFav.style.display = "block");
+      closeQualityMenu();
+    };
+    showPlayer();
+
     // Reset UI
-    show(UI.playerModal, true);
-    window.Modales?.showPlayer?.(); // navegación centralizada (inicio.js)
-    UI.playlist.innerHTML = '<p style="padding:10px;color:#b3b3b3">Cargando canciones…</p>';
-    setHero('', 'Selecciona una canción', '');
-    UI.audio.src = '';
-    UI.seek.value = 0; UI.cur.textContent='0:00'; UI.dur.textContent='0:00';
-    closeQualityMenu();
+    el.playlist.innerHTML = `<p style="padding:10px;color:#b3b3b3">Cargando canciones…</p>`;
+    setHero("", "Selecciona una canción", "");
+    el.audio.src = "";
+    el.seek.value = 0; el.curTime.textContent = "0:00"; el.durTime.textContent = "0:00";
 
     // Reset estado
-    App.playlist = []; App.originalPlaylist = [];
-    App.currentIndex = 0; App.isPlaying = false;
-    App.availableFormats = ['mp3']; App.currentFormat = 'mp3';
-    App.repeatMode = 'none'; App.shuffled = false; App.currentAlbumId = albumId;
+    playlist = []; originalPlaylist = []; idx = 0; isPlaying = false;
+    availableFormats = ["mp3"]; currentFormat = "mp3";
+    repeatMode = "none"; isShuffled = false; currentAlbumId = albumId;
+    el.btnPlay.classList.remove("playing"); el.btnPlay.setAttribute("aria-label", "Reproducir");
+    el.btnRepeat.classList.remove("active", "repeat-one"); el.btnShuffle.classList.remove("active");
 
-    UI.btnPlay.classList.remove('playing'); UI.btnPlay.setAttribute('aria-label','Reproducir');
-    UI.btnRepeat.classList.remove('active','repeat-one'); UI.btnShuffle.classList.remove('active');
-
-    // Mock
-    if (albumId === 'queen_greatest_hits') {
-      const cover = MOCK_ALBUMS[0].image, artist = 'Queen';
-      setHero(cover, 'Selecciona una canción', artist);
-      App.playlist = MOCK_TRACKS.map(t=>({...t}));
-      App.originalPlaylist = [...App.playlist];
-      App.availableFormats = ['mp3'];
+    // Mock de prueba
+    if (albumId === "queen_greatest_hits") {
+      const cover = "https://indiehoy.com/wp-content/uploads/2022/05/queen-queen-ii.jpg";
+      const artist = "Queen";
+      setHero(cover, "Selecciona una canción", artist);
+      playlist = [
+        { title: "Bohemian Rhapsody", artist, coverUrl: cover, urls: { mp3: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" }, format: "mp3" },
+        { title: "Another One Bites the Dust", artist, coverUrl: cover, urls: { mp3: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" }, format: "mp3" },
+      ];
+      originalPlaylist = [...playlist];
+      availableFormats = ["mp3"];
       buildQualityMenu();
       renderPlaylist();
       loadTrack(0);
       return;
     }
 
-    try{
-      const data = await IA.metadata(albumId);
-      const artist = normalizeCreator(data.metadata?.creator || data.metadata?.artist || 'Desconocido');
-      const heroCover = pickBestCover(data.files||[], albumId);
-      setHero(heroCover, 'Selecciona una canción', artist);
+    // Carga real
+    try {
+      const resp = await fetch(`https://archive.org/metadata/${albumId}`, { headers: { "User-Agent": "Mozilla/5.0" } });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
 
-      const files = (data.files||[]).filter(f => /\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i.test(f.name||''));
-      const tracksByTitle = {};
-      files.forEach(f=>{
+      const coverUrl = `https://archive.org/services/img/${albumId}`; // (mejorable a futuro con imagen grande)
+      const artist = normalizeCreator(data.metadata?.creator || data.metadata?.artist || "Desconocido");
+      setHero(coverUrl, "Selecciona una canción", artist);
+
+      const files = (data.files || []).filter((f) => /\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i.test(f.name || ""));
+      const tracks = {};
+      files.forEach((f) => {
         const raw = f.name;
         const title = extractSongTitle(raw);
-        const fmt = (raw.match(/\.(\w+)$/i)||[])[1]?.toLowerCase() || 'mp3';
-        const url = `https://archive.org/download/${albumId}/${encodeURIComponent(raw).replace(/\+/g,'%20')}`;
-        if (!tracksByTitle[title]) {
-          tracksByTitle[title] = { title, artist, coverUrl: heroCover, urls:{}, format: App.currentFormat };
-        }
-        tracksByTitle[title].urls[fmt] = url;
+        const fmt = ((raw.match(/\.(\w+)$/i) || [])[1] || "mp3").toLowerCase();
+        const url = `https://archive.org/download/${albumId}/${encodeURIComponent(raw).replace(/\+/g, "%20")}`;
+        if (!tracks[title]) tracks[title] = { title, artist, coverUrl, urls: {}, format: currentFormat };
+        tracks[title].urls[fmt] = url;
       });
-      App.playlist = Object.values(tracksByTitle);
-      App.originalPlaylist = [...App.playlist];
+      playlist = Object.values(tracks);
+      originalPlaylist = [...playlist];
 
-      // formatos disponibles
-      App.availableFormats = Array.from(new Set(
-        files.map(f => (f.name.match(/\.(\w+)$/i)||[])[1]?.toLowerCase()).filter(Boolean)
-      ));
-      if (!App.availableFormats.includes('mp3')) App.availableFormats.unshift('mp3');
+      availableFormats = unique(files.map((f) => ((f.name.match(/\.(\w+)$/i) || [])[1] || "").toLowerCase()).filter(Boolean));
+      if (!availableFormats.includes("mp3")) availableFormats.unshift("mp3");
 
       buildQualityMenu();
       renderPlaylist();
-      if (!App.playlist.length) {
-        UI.playlist.innerHTML = '<p style="padding:10px">No se encontraron canciones de audio</p>';
+      if (playlist.length === 0) {
+        el.playlist.innerHTML = `<p style="padding:10px">No se encontraron canciones de audio</p>`;
         return;
       }
       loadTrack(0);
     } catch (err) {
       console.error(err);
-      UI.playlist.innerHTML = `<p style="padding:10px;color:#b3b3b3">Error: ${err.message}. Usando datos de prueba.</p>`;
-      const cover = MOCK_ALBUMS[0].image;
-      setHero(cover, 'Selecciona una canción', 'Queen');
-      App.playlist = MOCK_TRACKS.map(t=>({...t}));
-      App.originalPlaylist = [...App.playlist];
-      App.availableFormats = ['mp3'];
+      el.playlist.innerHTML = `<p style="padding:10px;color:#b3b3b3">Error: ${err.message}. Usando datos de prueba.</p>`;
+      const cover = "https://indiehoy.com/wp-content/uploads/2022/05/queen-queen-ii.jpg";
+      setHero(cover, "Selecciona una canción", "Queen");
+      playlist = [
+        { title: "Bohemian Rhapsody", artist: "Queen", coverUrl: cover, urls: { mp3: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" }, format: "mp3" },
+        { title: "Another One Bites the Dust", artist: "Queen", coverUrl: cover, urls: { mp3: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" }, format: "mp3" },
+      ];
+      originalPlaylist = [...playlist];
+      availableFormats = ["mp3"];
       buildQualityMenu();
       loadTrack(0);
     }
   }
 
-  // ------- Botones principales (se atan en inicio.js también por las dudas) -------
-  UI.btnPlay?.addEventListener('click', togglePlay);
-  UI.btnNext?.addEventListener('click', next);
-  UI.btnPrev?.addEventListener('click', prev);
-  UI.btnRepeat?.addEventListener('click', toggleRepeat);
-  UI.btnShuffle?.addEventListener('click', toggleShuffle);
+  // ---------- Favoritos (mínimo para pintar iconos) ----------
+  function getFavorites() {
+    try {
+      return JSON.parse(localStorage.getItem("favorites") || "[]")
+        .filter((f) => f && f.title && f.artist && f.urls && f.urls.mp3);
+    } catch {
+      return [];
+    }
+  }
+  function setFavorites(list) {
+    localStorage.setItem("favorites", JSON.stringify(list || []));
+  }
 
-  // ------- Exponer API -------
-  window.Player = {
-    open,
-    togglePlay, next, prev,
-    selectQuality,
-    closeQualityMenu,
-    renderPlaylist, // usado por otros módulos si hace falta refrescar
+  // ---------- Exponer API global ----------
+  window.PlayerAPI = {
+    open: openPlayer,
+    isPlaying: () => isPlaying,
   };
+
+  // También exponemos una función global usada por buscador / HTML
+  window.openPlayer = openPlayer;
 })();
