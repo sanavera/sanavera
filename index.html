@@ -4,120 +4,148 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Sanavera Mp3</title>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-  <link href="style.css" rel="stylesheet">
+
+  <!-- Iconos -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- Bienvenida -->
+  <!-- ========== MODAL: Bienvenida ========== -->
   <section id="welcome-modal" class="modal show">
-    <div class="welcome-box">
+    <div class="welcome-wrap">
+      <img id="welcome-logo" src="./logo.png" alt="Sanavera Mp3" />
       <h1 class="brand">Sanavera Mp3</h1>
-      <div class="progress"><div class="bar" id="boot-bar"></div></div>
+
+      <div id="welcome-progress" class="progress">
+        <div id="welcome-progress-inner" class="progress-inner"></div>
+      </div>
+
       <p class="sub">Con el motor de Archive.org</p>
     </div>
   </section>
 
-  <!-- Búsqueda -->
-  <section id="search-modal" class="modal" style="display:none">
-    <header class="topbar">
-      <h1 class="brand small">Sanavera Mp3</h1>
-      <div class="search-row">
-        <input id="search-input" type="search" placeholder="Buscar álbumes (ej. Rata Blanca)" />
-        <button id="search-button" class="btn-solid"><i class="fa fa-search"></i> Buscar</button>
-      </div>
-      <div class="results-line"><span id="results-count">Resultados: 0</span></div>
+  <!-- ========== MODAL: Buscador ========== -->
+  <section id="search-modal" class="modal">
+    <header class="search-header">
+      <img src="./logo.png" alt="Sanavera" class="header-logo" />
+      <h2 class="header-title">Sanavera Mp3</h2>
     </header>
 
-    <div id="search-scroll" class="scroll-area">
-      <div id="error-message" class="msg" style="display:none"></div>
-      <div id="loading" class="loading" style="display:none"><i class="fa fa-spinner fa-spin"></i></div>
-      <div id="album-list" class="album-grid"></div>
+    <div class="search-bar">
+      <input id="search-input" type="text" placeholder="Buscar álbumes (ej. Rata Blanca)" autocomplete="off" />
+      <button id="search-button" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Buscar</button>
     </div>
+
+    <div class="meta-row">
+      <span id="results-count">Resultados: 0</span>
+      <span id="loading" style="display:none">Cargando…</span>
+      <span id="error-message" class="error" style="display:none"></span>
+    </div>
+
+    <!-- Grilla de álbumes -->
+    <div id="album-list" class="album-grid"></div>
   </section>
 
-  <!-- Reproductor -->
-  <section id="player-modal" class="modal" style="display:none">
-    <header id="player-hero" class="hero">
+  <!-- ========== MODAL: Reproductor ========== -->
+  <section id="player-modal" class="modal" style="display:none;">
+    <!-- Hero con portada difuminada -->
+    <div id="player-hero" class="hero">
       <div class="hero-overlay">
-        <h2 id="hero-song-title">Selecciona una canción</h2>
-        <p id="hero-song-artist"></p>
+        <h1 id="hero-song-title">Selecciona una canción</h1>
+        <h3 id="hero-song-artist"></h3>
       </div>
-    </header>
-
-    <div class="quality-wrap">
-      <button id="quality-btn" class="chip"><i class="fa fa-sliders"></i> Calidad</button>
-    </div>
-    <div id="quality-backdrop"></div>
-    <div id="quality-menu" class="quality-menu">
-      <div class="quality-title">Elegir calidad</div>
-      <div id="quality-options" class="quality-options"></div>
     </div>
 
-    <div id="player-scroll" class="scroll-area with-controls">
-      <div id="playlist" class="list"></div>
-      <div class="spacer"></div>
+    <!-- Botón Calidad -->
+    <div class="quality-row">
+      <button id="quality-btn" class="btn quality-btn">
+        <i class="fa-solid fa-sliders"></i> Calidad <i class="fa-solid fa-chevron-down"></i>
+      </button>
     </div>
 
-    <footer class="controls sticky-bottom">
-      <div class="timeline">
+    <!-- Lista de temas -->
+    <div id="playlist" class="playlist"></div>
+
+    <!-- Controles -->
+    <div class="player-controls">
+      <div class="time-row">
         <span id="current-time">0:00</span>
         <input id="seek-bar" type="range" min="0" max="100" value="0" />
         <span id="duration">0:00</span>
       </div>
-      <div class="buttons">
-        <button id="btn-repeat" class="btn-ctrl" aria-label="Repetir"><i class="fa fa-repeat"></i></button>
-        <button id="btn-prev" class="btn-ctrl" aria-label="Anterior"><i class="fa fa-backward-step"></i></button>
-        <button id="btn-play" class="btn-ctrl play" aria-label="Reproducir"><i class="fa fa-play"></i></button>
-        <button id="btn-next" class="btn-ctrl" aria-label="Siguiente"><i class="fa fa-forward-step"></i></button>
-        <button id="btn-shuffle" class="btn-ctrl" aria-label="Mezclar"><i class="fa fa-shuffle"></i></button>
-        <a id="btn-download" class="btn-ctrl" download aria-label="Descargar"><i class="fa fa-download"></i></a>
+      <div class="buttons-row">
+        <button id="btn-repeat" class="btn-round" aria-label="Repetir"><i class="fa-solid fa-repeat"></i></button>
+        <button id="btn-prev" class="btn-round" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button>
+        <button id="btn-play" class="btn-round play" aria-label="Reproducir"><i class="fa-solid fa-play"></i></button>
+        <button id="btn-next" class="btn-round" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button>
+        <button id="btn-shuffle" class="btn-round" aria-label="Aleatorio"><i class="fa-solid fa-shuffle"></i></button>
+        <a id="btn-download" class="btn-round" aria-label="Descargar" href="#" download><i class="fa-solid fa-download"></i></a>
       </div>
-      <audio id="audio-player"></audio>
-      <div class="footer-note">Código escrito por Sebastián Sanavera</div>
-    </footer>
-  </section>
-
-  <!-- Favoritos -->
-  <section id="favorites-modal" class="modal" style="display:none">
-    <header id="favorites-hero" class="hero">
-      <div class="hero-overlay">
-        <h2 id="favorites-hero-song-title">Selecciona una canción</h2>
-        <p id="favorites-hero-song-artist"></p>
-      </div>
-    </header>
-
-    <div id="favorites-scroll" class="scroll-area with-controls">
-      <div id="favorites-playlist" class="list"></div>
-      <div class="spacer"></div>
     </div>
 
-    <footer class="controls sticky-bottom">
-      <div class="timeline">
+    <!-- Audio principal -->
+    <audio id="audio-player" preload="metadata"></audio>
+  </section>
+
+  <!-- ========== MODAL: Favoritos ========== -->
+  <section id="favorites-modal" class="modal" style="display:none;">
+    <div id="favorites-hero" class="hero">
+      <div class="hero-overlay">
+        <h1 id="favorites-hero-song-title">Selecciona una canción</h1>
+        <h3 id="favorites-hero-song-artist"></h3>
+      </div>
+    </div>
+
+    <div id="favorites-playlist" class="playlist"></div>
+
+    <div class="player-controls">
+      <div class="time-row">
         <span id="favorites-current-time">0:00</span>
         <input id="favorites-seek-bar" type="range" min="0" max="100" value="0" />
         <span id="favorites-duration">0:00</span>
       </div>
-      <div class="buttons">
-        <button id="favorites-btn-repeat" class="btn-ctrl" aria-label="Repetir"><i class="fa fa-repeat"></i></button>
-        <button id="favorites-btn-prev" class="btn-ctrl" aria-label="Anterior"><i class="fa fa-backward-step"></i></button>
-        <button id="favorites-btn-play" class="btn-ctrl play" aria-label="Reproducir"><i class="fa fa-play"></i></button>
-        <button id="favorites-btn-next" class="btn-ctrl" aria-label="Siguiente"><i class="fa fa-forward-step"></i></button>
-        <button id="favorites-btn-shuffle" class="btn-ctrl" aria-label="Mezclar"><i class="fa fa-shuffle"></i></button>
-        <a id="favorites-btn-download" class="btn-ctrl" download aria-label="Descargar"><i class="fa fa-download"></i></a>
+      <div class="buttons-row">
+        <button id="favorites-btn-repeat" class="btn-round" aria-label="Repetir"><i class="fa-solid fa-repeat"></i></button>
+        <button id="favorites-btn-prev" class="btn-round" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button>
+        <button id="favorites-btn-play" class="btn-round play" aria-label="Reproducir"><i class="fa-solid fa-play"></i></button>
+        <button id="favorites-btn-next" class="btn-round" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button>
+        <button id="favorites-btn-shuffle" class="btn-round" aria-label="Aleatorio"><i class="fa-solid fa-shuffle"></i></button>
+        <a id="favorites-btn-download" class="btn-round" aria-label="Descargar" href="#" download><i class="fa-solid fa-download"></i></a>
       </div>
-      <audio id="favorites-audio-player"></audio>
-    </footer>
+    </div>
+
+    <audio id="favorites-audio-player" preload="metadata"></audio>
   </section>
 
-  <!-- FABs -->
-  <button id="floating-search-button" class="fab fab-search" title="Búsqueda"><i class="fa fa-magnifying-glass"></i></button>
-  <button id="floating-player-button" class="fab fab-player" title="Reproductor" style="display:none"><i class="fa fa-play"></i></button>
-  <button id="floating-favorites-button" class="fab fab-fav" title="Favoritos"><i class="fa fa-heart"></i></button>
+  <!-- ========== Menú de Calidad (overlay) ========== -->
+  <div id="quality-backdrop" class="backdrop"></div>
+  <div id="quality-menu" class="quality-menu">
+    <h4>Elegir calidad</h4>
+    <div id="quality-options" class="quality-options"></div>
+  </div>
 
-  <!-- JS -->
-  <script type="module" src="./utilidades.js"></script>
-<script type="module" src="./inicio.js"></script>
+  <!-- ========== Elementos legacy (ocultos por CSS pero usados por JS) ========== -->
+  <img id="cover-image" alt="" style="display:none" />
+  <span id="song-title" style="display:none"></span>
+  <span id="song-artist" style="display:none"></span>
+  <img id="favorites-cover-image" alt="" style="display:none" />
+  <span id="favorites-song-title" style="display:none"></span>
+  <span id="favorites-song-artist" style="display:none"></span>
+
+  <!-- ========== FABs siempre visibles ========== -->
+  <button id="floating-search-button" class="fab fab-search" title="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+  <button id="floating-player-button" class="fab fab-player" title="Reproductor" style="display:none;"><i class="fa-solid fa-play"></i></button>
+  <button id="floating-favorites-button" class="fab fab-fav" title="Favoritos"><i class="fa-solid fa-heart"></i></button>
+
+  <!-- ========== Scripts (orden requerido) ========== -->
+  <script src="utilidades.js"></script>
+  <script src="reproductor.js"></script>
+  <script src="favoritos.js"></script>
+  <script src="buscador.js"></script>
+  <script src="inicio.js"></script>
 </body>
 </html>
