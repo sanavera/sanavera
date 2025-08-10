@@ -98,7 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- Estado ----------
   const HQ_FORMATS = ['wav','flac','aiff','alac'];
-  const MAX_HERO_BYTES = 1 * 1024 * 1024; // 1 MB
   const MOCK_ALBUMS = [
     { id:'queen_greatest_hits', title:'Queen - Greatest Hits', artist:'Queen', image:'https://indiehoy.com/wp-content/uploads/2022/05/queen-queen-ii.jpg', relevance:0 }
   ];
@@ -138,16 +137,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function extractSongTitle(fileName){
     try{
       let name = fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i,'');
-      name = name.replace(/^.*\//,'');             // quita path
+      name = name.replace(/^.*\//,'');
       name = name.replace(/_/g,' ').replace(/\s+/g,' ').trim();
-      // quita prefijos tipo [01], (01), 01-, 1.
       name = name.replace(/^[\[(]?\s*\d{1,2}\s*[\])\-.]\s*/,'');
-      // si hay separadores " - ", preferimos la última parte (suele ser la pista)
       if(name.includes(' - ')){
         const parts = name.split(' - ').map(s=>s.trim()).filter(Boolean);
         if(parts.length>1) name = parts[parts.length-1];
       }
-      // quita año en paréntesis al final
       name = name.replace(/\s*[\[(]?\b(19|20)\d{2}\b[\])]?$/,'').trim();
       return name || fileName;
     }catch(_){
@@ -172,52 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function qualityIsHQ(fmt){ return HQ_FORMATS.includes((fmt||'').toLowerCase()); }
-
-  // ---------- Utilidades de red (portadas) ----------
-  function withTimeout(promise, ms=5000){
-    return Promise.race([
-      promise,
-      new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')), ms))
-    ]);
-  }
-
-  async function headSize(url){
-    try{
-      const r = await withTimeout(fetch(url, { method:'HEAD' }), 6000);
-      if(!r.ok) throw new Error('HEAD '+r.status);
-      const len = r.headers.get('content-length');
-      return len ? parseInt(len,10) : NaN;
-    }catch(_){ return NaN; }
-  }
-
-  async function pickHeroImage(albumId, metadata){
-    const services = `https://archive.org/services/img/${albumId}`;
-    const files = Array.isArray(metadata?.files) ? metadata.files : [];
-    // Candidatos: imágenes que parecen "portada", evitando espectrogramas
-    const imgs = files.filter(f=>{
-      const n = (f.name||'').toLowerCase();
-      return /\.(jpg|jpeg|png|webp)$/i.test(n)
-        && !/spectro|spectrogram|waveform|spectrum/.test(n);
-    });
-
-    const preferred = imgs.sort((a,b)=>{
-      const na=(a.name||'').toLowerCase();
-      const nb=(b.name||'').toLowerCase();
-      const sa = /front|frontal|cover|portada|folder|album/.test(na) ? 1 : 0;
-      const sb = /front|frontal|cover|portada|folder|album/.test(nb) ? 1 : 0;
-      return sb - sa; // primero los que parecen portada
-    });
-
-    for(const f of preferred){
-      const url = `https://archive.org/download/${albumId}/${encodeURIComponent(f.name).replace(/\+/g,'%20')}`;
-      const bytes = await headSize(url);
-      if(!isNaN(bytes) && bytes <= MAX_HERO_BYTES){
-        return url; // Aprobada (<=1MB)
-      }
-    }
-    // Si ninguna pasa o no se pudo medir → services/img
-    return services;
-  }
 
   // ---------- Player time events ----------
   function wireTime(player, seek, cur, dur, scope){
@@ -248,12 +198,44 @@ document.addEventListener('DOMContentLoaded', () => {
   wireTime(el.audio, el.seek, el.curTime, el.durTime, 'player');
   wireTime(el.favAudio, el.favSeek, el.favCurTime, el.favDurTime, 'favorites');
 
+  // ---------- HERO COVER PICKER (solo JPG/JPEG y <= 1MB) ----------
+  async function pickBestCover(files, albumId) {
+    const isJpg = f => /\.jpe?g$/i.test(f.name || '');
+    const good = (files || []).filter(isJpg);
+
+    // orden: nombres típicos de portada primero
+    const PREF = [/front|frontal|cover|portada|folder/i, /album|artwork|scan|caratula|tapa/i];
+    good.sort((a,b)=>{
+      const an=a.name||'', bn=b.name||'';
+      const score = s => PREF.reduce((acc,rx)=>acc+(rx.test(s)?1:0),0);
+      const extScore = s => (/\.jpe?g$/i.test(s)?2:0);
+      return (score(bn)-score(an)) || (extScore(bn)-extScore(an)) || (an.length-bn.length);
+    });
+
+    const headOK = async url => {
+      try{
+        const r = await fetch(url, { method:'HEAD' });
+        const len = +r.headers.get('content-length') || 0;
+        // entre ~30KB y 1MB para evitar thumbs minúsculos y JPGs gigantes
+        return len > 30_000 && len <= 1_000_000;
+      }catch{ return false; }
+    };
+
+    for (const f of good){
+      const url = `https://archive.org/download/${albumId}/${encodeURIComponent(f.name).replace(/\+/g,'%20')}`;
+      if (await headOK(url)) return url;
+    }
+
+    // fallback seguro (thumbnail del grid)
+    return `https://archive.org/services/img/${albumId}`;
+  }
+
   // ---------- Calidad (menú) ----------
   function buildQualityMenu(){
     if(!el.qualityList) return;
     el.qualityList.innerHTML = '';
     const fmts = [...availableFormats];
-    if(!fmts.includes('mp3')) fmts.unshift('mp3'); // aseguramos mp3 al frente
+    if(!fmts.includes('mp3')) fmts.unshift('mp3');
     const frag = document.createDocumentFragment();
     fmts.forEach(f=>{
       const li = document.createElement('button');
@@ -277,7 +259,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if(!el.qualityMenu) return;
     el.qualityBtn.classList.add('active');
     el.qualityBackdrop.classList.add('show');
-    // Colocamos el menú bajo el botón y centrado (top dinámico)
     const rect = el.qualityBtn.getBoundingClientRect();
     const top = Math.min(window.innerHeight-180, rect.bottom + 10);
     el.qualityMenu.style.top = `${top + window.scrollY}px`;
@@ -291,7 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function selectQuality(fmt){
     currentFormat = fmt;
-    // Actualizamos la pista actual
     if(el.playerModal.style.display==='flex'){
       const t = playlist[idx];
       if(t){
@@ -376,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
     el.fabSearch.style.display='block';
     el.fabPlayer.style.display='none';
     el.fabFav.style.display='block';
-    closeQualityMenu(); // por las dudas
+    closeQualityMenu();
   }
   function showFavorites(){
     el.searchModal.style.display='none';
@@ -444,7 +424,6 @@ document.addEventListener('DOMContentLoaded', () => {
           relevance:relevance(d, query)
         }));
         allAlbums = allAlbums.concat(albums);
-        // Unicos por Título|Artista
         const unique = Array.from(new Map(allAlbums.map(a=>[`${a.title}|${a.artist}`, a])).values());
         el.resultsCount.textContent=`Resultados: ${unique.length}`;
         displayAlbums(unique);
@@ -492,16 +471,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- Player ----------
   function openPlayer(albumId){
     showPlayer();
-    // Reset UI
     el.playlist.innerHTML='<p style="padding:10px;color:#b3b3b3">Cargando canciones…</p>';
-    setHero('player','', 'Cargando álbum…', '');
+    setHero('player','', 'Selecciona una canción', '');
     el.songTitle.textContent='Selecciona una canción';
     el.songArtist.textContent='';
     el.audio.src='';
     el.seek.value=0; el.curTime.textContent='0:00'; el.durTime.textContent='0:00';
     closeQualityMenu();
 
-    // Reset estado
     playlist=[]; originalPlaylist=[]; idx=0; isPlaying=false;
     availableFormats=['mp3']; currentFormat='mp3';
     repeatMode='none'; isShuffled=false; currentAlbumId=albumId;
@@ -509,8 +486,8 @@ document.addEventListener('DOMContentLoaded', () => {
     el.btnRepeat.classList.remove('active','repeat-one'); el.btnShuffle.classList.remove('active');
 
     if(albumId==='queen_greatest_hits'){
-      const cover = MOCK_ALBUMS[0].image, artist='Queen', albumTitle='Queen - Greatest Hits';
-      setHero('player', cover, albumTitle, artist);
+      const cover = MOCK_ALBUMS[0].image, artist='Queen';
+      setHero('player', cover, 'Queen - Greatest Hits', artist);
       playlist = MOCK_TRACKS.map(t=>({...t}));
       originalPlaylist=[...playlist];
       availableFormats=['mp3'];
@@ -523,14 +500,15 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch(`https://archive.org/metadata/${albumId}`, {headers:{'User-Agent':'Mozilla/5.0'}})
       .then(r=>{ if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(async data=>{
-        const albumTitle = data.metadata?.title || 'Álbum';
+        const albumTitle = (data.metadata?.title || 'Selecciona una canción');
         const artist = normalizeCreator(data.metadata?.creator || data.metadata?.artist || 'Desconocido');
 
-        // Elegimos portada (HD <=1MB o services/img)
-        const heroUrl = await pickHeroImage(albumId, data);
-        setHero('player', heroUrl, albumTitle, artist);
+        // Portada: solo JPG/JPEG <= 1MB. Si no hay, fallback a services/img
+        const coverUrl = await pickBestCover(data.files, albumId);
 
-        // Construimos tracks
+        // Hero muestra el título del álbum al inicio
+        setHero('player', coverUrl, albumTitle, artist);
+
         const files = (data.files||[]).filter(f=>/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i.test(f.name||''));
         const tracks = {};
         files.forEach(f=>{
@@ -538,13 +516,15 @@ document.addEventListener('DOMContentLoaded', () => {
           const title = extractSongTitle(raw);
           const fmt = (raw.match(/\.(\w+)$/i)||[])[1]?.toLowerCase() || 'mp3';
           const url = `https://archive.org/download/${albumId}/${encodeURIComponent(raw).replace(/\+/g,'%20')}`;
-          if(!tracks[title]) tracks[title]={ title, artist, coverUrl: heroUrl, urls:{}, format: currentFormat };
+          if(!tracks[title]) tracks[title]={ title, artist, coverUrl, urls:{}, format: currentFormat };
           tracks[title].urls[fmt]=url;
         });
         playlist = Object.values(tracks);
         originalPlaylist=[...playlist];
 
-        availableFormats = unique(files.map(f=>(f.name.match(/\.(\w+)$/i)||[])[1]?.toLowerCase()).filter(Boolean));
+        availableFormats = unique((data.files||[])
+          .map(f=>(f.name.match(/\.(\w+)$/i)||[])[1]?.toLowerCase())
+          .filter(Boolean));
         if(!availableFormats.includes('mp3')) availableFormats.unshift('mp3');
 
         buildQualityMenu();
@@ -559,7 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error(err);
         el.playlist.innerHTML=`<p style="padding:10px;color:#b3b3b3">Error: ${err.message}. Usando datos de prueba.</p>`;
         const cover = MOCK_ALBUMS[0].image;
-        setHero('player', cover, 'Queen - Greatest Hits', 'Queen');
+        setHero('player', cover, 'Selecciona una canción', 'Queen');
         playlist = MOCK_TRACKS.map(t=>({...t}));
         originalPlaylist=[...playlist];
         availableFormats=['mp3'];
@@ -575,18 +555,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const t = playlist[idx];
     if(!t) return;
 
-    // Títulos (hero + legado oculto)
     el.songTitle.textContent = t.title;
     el.songArtist.textContent = t.artist;
     setHero('player', t.coverUrl, t.title, t.artist);
 
-    // Audio
     const url = t.urls[currentFormat] || t.urls.mp3;
     el.audio.src = url;
     el.btnDownload.setAttribute('href', url);
     el.btnDownload.setAttribute('download', `${t.title}.${currentFormat}`);
 
-    // Reset tiempo
     el.seek.value=0; el.curTime.textContent='0:00'; el.durTime.textContent='0:00';
 
     renderPlaylist();
@@ -619,7 +596,6 @@ document.addEventListener('DOMContentLoaded', () => {
           </button>
         </div>
       `;
-      // Click en favorito
       row.querySelector('.btn-favorite').addEventListener('click', (e)=>{
         e.stopPropagation();
         const nowFavs = getFavorites();
@@ -631,7 +607,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPlaylist();
         if(el.favoritesModal.style.display==='flex') loadFavorites();
       });
-      // Click en fila
       row.addEventListener('click', ()=>{
         loadTrack(i);
         el.audio.play().then(()=>{
