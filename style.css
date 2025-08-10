@@ -1,38 +1,33 @@
-/* ================================
-   Sanavera MP3 - style.css
-   Sebastián Gustavo Sanavera
-   ================================ */
+/* =====================================
+   Sanavera MP3 - style.css (completo)
+   Comentarios “argentos” pa' ubicarnos.
+   ===================================== */
 
-/* --- Variables (colores y medidas base) --- */
+/* -------- Variables que mandan los colores -------- */
 :root{
-  --bg:#0e0f13;
-  --elev:#161821;
-  --tile:#1b1e27;
-  --tile-hover:#222634;
-  --muted:#aab0c0;
-  --text:#f6f7fb;
-  --brand:#5ee192;
-  --brand-2:#37c977;
-  --line:#2a2f3e;
+  --bg:#0e0f13;          /* fondo general, negro azulado */
+  --elev:#161821;        /* tarjetas/headers */
+  --tile:#1b1e27;        /* listitas y botones */
+  --tile-hover:#222634;  /* hover suave */
+  --muted:#aab0c0;       /* grisito para textos secundarios */
+  --text:#f6f7fb;        /* texto principal */
+  --brand:#5ee192;       /* verde “play” */
+  --brand-2:#37c977;     /* verde cuando pasás el dedo */
+  --line:#2a2f3e;        /* bordecitos */
+  --header-h:110px;
+  --hero-max-h:44vh;
+  --footer-safe:max(88px,64px + env(safe-area-inset-bottom));
+  --side-pad:14px;
 
-  --header-h: 110px;
-  --hero-max-h: 44vh;
-  --footer-safe: max(88px, 64px + env(safe-area-inset-bottom));
-  --side-pad: 14px;
-
-  --transition: 150ms cubic-bezier(0.4,0,0.2,1);
-  --shadow-sm: 0 2px 8px rgba(0,0,0,.15);
-  --shadow-md: 0 4px 16px rgba(0,0,0,.25);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,.35);
-  --border-radius: 12px;
-  --border-radius-sm: 8px;
+  --transition:150ms cubic-bezier(.4,0,.2,1);
+  --shadow-sm:0 2px 8px rgba(0,0,0,.15);
+  --shadow-md:0 4px 16px rgba(0,0,0,.25);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.35);
+  --border-radius:12px;
+  --border-radius-sm:8px;
 }
 
-
-html { color-scheme: dark; }
-body { background-color: #161821; }
-
-/* --- Reseteo --- */
+/* -------- Reset tranqui -------- */
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
 html{ -webkit-text-size-adjust:100%; }
@@ -47,69 +42,65 @@ body{
 }
 a{ color:inherit; text-decoration:none; }
 img{ display:block; max-width:100%; height:auto; }
-
-/* Si el user pide menos animaciones, bajamos un cambio */
-@media (prefers-reduced-motion: reduce){
-  *,*::before,*::after{ animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; scroll-behavior:auto!important; }
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{ animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; }
 }
-
-/* Cuando hay modal abierto, clavamos el scroll */
+/* cuando hay modal, clavamos el scroll */
 body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 
-/* --- Raíz del reproductor --- */
-#reproductor-container-sanavera{
-  position:relative; width:100%; height:100vh; overflow:hidden; background:inherit;
-}
+/* -------- Raíz del reproductor -------- */
+#reproductor-container-sanavera{ position:relative; width:100%; height:100vh; overflow:hidden; background:inherit; }
 
-/* ================================
-   MODALES
-   ================================ */
+/* =====================================
+   MODALES (capas por encima, con blur)
+   ===================================== */
 #reproductor-container-sanavera .modal{
   display:none; position:fixed; inset:0; z-index:1000;
-  background:rgba(14,15,19,.85); backdrop-filter:blur(8px);
+  background:rgba(14,15,19,.85);
+  backdrop-filter: blur(8px);
   justify-content:center; align-items:center;
 }
 #reproductor-container-sanavera .modal-content{
   background:var(--elev); border:1px solid var(--line);
-  width:100%; max-width:100%; height:100vh; padding:0; outline:none;
-  display:flex; flex-direction:column; overflow:hidden; box-shadow:var(--shadow-lg);
+  width:100%; max-width:100%; height:100vh; padding:0;
+  display:flex; flex-direction:column; overflow:hidden;
+  box-shadow:var(--shadow-lg);
 }
 
-/* ================================
-   WELCOME
-   ================================ */
+/* =====================================
+   BIENVENIDA
+   ===================================== */
 #reproductor-container-sanavera .welcome-content{
   height:100%; width:100%; padding:32px 20px;
   display:flex; align-items:center; justify-content:center; flex-direction:column; gap:24px;
   background: radial-gradient(circle at center, var(--elev) 0%, var(--bg) 70%);
 }
-#reproductor-container-sanavera .welcome-image{
-  width:180px; height:180px; object-fit:contain; border-radius:var(--border-radius); box-shadow:var(--shadow-md);
-}
+#reproductor-container-sanavera .welcome-image{ width:180px; height:180px; object-fit:contain; border-radius:var(--border-radius); box-shadow:var(--shadow-md); }
 #reproductor-container-sanavera .welcome-text{ font-size:20px; font-weight:500; text-align:center; }
 #reproductor-container-sanavera .progress-container{ width:100%; max-width:420px; }
 #reproductor-container-sanavera .progress-bar{ width:100%; height:6px; background:var(--tile); border-radius:3px; overflow:hidden; box-shadow:inset 0 1px 3px rgba(0,0,0,.2); }
 #reproductor-container-sanavera .progress{ width:0; height:100%; background:linear-gradient(90deg,var(--brand-2),var(--brand)); animation:welcome-progress 10s linear forwards; border-radius:3px; }
 @keyframes welcome-progress{ from{width:0} to{width:100%} }
 
-/* ================================
+/* =====================================
    BUSCADOR (header + grilla)
-   ================================ */
+   ===================================== */
 #reproductor-container-sanavera .search-modal .modal-content{ padding-bottom:var(--footer-safe); background:var(--bg); }
 
-/* Barra fija arriba */
+/* Topbar donde vive el buscador */
 #reproductor-container-sanavera .topbar{
   position:sticky; top:0; z-index:30;
   background:var(--elev); border:1px solid var(--line);
-  padding:44px var(--side-pad) 18px; box-shadow:var(--shadow-md); backdrop-filter:blur(10px);
+  padding:20px var(--side-pad) 22px; /* si querés bajar/subir el buscador, tocá este padding */
+  box-shadow:var(--shadow-md); backdrop-filter: blur(10px);
 }
-
-/* Acá iba el logo/brand, pero lo volamos porque pintaba al dope */
+/* ocultamos la marca de arriba porque ya no la usamos */
 #reproductor-container-sanavera .brand{ display:none !important; }
-#brand-logo{ display:none !important; }
-#brand-text{ display:none !important; }
 
-/* Caja de búsqueda */
+#brand-logo{ height:36px; width:auto; }
+#brand-text{ font-weight:600; font-size:18px; letter-spacing:-.025em; }
+
+/* campo + “botón” con nuestro logo */
 #reproductor-container-sanavera .search-row{ display:flex; gap:12px; align-items:center; }
 #search-input{
   flex:1; background:var(--tile); color:var(--text);
@@ -120,53 +111,43 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 #search-input::placeholder{ color:var(--muted); font-weight:400; }
 #search-input:focus{ border-color:var(--brand); background:var(--elev); box-shadow:0 0 0 3px rgba(94,225,146,.15), var(--shadow-sm); }
 
-/* Botón de buscar: usamos el PNG, más chico y sin adornos raros */
 #search-button{
-  width:44px; height:44px; min-width:44px;
-  padding:0; border:none; border-radius:50%;
-  background:var(--tile) center/72% no-repeat url("./logo3.png");
-  box-shadow:var(--shadow-sm); font-size:0; color:transparent; cursor:pointer;
-  transition:all var(--transition);
+  width:48px; height:48px; min-width:48px; padding:0; border:none; border-radius:50%;
+  background:var(--tile) url("./logo3.png") center/75% no-repeat;
+  box-shadow:var(--shadow-sm); font-size:0; color:transparent; cursor:pointer; transition:all var(--transition);
 }
 #search-button:hover{ transform:translateY(-1px); box-shadow:var(--shadow-md); background-color:var(--tile-hover); }
 #search-button:active{ transform:scale(.95); }
 #search-button:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
 
-/* Contador de resultados */
 #results-count{ margin-top:12px; font-size:13px; font-weight:500; color:var(--muted); text-align:center; }
 
-/* Grilla de álbums */
+/* Grilla de álbumes */
 #album-list{
   height:calc(100vh - var(--header-h));
   overflow:auto; padding:20px var(--side-pad) 32px;
-  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; background:var(--bg);
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px;
+  background:var(--bg);
 }
 .album-item{ cursor:pointer; transition:transform var(--transition); }
 .album-item:hover{ transform:translateY(-2px); }
 .album-item:active{ transform:scale(.98); }
-.album-item img{
-  width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:var(--border-radius);
-  background:var(--tile); box-shadow:var(--shadow-sm); transition:all var(--transition);
-}
+.album-item img{ width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:var(--border-radius); background:var(--tile); box-shadow:var(--shadow-sm); transition:all var(--transition); }
 .album-item:hover img{ box-shadow:var(--shadow-md); }
 .album-item-info{ padding:10px 2px 0; }
 .album-item-info h3{
-  margin:0; font-size:14px; line-height:1.3; font-weight:600;
-  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; color:var(--text);
+  margin:0; font-size:14px; line-height:1.3; font-weight:600; color:var(--text);
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
 }
 .album-item-info p{
   margin:6px 0 0; font-size:12px; font-weight:500; color:var(--muted);
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
-
-/* Mensajitos de carga/error */
 .loading,.error-message{ text-align:center; padding:24px; color:var(--muted); font-weight:500; }
 
-/* ================================
+/* =====================================
    REPRODUCTOR
-   ================================ */
-
-/* Hero con la tapa arriba y un degradé que no rompe nada */
+   ===================================== */
 .player-hero{
   position:sticky; top:0; z-index:25;
   width:100%; aspect-ratio:16/9; max-height:var(--hero-max-h);
@@ -184,12 +165,10 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 .hero-text h2{ margin:0 0 6px; font-size:clamp(20px,5.2vw,26px); font-weight:700; text-shadow:0 2px 8px rgba(0,0,0,.6); letter-spacing:-.025em; }
 .hero-text p{ margin:0; font-size:clamp(13px,3.6vw,16px); font-weight:500; color:#f0f0f0; text-shadow:0 1px 4px rgba(0,0,0,.4); }
 
-/* Ocultamos lo viejo del player */
-.player-section{ display:none !important; }
-.audio-info{ display:none !important; }
+.player-section,.audio-info{ display:none !important; }
 
-/* Lista de temas */
 .playlist-section{ flex:1; overflow:auto; padding:12px var(--side-pad) 140px; background:var(--bg); }
+
 .playlist{ display:flex; flex-direction:column; gap:4px; }
 .playlist-item{
   display:flex; align-items:center; gap:12px; padding:10px 8px;
@@ -208,27 +187,27 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 .playlist-item-info p{ margin:4px 0 0; font-size:13px; font-weight:500; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
 .hq-indicator{ display:inline-block; font-size:10px; font-weight:700; color:#0a1f0f; background:var(--brand); border-radius:4px; padding:3px 5px; letter-spacing:.3px; box-shadow:0 1px 3px rgba(94,225,146,.3); }
+
 .eq{ display:inline-flex; align-items:flex-end; gap:2px; width:16px; height:14px; }
 .eq span{ display:block; width:3px; height:100%; background:var(--brand); opacity:.9; border-radius:1px; animation:bar 1.2s ease-in-out infinite; }
 .eq span:nth-child(2){ animation-delay:.2s; } .eq span:nth-child(3){ animation-delay:.4s; }
 @keyframes bar{ 0%,100%{ transform:scaleY(.3); opacity:.6; } 50%{ transform:scaleY(1); opacity:1; } }
 
 .playlist-item-actions{ margin-left:auto; display:flex; align-items:center; gap:8px; }
-.btn-favorite,.btn-remove-favorite{
-  background:none; border:none; padding:8px; cursor:pointer; color:var(--muted); font-size:16px;
-  border-radius:50%; transition:all var(--transition);
-}
+.btn-favorite,.btn-remove-favorite{ background:none; border:none; padding:8px; cursor:pointer; color:var(--muted); font-size:16px; border-radius:50%; transition:all var(--transition); }
 .btn-favorite:hover,.btn-remove-favorite:hover{ background:var(--tile); color:var(--text); }
 .btn-favorite.active i{ color:#ff4757; }
 .btn-favorite:focus-visible,.btn-remove-favorite:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
 
-/* Controles de abajo: con blur y pinta */
+/* Controles de abajo (la “cajonera”) */
 .controls-section{
   position:sticky; bottom:0; z-index:26;
   background:rgba(22,24,33,.85); backdrop-filter:blur(20px);
-  border:1px solid var(--line); border-top:1px solid var(--line);
-  padding:16px var(--side-pad) calc(16px + env(safe-area-inset-bottom));
-  box-shadow:var(--shadow-lg); border-radius:var(--border-radius) var(--border-radius) 0 0;
+  border:1px solid var(--line);
+  padding:16px var(--side-pad) calc(28px + env(safe-area-inset-bottom)); /* le dimos más base para que el texto no quede mordido */
+  border-top:1px solid var(--line);
+  box-shadow:var(--shadow-lg);
+  border-radius:var(--border-radius) var(--border-radius) 0 0;
 }
 .controls-section::before{
   content:""; position:absolute; left:0; right:0; top:-80px; height:80px;
@@ -248,60 +227,65 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 .btn-small{ width:38px; height:38px; font-size:16px; }
 .btn-play{ width:56px; height:56px; font-size:24px; background:var(--brand); color:#0a1f0f; }
 .btn-play:hover{ background:var(--brand-2); }
-.btn-play .fa-pause{ display:none; }
-.btn-play.playing .fa-play{ display:none; }
-.btn-play.playing .fa-pause{ display:inline-block; }
+.btn-play .fa-pause{ display:none; } .btn-play.playing .fa-play{ display:none; } .btn-play.playing .fa-pause{ display:inline-block; }
 .btn.active{ color:var(--brand); background:var(--tile-hover); }
 .btn.repeat-one{ position:relative; }
 .btn.repeat-one::after{
   content:'1'; position:absolute; right:8px; bottom:8px; font-size:10px; font-weight:700;
-  color:var(--brand); background:var(--bg); width:14px; height:14px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  color:var(--brand); background:var(--bg); width:14px; height:14px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
 }
 
-/* Botón de calidad */
-#quality-btn{
-  background:var(--tile); border:none; color:var(--text); cursor:pointer;
-  width:38px; height:38px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center; font-size:15px;
-  transition:all var(--transition); box-shadow:var(--shadow-sm);
-}
-#quality-btn:hover{ background:var(--tile-hover); transform:translateY(-1px); }
-#quality-btn.active{ outline:2px solid var(--brand); color:var(--brand); }
-#quality-btn:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
-
-/* Barra de progreso */
+/* Progreso y tiempos */
 .progress-container{ width:100%; }
-.seek-bar{
-  width:100%; height:6px; background:var(--tile); border-radius:3px; outline:none;
-  -webkit-appearance:none; appearance:none; box-shadow:inset 0 1px 3px rgba(0,0,0,.2); transition:all var(--transition);
-}
+.seek-bar{ width:100%; height:6px; background:var(--tile); border-radius:3px; outline:none; -webkit-appearance:none; appearance:none; box-shadow:inset 0 1px 3px rgba(0,0,0,.2); transition:all var(--transition); }
 .seek-bar:hover{ background:var(--tile-hover); }
-.seek-bar::-webkit-slider-thumb{
-  -webkit-appearance:none; appearance:none; width:16px; height:16px; background:var(--brand); border-radius:50%;
-  box-shadow:var(--shadow-sm); transition:all var(--transition);
-}
+.seek-bar::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:16px; height:16px; background:var(--brand); border-radius:50%; box-shadow:var(--shadow-sm); transition:all var(--transition); }
 .seek-bar::-webkit-slider-thumb:hover{ transform:scale(1.1); box-shadow:var(--shadow-md); }
 .seek-bar::-moz-range-thumb{ width:16px; height:16px; background:var(--brand); border:none; border-radius:50%; box-shadow:var(--shadow-sm); }
 .time-info{ display:flex; justify-content:space-between; font-size:13px; font-weight:500; color:var(--muted); padding:8px 4px 0; }
-.footer-text{ text-align:center; font-size:12px; font-weight:500; color:var(--muted); padding-top:8px; }
 
-/* ================================
-   MENÚ DE CALIDAD
-   ================================ */
-#quality-backdrop{ position:fixed; inset:0; background:rgba(14,15,19,.4); backdrop-filter:blur(4px); z-index:2000; display:none; }
+/* Texto de crédito — lo subimos y le dejamos aire del safe area */
+.footer-text{
+  text-align:center; font-size:12px; font-weight:500; color:var(--muted);
+  padding-top:8px;
+  margin-bottom:calc(6px + env(safe-area-inset-bottom)); /* magia: ya no queda cortado */
+}
+
+/* =====================================
+   SELECTOR DE CALIDAD (sin “caja” grande)
+   ===================================== */
+
+/* telón borroso que cubre todo */
+#quality-backdrop{
+  position:fixed; inset:0; background:rgba(14,15,19,.4);
+  backdrop-filter:blur(4px); z-index:2000; display:none;
+}
 #quality-backdrop.show{ display:block; }
+
+/* contenedor “fantasma”: sin fondo ni borde, sólo posiciona título + lista */
 #quality-menu{
   position:fixed; left:50%; transform:translateX(-50%); bottom:120px;
-  min-width:240px; background:var(--elev); border:1px solid var(--line);
-  border-radius:var(--border-radius); box-shadow:var(--shadow-lg); z-index:2001; display:none;
+  min-width:240px; background:transparent; border:none; box-shadow:none;
+  z-index:2001; display:none;
 }
 #quality-menu.show{ display:block; }
-#quality-menu .title{ padding:14px 16px; font-size:13px; font-weight:600; color:var(--text); border-bottom:1px solid var(--line); letter-spacing:.025em; }
-#quality-options{ display:flex; flex-direction:column; padding:8px; max-height:50vh; overflow:auto; }
+
+/* título suelto, sin cajita */
+#quality-menu .title{
+  margin:0 12px 8px; padding:0;
+  background:transparent; border:none;
+  color:var(--muted); font-size:13px; font-weight:600; letter-spacing:.025em;
+}
+
+/* la lista queda “flotando” sobre el blur, cada opción con pill */
+#quality-options{ display:flex; flex-direction:column; padding:0 8px 8px; gap:8px; max-height:50vh; overflow:auto; }
 .quality-option{
   display:flex; align-items:center; justify-content:space-between;
-  width:100%; padding:12px; border-radius:var(--border-radius-sm); border:none; background:transparent; color:var(--text); cursor:pointer;
-  transition:all var(--transition); font-weight:500;
+  width:100%; padding:12px 12px;
+  background:rgba(22,24,33,.85); border:1px solid var(--line);
+  border-radius:var(--border-radius-sm); color:var(--text);
+  cursor:pointer; transition:all var(--transition); font-weight:500;
 }
 .quality-option:hover{ background:var(--tile); }
 .quality-option:focus-visible{ outline:2px solid var(--brand); outline-offset:-2px; }
@@ -310,12 +294,10 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 .check{ opacity:.3; color:var(--muted); transition:all var(--transition); }
 .quality-option:hover .check{ opacity:.7; }
 
-/* ================================
-   BOTONES FLOTANTES
-   ================================ */
-#floating-search-button,
-#floating-player-button,
-#floating-favorites-button{
+/* =====================================
+   FABs (botoncitos flotantes)
+   ===================================== */
+#floating-search-button,#floating-player-button,#floating-favorites-button{
   position:fixed; right:20px; z-index:1001;
   width:64px; height:64px; border-radius:50%; border:none; cursor:pointer;
   background:var(--elev); border:1px solid var(--line);
@@ -325,28 +307,22 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 #floating-favorites-button{ bottom:32px; }
 #floating-player-button{ bottom:108px; }
 #floating-search-button{ bottom:184px; }
-#floating-search-button:hover,
-#floating-player-button:hover,
-#floating-favorites-button:hover{ transform:translateY(-2px); box-shadow:0 12px 40px rgba(0,0,0,.4); background:var(--tile); }
-#floating-search-button:active,
-#floating-player-button:active,
-#floating-favorites-button:active{ transform:scale(.95); }
-#floating-search-button:focus-visible,
-#floating-player-button:focus-visible,
-#floating-favorites-button:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
-#floating-search-button i,
-#floating-player-button i,
-#floating-favorites-button i{ color:var(--brand); font-size:22px; }
+#floating-search-button:hover,#floating-player-button:hover,#floating-favorites-button:hover{
+  transform:translateY(-2px); box-shadow:0 12px 40px rgba(0,0,0,.4); background:var(--tile);
+}
+#floating-search-button:active,#floating-player-button:active,#floating-favorites-button:active{ transform:scale(.95); }
+#floating-search-button:focus-visible,#floating-player-button:focus-visible,#floating-favorites-button:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
+#floating-search-button i,#floating-player-button i,#floating-favorites-button i{ color:var(--brand); font-size:22px; }
 
-/* Utilidades */
+/* Utilidad para esconder algo al toque */
 .hide{ display:none !important; }
 
-/* ================================
-   RESPONSIVE
-   ================================ */
+/* =====================================
+   RESPONSIVE (un poco más aire en pantallas grandes)
+   ===================================== */
 @media (min-width:480px){
   :root{ --side-pad:16px; }
-  #search-button{ width:48px; height:48px; background-size:72%; }
+  #search-button{ width:52px; height:52px; background-size:75%; }
   .album-item-info h3{ font-size:15px; }
   .album-item-info p{ font-size:13px; }
 }
@@ -355,39 +331,29 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
   #album-list{ grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; padding:24px var(--side-pad) 40px; }
   .hero-text{ left:24px; right:24px; bottom:24px; }
   .playlist-section{ padding:16px var(--side-pad) 140px; }
-  .controls-section{ padding:20px var(--side-pad) calc(20px + env(safe-area-inset-bottom)); }
+  .controls-section{ padding:20px var(--side-pad) calc(28px + env(safe-area-inset-bottom)); }
 }
 @media (min-width:1024px){
   :root{ --side-pad:24px; }
   #album-list{ grid-template-columns:repeat(4,minmax(0,1fr)); gap:24px; padding:32px var(--side-pad) 48px; }
-  .album-item-info h3{ font-size:16px; }
-  .album-item-info p{ font-size:14px; }
+  .album-item-info h3{ font-size:16px; } .album-item-info p{ font-size:14px; }
   .playlist-item img{ width:52px; height:52px; flex:0 0 52px; }
-  .playlist-item-info h3{ font-size:16px; }
-  .playlist-item-info p{ font-size:14px; }
+  .playlist-item-info h3{ font-size:16px; } .playlist-item-info p{ font-size:14px; }
   .controls{ gap:16px; }
   .btn{ width:48px; height:48px; font-size:20px; }
   .btn-small{ width:42px; height:42px; font-size:18px; }
   .btn-play{ width:60px; height:60px; font-size:26px; }
-  #quality-btn{ width:42px; height:42px; font-size:16px; }
-  .hero-text h2{ font-size:clamp(24px,2.5vw,32px); }
-  .hero-text p{ font-size:clamp(16px,1.8vw,18px); }
-  .topbar{ padding:20px var(--side-pad) 22px; }
-  #search-input{ font-size:16px; padding:16px 20px; }
-  #search-button{ width:52px; height:52px; }
 }
 
-/* Accesibilidad: foco bien marcado */
-button:focus-visible, input:focus-visible, [tabindex]:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
+/* Accesibilidad básica: si enfocás con teclado, que se note */
+button:focus-visible,input:focus-visible,[tabindex]:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
 
-/* Si el user pidió menos movimiento, sacamos animitas */
-@media (prefers-reduced-motion: reduce){
-  .album-item:hover,.btn:hover,#floating-search-button:hover,#floating-player-button:hover,#floating-favorites-button:hover,.playlist-item:hover,#search-button:hover{ transform:none; }
-}
-
-/* Alto contraste por si hace falta */
-@media (prefers-contrast: high){
-  :root{ --bg:#000; --elev:#1a1a1a; --tile:#2a2a2a; --tile-hover:#3a3a3a; --text:#fff; --muted:#ccc; --line:#555; }
+/* Alto contraste, por si el user lo pide en el SO */
+@media (prefers-contrast:high){
+  :root{
+    --bg:#000; --elev:#1a1a1a; --tile:#2a2a2a; --tile-hover:#3a3a3a;
+    --text:#fff; --muted:#ccc; --line:#555;
+  }
   #search-input:focus{ border-width:3px; }
   .btn{ border:1px solid var(--line); }
   .playlist-item.active{ border-left-width:4px; }
