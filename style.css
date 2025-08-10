@@ -1,36 +1,62 @@
 /* =====================================
-   Sanavera MP3 - style.css (COMPLETO)
+   Sanavera MP3 - style.css REDISEÑADO - PARTE 1/4
+   Cambios clave: Paleta elegante, micro-interacciones, hero mejorado,
+   controles con blur, logo responsive, estados accesibles
    ===================================== */
 
-/* -------- Variables base -------- */
+/* -------- Variables rediseñadas -------- */
 :root{
-  --bg:#121212;
-  --elev:#181818;
-  --tile:#1e1e1e;
-  --tile-hover:#262626;
-  --muted:#b3b3b3;
-  --text:#ffffff;
-  --brand:#1db954;
-  --brand-2:#18a348;
-  --line:#303030;
-
+  --bg:#0e0f13;
+  --elev:#161821;
+  --tile:#1b1e27;
+  --tile-hover:#222634;
+  --muted:#aab0c0;
+  --text:#f6f7fb;
+  --brand:#5ee192;
+  --brand-2:#37c977;
+  --line:#2a2f3e;
+  
   --header-h: 110px;
   --hero-max-h: 44vh;
   --footer-safe: max(88px, 64px + env(safe-area-inset-bottom));
   --side-pad: 14px;
+  
+  /* Nuevas variables para microinteracciones */
+  --transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --border-radius: 12px;
+  --border-radius-sm: 8px;
 }
 
-/* -------- Reset suave -------- */
+/* -------- Reset suave mejorado -------- */
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
 html{ -webkit-text-size-adjust:100%; }
 body{
-  margin:0; background:var(--bg); color:var(--text);
-  font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Inter","Helvetica Neue",Arial,"Noto Sans",sans-serif;
-  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  margin:0; 
+  background: linear-gradient(135deg, var(--bg) 0%, #0a0b0f 100%);
+  color:var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, system-ui, sans-serif;
+  -webkit-font-smoothing:antialiased; 
+  -moz-osx-font-smoothing:grayscale;
+  line-height: 1.5;
 }
 a{ color:inherit; text-decoration:none; }
 img{ display:block; max-width:100%; height:auto; }
+
+/* Soporte para motion reducido */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 /* Bloqueo de scroll cuando hay modal */
 body.modal-open{ position:fixed; width:100%; overflow:hidden; }
@@ -38,320 +64,797 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 /* -------- Contenedor raíz -------- */
 #reproductor-container-sanavera{
   position:relative; width:100%; height:100vh; overflow:hidden;
+  background: inherit;
 }
 
 /* =====================================
-   MODALES BASE
+   MODALES BASE MEJORADOS
    ===================================== */
 #reproductor-container-sanavera .modal{
   display:none; position:fixed; inset:0; z-index:1000;
-  background:rgba(0,0,0,.82);
+  background:rgba(14, 15, 19, 0.85);
+  backdrop-filter: blur(8px);
   justify-content:center; align-items:center;
+  animation: modalFadeIn var(--transition) ease-out;
 }
 #reproductor-container-sanavera .modal-content{
-  background:var(--elev); width:100%; max-width:100%;
+  background: var(--elev);
+  border: 1px solid var(--line);
+  width:100%; max-width:100%;
   height:100vh; padding:0; border:none; outline:none;
   display:flex; flex-direction:column; overflow:hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* =====================================
-   WELCOME
+   WELCOME MEJORADO
    ===================================== */
 #reproductor-container-sanavera .welcome-content{
-  height:100%; width:100%; padding:20px;
-  display:flex; align-items:center; justify-content:center; flex-direction:column; gap:18px;
+  height:100%; width:100%; padding:32px 20px;
+  display:flex; align-items:center; justify-content:center; flex-direction:column; gap:24px;
+  background: radial-gradient(circle at center, var(--elev) 0%, var(--bg) 70%);
 }
 #reproductor-container-sanavera .welcome-image{
-  width:160px; height:160px; object-fit:contain;
+  width:180px; height:180px; object-fit:contain;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
 }
 #reproductor-container-sanavera .welcome-text{
-  font-size:18px; color:#fff; text-align:center;
+  font-size:20px; font-weight: 500; color:var(--text); text-align:center;
+  line-height: 1.4;
 }
-#reproductor-container-sanavera .progress-container{ width:100%; max-width:420px; }
-#reproductor-container-sanavera .progress-bar{ width:100%; height:4px; background:#444; border-radius:2px; overflow:hidden; }
+#reproductor-container-sanavera .progress-container{ 
+  width:100%; max-width:420px; 
+}
+#reproductor-container-sanavera .progress-bar{ 
+  width:100%; height:6px; 
+  background:var(--tile); 
+  border-radius:3px; overflow:hidden; 
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+}
 #reproductor-container-sanavera .progress{
-  width:0; height:100%; background:var(--brand);
+  width:0; height:100%; 
+  background: linear-gradient(90deg, var(--brand-2), var(--brand));
   animation:welcome-progress 10s linear forwards;
+  border-radius: 3px;
 }
 @keyframes welcome-progress{ from{width:0} to{width:100%} }
 @keyframes fadeOut{ from{opacity:1} to{opacity:0} }
 
+
 /* =====================================
-   BUSCADOR (HEADER + GRID)
+   Sanavera MP3 - PARTE 2/4
+   ===================================== */
+
+/* =====================================
+   BUSCADOR REDISEÑADO
    ===================================== */
 #reproductor-container-sanavera .search-modal .modal-content{
   padding-bottom: var(--footer-safe);
+  background: var(--bg);
 }
 
-/* Topbar fijo */
+/* Topbar mejorado */
 #reproductor-container-sanavera .topbar{
   position:sticky; top:0; z-index:30;
-  background:var(--elev);
-  padding:10px var(--side-pad) 12px;
+  background: var(--elev);
+  border: 1px solid var(--line);
+  padding:16px var(--side-pad) 18px;
   border-bottom:1px solid var(--line);
-  box-shadow:0 6px 16px rgba(0,0,0,.25);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(10px);
 }
 #reproductor-container-sanavera .brand{
-  display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:10px;
+  display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:16px;
 }
-/* Ocultamos el logo/texto del encabezado (lo usamos como botón a la derecha) */
-#brand-logo{ height:0px; width:auto; }
-#brand-text{ font-weight:0; letter-spacing:0; }
 
-/* Buscador */
+/* Logo responsive mejorado */
+#brand-logo{ 
+  height: 36px; 
+  width: auto; 
+  transition: transform var(--transition);
+}
+#brand-logo:hover {
+  transform: scale(1.05);
+}
+
+#brand-text{ 
+  font-weight: 600; 
+  font-size: 18px;
+  letter-spacing: -0.025em;
+  color: var(--text);
+}
+
+/* Buscador rediseñado */
 #reproductor-container-sanavera .search-row{
-  display:flex; gap:10px; align-items:center;
+  display:flex; gap:12px; align-items:center;
 }
 #search-input{
-  flex:1; background:#222; color:#fff; border:1px solid #333; border-radius:24px;
-  padding:10px 14px; font-size:15px; outline:none;
+  flex:1; 
+  background: var(--tile); 
+  color: var(--text); 
+  border: 2px solid transparent; 
+  border-radius: var(--border-radius);
+  padding: 14px 18px; 
+  font-size: 15px; 
+  font-weight: 500;
+  outline: none;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
 }
-#search-input::placeholder{ color:#888; }
+#search-input::placeholder{ 
+  color: var(--muted); 
+  font-weight: 400;
+}
+#search-input:focus{
+  border-color: var(--brand);
+  background: var(--elev);
+  box-shadow: 0 0 0 3px rgba(94, 225, 146, 0.15), var(--shadow-sm);
+}
 
-/* === Botón de búsqueda convertido en logo circular === */
+/* Botón de búsqueda (logo) mejorado */
 #search-button{
-  width:54px; height:54px; min-width:54px;
-  padding:0; border:none; border-radius:50%;
-  background:transparent;
-  background-image:url("./logo3.png");
-  background-size:88%;
-  background-position:center;
-  background-repeat:no-repeat;
-  box-shadow:none;
-  font-size:0; color:transparent; /* ocultar texto "Buscar" */
-  cursor:pointer;
+  width: 48px; 
+  height: 48px; 
+  min-width: 48px;
+  padding: 0; 
+  border: none; 
+  border-radius: 50%;
+  background: var(--tile);
+  background-image: url("./logo3.png");
+  background-size: 75%;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: var(--shadow-sm);
+  font-size: 0; 
+  color: transparent;
+  cursor: pointer;
+  transition: all var(--transition);
 }
-#search-button:active{ transform:scale(.96); }
+#search-button:hover{
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  background-color: var(--tile-hover);
+}
+#search-button:active{ 
+  transform: scale(0.95); 
+}
+#search-button:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
 
-/* Contador */
+/* Contador mejorado */
 #results-count{
-  margin-top:8px; font-size:12px; color:var(--muted); text-align:center;
+  margin-top: 12px; 
+  font-size: 13px; 
+  font-weight: 500;
+  color: var(--muted); 
+  text-align: center;
 }
 
-/* Lista de álbumes (grid limpio) */
+/* Grid de álbumes rediseñado */
 #album-list{
   height: calc(100vh - var(--header-h));
-  overflow:auto; padding:12px var(--side-pad) 20px;
-  display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:14px;
+  overflow: auto; 
+  padding: 20px var(--side-pad) 32px;
+  display: grid; 
+  grid-template-columns: repeat(2, minmax(0,1fr)); 
+  gap: 18px;
+  background: var(--bg);
 }
-.album-item{ cursor:pointer; }
+.album-item{ 
+  cursor: pointer;
+  transition: transform var(--transition);
+}
+.album-item:hover {
+  transform: translateY(-2px);
+}
+.album-item:active {
+  transform: scale(0.98);
+}
 .album-item img{
-  width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:10px;
-  background:#222;
+  width: 100%; 
+  aspect-ratio: 1/1; 
+  object-fit: cover; 
+  border-radius: var(--border-radius);
+  background: var(--tile);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition);
 }
-.album-item-info{ padding:6px 2px 0; }
+.album-item:hover img {
+  box-shadow: var(--shadow-md);
+}
+.album-item-info{ 
+  padding: 10px 2px 0; 
+}
 .album-item-info h3{
-  margin:0; font-size:14px; line-height:1.25; font-weight:600;
-  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  margin: 0; 
+  font-size: 14px; 
+  line-height: 1.3; 
+  font-weight: 600;
+  display: -webkit-box; 
+  -webkit-line-clamp: 2; 
+  -webkit-box-orient: vertical; 
+  overflow: hidden;
+  color: var(--text);
 }
 .album-item-info p{
-  margin:4px 0 0; font-size:12px; color:var(--muted);
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  margin: 6px 0 0; 
+  font-size: 12px; 
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis;
 }
 
-/* Loading / error */
+/* Loading / error mejorados */
 .loading, .error-message{
-  text-align:center; padding:10px; color:var(--muted);
+  text-align: center; 
+  padding: 24px; 
+  color: var(--muted);
+  font-weight: 500;
 }
+
 
 /* =====================================
-   REPRODUCTOR / FAVORITOS
+   Sanavera MP3 - PARTE 3/4
    ===================================== */
 
-/* HERO fijo arriba */
+/* =====================================
+   REPRODUCTOR REDISEÑADO
+   ===================================== */
+
+/* HERO mejorado con degradé optimizado */
 .player-hero{
-  position:sticky; top:0; z-index:25;
-  width:100%; aspect-ratio:16/9; max-height: var(--hero-max-h);
+  position: sticky; 
+  top: 0; 
+  z-index: 25;
+  width: 100%; 
+  aspect-ratio: 16/9; 
+  max-height: var(--hero-max-h);
   background: center/cover no-repeat var(--elev);
   background-image: var(--cover-url);
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  overflow: hidden;
 }
 .player-hero::before{
-  content:"";
-  position:absolute;
-  inset:0;
+  content: "";
+  position: absolute;
+  inset: 0;
   background: linear-gradient(
     to top,
-    rgba(0,0,0,.65) 0%,
-    rgba(0,0,0,.35) 45%,
-    rgba(0,0,0,0)   100%
+    rgba(14, 15, 19, 0.85) 0%,
+    rgba(14, 15, 19, 0.5) 30%,
+    rgba(14, 15, 19, 0.2) 60%,
+    rgba(14, 15, 19, 0) 100%
   );
-  pointer-events:none;
+  pointer-events: none;
 }
 .hero-text{
-  position:absolute; left:16px; right:16px; bottom:12px; text-align:center;
+  position: absolute; 
+  left: 20px; 
+  right: 20px; 
+  bottom: 20px; 
+  text-align: center;
 }
-.hero-text h2{ margin:0 0 4px; font-size:clamp(18px,4.8vw,22px); font-weight:700; }
-.hero-text p{ margin:0; font-size:clamp(12px,3.4vw,14px); color:#eaeaea; }
+.hero-text h2{ 
+  margin: 0 0 6px; 
+  font-size: clamp(20px, 5.2vw, 26px); 
+  font-weight: 700; 
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  letter-spacing: -0.025em;
+}
+.hero-text p{ 
+  margin: 0; 
+  font-size: clamp(13px, 3.6vw, 16px); 
+  font-weight: 500;
+  color: #f0f0f0; 
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
 
-.player-section{ display:none !important; }
-.audio-info{ display:none !important; }
+.player-section{ display: none !important; }
+.audio-info{ display: none !important; }
 
-/* Lista (scroll) */
+/* Lista con mejores espacios */
 .playlist-section{
-  flex:1; overflow:auto; padding:8px var(--side-pad) 120px;
+  flex: 1; 
+  overflow: auto; 
+  padding: 12px var(--side-pad) 140px;
+  background: var(--bg);
 }
 
-/* Fila de tema */
-.playlist{ display:flex; flex-direction:column; gap:6px; }
-.playlist-item{
-  display:flex; align-items:center; gap:10px; padding:8px 6px; border-radius:8px;
+/* Filas mejoradas */
+.playlist{ 
+  display: flex; 
+  flex-direction: column; 
+  gap: 4px; 
 }
-.playlist-item:hover{ background:#1b1b1b; }
-.playlist-item.active h3{ color:var(--brand); }
+.playlist-item{
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 10px 8px; 
+  border-radius: var(--border-radius-sm);
+  transition: all var(--transition);
+  border-left: 3px solid transparent;
+}
+.playlist-item:hover{ 
+  background: var(--tile); 
+  transform: translateX(2px);
+}
+.playlist-item.active { 
+  background: var(--tile-hover);
+  border-left-color: var(--brand);
+}
+.playlist-item.active h3{ 
+  color: var(--brand); 
+}
 
 .playlist-item img{
-  width:44px; height:44px; border-radius:6px; object-fit:cover; flex:0 0 44px; background:#222;
+  width: 48px; 
+  height: 48px; 
+  border-radius: var(--border-radius-sm); 
+  object-fit: cover; 
+  flex: 0 0 48px; 
+  background: var(--tile);
+  box-shadow: var(--shadow-sm);
 }
-.playlist-item-info{ min-width:0; flex:1; }
+.playlist-item-info{ 
+  min-width: 0; 
+  flex: 1; 
+}
 .playlist-item-info h3{
-  margin:0; font-size:14px; line-height:1.25; font-weight:600;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:8px;
+  margin: 0; 
+  font-size: 15px; 
+  line-height: 1.3; 
+  font-weight: 600;
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  display: flex; 
+  align-items: center; 
+  gap: 10px;
 }
 .playlist-item-info p{
-  margin:2px 0 0; font-size:12px; color:var(--muted);
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  margin: 4px 0 0; 
+  font-size: 13px; 
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis;
 }
 
 .hq-indicator{
-  display:inline-block; font-size:10px; font-weight:700; color:#0b331a;
-  background:var(--brand); border-radius:4px; padding:2px 4px; letter-spacing:.2px;
+  display: inline-block; 
+  font-size: 10px; 
+  font-weight: 700; 
+  color: #0a1f0f;
+  background: var(--brand); 
+  border-radius: 4px; 
+  padding: 3px 5px; 
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 3px rgba(94, 225, 146, 0.3);
 }
 
 .eq{
-  display:inline-flex; align-items:flex-end; gap:2px; width:14px; height:12px;
+  display: inline-flex; 
+  align-items: flex-end; 
+  gap: 2px; 
+  width: 16px; 
+  height: 14px;
 }
 .eq span{
-  display:block; width:2px; height:100%; background:#fff; opacity:.9; border-radius:1px;
-  animation:bar 1s ease-in-out infinite;
+  display: block; 
+  width: 3px; 
+  height: 100%; 
+  background: var(--brand); 
+  opacity: 0.9; 
+  border-radius: 1px;
+  animation: bar 1.2s ease-in-out infinite;
 }
-.eq span:nth-child(2){ animation-delay:.15s; }
-.eq span:nth-child(3){ animation-delay:.3s; }
-@keyframes bar{ 0%,100%{ transform:scaleY(.2); } 50%{ transform:scaleY(1); } }
-
-.playlist-item-actions{ margin-left:auto; display:flex; align-items:center; gap:8px; }
-.btn-favorite,.btn-remove-favorite{
-  background:none; border:none; padding:6px; cursor:pointer; color:#fff; font-size:16px;
+.eq span:nth-child(2){ animation-delay: 0.2s; }
+.eq span:nth-child(3){ animation-delay: 0.4s; }
+@keyframes bar{ 
+  0%, 100%{ transform: scaleY(0.3); opacity: 0.6; } 
+  50%{ transform: scaleY(1); opacity: 1; } 
 }
-.btn-favorite.active i{ color:#ff3b3b; }
 
-/* Controles y progreso */
+.playlist-item-actions{ 
+  margin-left: auto; 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+}
+.btn-favorite, .btn-remove-favorite{
+  background: none; 
+  border: none; 
+  padding: 8px; 
+  cursor: pointer; 
+  color: var(--muted); 
+  font-size: 16px;
+  border-radius: 50%;
+  transition: all var(--transition);
+}
+.btn-favorite:hover, .btn-remove-favorite:hover {
+  background: var(--tile);
+  color: var(--text);
+}
+.btn-favorite.active i{ 
+  color: #ff4757; 
+}
+.btn-favorite:focus-visible, .btn-remove-favorite:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* Controles rediseñados con blur */
 .controls-section{
-  position:sticky; bottom:0; z-index:26; background:var(--elev);
-  padding:10px var(--side-pad) calc(10px + env(safe-area-inset-bottom));
-  border-top:1px solid var(--line);
-  box-shadow:0 -10px 30px rgba(0,0,0,.35);
+  position: sticky; 
+  bottom: 0; 
+  z-index: 26; 
+  background: rgba(22, 24, 33, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--line);
+  padding: 16px var(--side-pad) calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 .controls-section::before{
-  content:"";
-  position:absolute;
-  left:0; right:0;
-  top:-56px;
-  height:56px;
+  content: "";
+  position: absolute;
+  left: 0; 
+  right: 0;
+  top: -80px;
+  height: 80px;
   background: linear-gradient(
     to top,
-    var(--elev) 0%,
-    rgba(24,24,24,.85) 50%,
-    rgba(24,24,24,0)   100%
+    rgba(14, 15, 19, 0.9) 0%,
+    rgba(14, 15, 19, 0.6) 40%,
+    rgba(14, 15, 19, 0) 100%
   );
-  pointer-events:none;
+  pointer-events: none;
 }
-.controls{ display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:8px; }
+
+.controls{ 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  gap: 14px; 
+  margin-bottom: 14px; 
+}
 .btn{
-  background:#252525; border:none; color:#fff; cursor:pointer;
-  width:40px; height:40px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center; font-size:20px;
+  background: var(--tile); 
+  border: none; 
+  color: var(--text); 
+  cursor: pointer;
+  width: 44px; 
+  height: 44px; 
+  border-radius: 50%;
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 18px;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
 }
-.btn-small{ width:34px; height:34px; font-size:16px; }
-.btn-play{ width:50px; height:50px; font-size:26px; }
-.btn-play .fa-pause{ display:none; }
-.btn-play.playing .fa-play{ display:none; }
-.btn-play.playing .fa-pause{ display:inline-block; }
-.btn.active{ color:var(--brand); }
-.btn.repeat-one{ position:relative; }
+.btn:hover {
+  background: var(--tile-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.btn:active {
+  transform: scale(0.95);
+}
+.btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.btn-small{ 
+  width: 38px; 
+  height: 38px; 
+  font-size: 16px; 
+}
+.btn-play{ 
+  width: 56px; 
+  height: 56px; 
+  font-size: 24px;
+  background: var(--brand);
+  color: #0a1f0f;
+}
+.btn-play:hover {
+  background: var(--brand-2);
+}
+.btn-play .fa-pause{ display: none; }
+.btn-play.playing .fa-play{ display: none; }
+.btn-play.playing .fa-pause{ display: inline-block; }
+.btn.active{ 
+  color: var(--brand); 
+  background: var(--tile-hover);
+}
+.btn.repeat-one{ position: relative; }
 .btn.repeat-one::after{
-  content:'1'; position:absolute; right:6px; bottom:6px; font-size:10px; color:var(--brand);
+  content: '1'; 
+  position: absolute; 
+  right: 8px; 
+  bottom: 8px; 
+  font-size: 10px; 
+  font-weight: 700;
+  color: var(--brand);
+  background: var(--bg);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+
+/* =====================================
+   Sanavera MP3 - PARTE 4/4 FINAL COMPLETA
+   ===================================== */
 
 #quality-btn{
-  background:#252525; border:none; color:#fff; cursor:pointer;
-  width:34px; height:34px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center; font-size:16px;
+  background: var(--tile); 
+  border: none; 
+  color: var(--text); 
+  cursor: pointer;
+  width: 38px; 
+  height: 38px; 
+  border-radius: 50%;
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 15px;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
 }
-#quality-btn.active{ outline:1px solid var(--brand); }
+#quality-btn:hover {
+  background: var(--tile-hover);
+  transform: translateY(-1px);
+}
+#quality-btn.active{ 
+  outline: 2px solid var(--brand); 
+  color: var(--brand);
+}
+#quality-btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
 
-.progress-container{ width:100%; }
+.progress-container{ width: 100%; }
 .seek-bar{
-  width:100%; height:4px; background:#444; border-radius:2px; outline:none; -webkit-appearance:none; appearance:none;
+  width: 100%; height: 6px; background: var(--tile); border-radius: 3px; 
+  outline: none; -webkit-appearance: none; appearance: none;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+  transition: all var(--transition);
 }
+.seek-bar:hover { background: var(--tile-hover); }
 .seek-bar::-webkit-slider-thumb{
-  -webkit-appearance:none; appearance:none; width:12px; height:12px; background:var(--brand); border-radius:50%;
+  -webkit-appearance: none; appearance: none; width: 16px; height: 16px; 
+  background: var(--brand); border-radius: 50%;
+  box-shadow: var(--shadow-sm); transition: all var(--transition);
 }
-.seek-bar::-moz-range-thumb{ width:12px; height:12px; background:var(--brand); border-radius:50%; }
+.seek-bar::-webkit-slider-thumb:hover {
+  transform: scale(1.1); box-shadow: var(--shadow-md);
+}
+.seek-bar::-moz-range-thumb{ 
+  width: 16px; height: 16px; background: var(--brand); border-radius: 50%; 
+  border: none; box-shadow: var(--shadow-sm);
+}
 .time-info{
-  display:flex; justify-content:space-between; font-size:12px; color:var(--muted);
-  padding:4px 2px 0;
+  display: flex; justify-content: space-between; font-size: 13px; font-weight: 500;
+  color: var(--muted); padding: 8px 4px 0;
 }
-.footer-text{ text-align:center; font-size:12px; color:var(--muted); padding-top:6px; }
+.footer-text{ 
+  text-align: center; font-size: 12px; font-weight: 500;
+  color: var(--muted); padding-top: 8px; 
+}
 
 /* =====================================
-   SELECTOR DE CALIDAD
+   SELECTOR DE CALIDAD MEJORADO
    ===================================== */
 #quality-backdrop{
-  position:fixed; inset:0; background:transparent; z-index:2000; display:none;
+  position: fixed; inset: 0; background: rgba(14, 15, 19, 0.4); 
+  backdrop-filter: blur(4px); z-index: 2000; display: none;
+  animation: backdropFadeIn var(--transition) ease-out;
 }
-#quality-backdrop.show{ display:block; }
+#quality-backdrop.show{ display: block; }
+
+@keyframes backdropFadeIn { 
+  from { opacity: 0; } 
+  to { opacity: 1; } 
+}
 
 #quality-menu{
-  position:fixed; left:50%; transform:translateX(-50%);
-  min-width:220px; background:#202020; border:1px solid #2f2f2f; border-radius:12px;
-  box-shadow:0 20px 60px rgba(0,0,0,.6); z-index:2001; display:none;
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: 120px;
+  min-width: 240px; background: var(--elev); border: 1px solid var(--line); 
+  border-radius: var(--border-radius); box-shadow: var(--shadow-lg); 
+  z-index: 2001; display: none; animation: menuSlideUp var(--transition) ease-out;
 }
-#quality-menu.show{ display:block; }
-#quality-menu .title{ padding:10px 12px; font-size:12px; color:#ddd; border-bottom:1px solid #2a2a2a; }
-#quality-options{ display:flex; flex-direction:column; padding:6px; max-height:50vh; overflow:auto; }
+#quality-menu.show{ display: block; }
+
+@keyframes menuSlideUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+#quality-menu .title{ 
+  padding: 14px 16px; font-size: 13px; font-weight: 600;
+  color: var(--text); border-bottom: 1px solid var(--line); letter-spacing: 0.025em;
+}
+#quality-options{ 
+  display: flex; flex-direction: column; padding: 8px; 
+  max-height: 50vh; overflow: auto; 
+}
 .quality-option{
-  display:flex; align-items:center; justify-content:space-between;
-  width:100%; padding:10px 10px; border-radius:8px; border:none; background:transparent; color:#fff; cursor:pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 12px 12px; border-radius: var(--border-radius-sm); 
+  border: none; background: transparent; color: var(--text); cursor: pointer;
+  transition: all var(--transition); font-weight: 500;
 }
-.quality-option:hover{ background:#2a2a2a; }
-.quality-option .center{ display:flex; align-items:center; gap:8px; }
+.quality-option:hover{ background: var(--tile); }
+.quality-option:focus-visible {
+  outline: 2px solid var(--brand); outline-offset: -2px;
+}
+.quality-option .center{ display: flex; align-items: center; gap: 10px; }
 .badge-hq{
-  display:inline-block; font-size:10px; font-weight:700; color:#0b331a;
-  background:var(--brand); border-radius:4px; padding:2px 4px; letter-spacing:.2px;
+  display: inline-block; font-size: 10px; font-weight: 700; color: #0a1f0f;
+  background: var(--brand); border-radius: 4px; padding: 3px 5px; 
+  letter-spacing: 0.3px; box-shadow: 0 1px 3px rgba(94, 225, 146, 0.3);
 }
-.check{ opacity:.25; }
-.quality-option:hover .check{ opacity:.6; }
+.check{ 
+  opacity: 0.3; color: var(--muted); transition: all var(--transition);
+}
+.quality-option:hover .check{ opacity: 0.7; }
+.quality-option .check.active { opacity: 1; color: var(--brand); }
 
 /* =====================================
-   FABs
+   FABs MEJORADOS
    ===================================== */
 #floating-search-button,
 #floating-player-button,
 #floating-favorites-button{
-  position:fixed; right:18px; z-index:1001;
-  width:56px; height:56px; border-radius:50%; border:none; cursor:pointer;
-  background:#181818; box-shadow:0 8px 28px rgba(0,0,0,.35);
-  display:flex; align-items:center; justify-content:center;
+  position: fixed; right: 20px; z-index: 1001;
+  width: 64px; height: 64px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--elev); border: 1px solid var(--line);
+  box-shadow: var(--shadow-lg); display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
 }
-#floating-favorites-button{ bottom:26px; }
-#floating-player-button{ bottom:96px; }
-#floating-search-button{ bottom:166px; }
+#floating-favorites-button{ bottom: 32px; }
+#floating-player-button{ bottom: 108px; }
+#floating-search-button{ bottom: 184px; }
+
+#floating-search-button:hover,
+#floating-player-button:hover,
+#floating-favorites-button:hover {
+  transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  background: var(--tile);
+}
+
+#floating-search-button:active,
+#floating-player-button:active,
+#floating-favorites-button:active { 
+  transform: scale(0.95); 
+}
+
+#floating-search-button:focus-visible,
+#floating-player-button:focus-visible,
+#floating-favorites-button:focus-visible {
+  outline: 2px solid var(--brand); outline-offset: 2px;
+}
+
 #floating-search-button i,
 #floating-player-button i,
-#floating-favorites-button i{ color:var(--brand); font-size:22px; }
+#floating-favorites-button i{ 
+  color: var(--brand); font-size: 22px; 
+}
 
 /* =====================================
    Utilidades
    ===================================== */
-.hide{ display:none !important; }
+.hide{ display: none !important; }
 
-/* Responsive tweaks */
-@media (min-width:480px){
-  #search-button{ width:58px; height:58px; background-size:88%; }
+/* =====================================
+   RESPONSIVE MEJORADO
+   ===================================== */
+@media (min-width: 480px) {
+  :root { --side-pad: 16px; }
+  #brand-logo { height: 40px; }
+  #search-button { width: 52px; height: 52px; background-size: 75%; }
+  .album-item-info h3 { font-size: 15px; }
+  .album-item-info p { font-size: 13px; }
 }
-@media (min-width:680px){
-  #album-list{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+
+@media (min-width: 680px) {
+  :root { --side-pad: 20px; }
+  #album-list { 
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: 20px; padding: 24px var(--side-pad) 40px;
+  }
+  #brand-logo { height: 44px; }
+  .hero-text { left: 24px; right: 24px; bottom: 24px; }
+  .playlist-section { padding: 16px var(--side-pad) 140px; }
+  .controls-section { padding: 20px var(--side-pad) calc(20px + env(safe-area-inset-bottom)); }
 }
-@media (min-width:1024px){
-  #album-list{ grid-template-columns: repeat(4, minmax(0,1fr)); }
+
+@media (min-width: 1024px) {
+  :root { --side-pad: 24px; }
+  #album-list { 
+    grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: 24px; padding: 32px var(--side-pad) 48px;
+  }
+  .album-item-info h3 { font-size: 16px; }
+  .album-item-info p { font-size: 14px; }
+  .playlist-item img { width: 52px; height: 52px; flex: 0 0 52px; }
+  .playlist-item-info h3 { font-size: 16px; }
+  .playlist-item-info p { font-size: 14px; }
+  .controls { gap: 16px; }
+  .btn { width: 48px; height: 48px; font-size: 20px; }
+  .btn-small { width: 42px; height: 42px; font-size: 18px; }
+  .btn-play { width: 60px; height: 60px; font-size: 26px; }
+  #quality-btn { width: 42px; height: 42px; font-size: 16px; }
+  .hero-text h2 { font-size: clamp(24px, 2.5vw, 32px); }
+  .hero-text p { font-size: clamp(16px, 1.8vw, 18px); }
+  .topbar { padding: 20px var(--side-pad) 22px; }
+  #search-input { font-size: 16px; padding: 16px 20px; }
+  #search-button { width: 56px; height: 56px; }
+  #floating-search-button,
+  #floating-player-button,
+  #floating-favorites-button { width: 72px; height: 72px; }
+  #floating-search-button i,
+  #floating-player-button i,
+  #floating-favorites-button i { font-size: 24px; }
 }
+
+/* =====================================
+   ESTADOS ADICIONALES PARA ACCESIBILIDAD
+   ===================================== */
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible { 
+  outline: 2px solid var(--brand); 
+  outline-offset: 2px; 
+}
+
+/* Mejoras para usuarios con motion reducido */
+@media (prefers-reduced-motion: reduce) {
+  .album-item:hover,
+  .btn:hover,
+  #floating-search-button:hover,
+  #floating-player-button:hover,
+  #floating-favorites-button:hover,
+  .playlist-item:hover,
+  #search-button:hover { 
+    transform: none; 
+  }
+}
+
+/* Estados de alto contraste */
+@media (prefers-contrast: high) {
+  :root {
+    --bg: #000000; 
+    --elev: #1a1a1a; 
+    --tile: #2a2a2a; 
+    --tile-hover: #3a3a3a;
+    --text: #ffffff; 
+    --muted: #cccccc; 
+    --line: #555555;
+  }
+  #search-input:focus { border-width: 3px; }
+  .btn { border: 1px solid var(--line); }
+  .playlist-item.active { border-left-width: 4px; }
+}
+
+
+
