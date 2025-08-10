@@ -94,8 +94,8 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 #reproductor-container-sanavera .brand{
   display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:10px;
 }
-#brand-logo{ height:50px; width:auto; }
-#brand-text{ font-weight:700; letter-spacing:.2px; }
+#brand-logo{ height:100px; width:auto; }
+#brand-text{ font-weight:0; letter-spacing:.0px; }
 
 /* Buscador */
 #reproductor-container-sanavera .search-row{
