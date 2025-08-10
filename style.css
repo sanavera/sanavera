@@ -27,6 +27,10 @@
   --border-radius-sm:8px;
 }
 
+
+html { color-scheme: dark; }
+body { background-color: #0e0f13; }
+
 /* -------- Reset tranqui -------- */
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
@@ -91,7 +95,7 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 #reproductor-container-sanavera .topbar{
   position:sticky; top:0; z-index:30;
   background:var(--elev); border:1px solid var(--line);
-  padding:20px var(--side-pad) 22px; /* si querés bajar/subir el buscador, tocá este padding */
+  padding:44px var(--side-pad) 22px; /* si querés bajar/subir el buscador, tocá este padding */
   box-shadow:var(--shadow-md); backdrop-filter: blur(10px);
 }
 /* ocultamos la marca de arriba porque ya no la usamos */
@@ -105,7 +109,7 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 #search-input{
   flex:1; background:var(--tile); color:var(--text);
   border:2px solid transparent; border-radius:var(--border-radius);
-  padding:14px 18px; font-size:15px; font-weight:500; outline:none;
+  padding:24px 18px; font-size:15px; font-weight:500; outline:none;
   transition:all var(--transition); box-shadow:var(--shadow-sm);
 }
 #search-input::placeholder{ color:var(--muted); font-weight:400; }
