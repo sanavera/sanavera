@@ -427,22 +427,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- Player ----------
   function chooseHeroCover(files, albumId){
-    // 1) preferir JPG/JPEG <=1MB (no PNG), 2) otros formatos de imagen <=1MB (no PNG), 3) fallback services/img
-    const isImg = f => /image/i.test(f.format||'') || /\.(jpe?g|png|webp|bmp|tiff)$/i.test(f.name||'');
-    const ext = f => ((f.name||'').match(/\.(\w+)$/i)||[])[1]?.toLowerCase() || '';
-    const candidates = (files||[]).filter(f=>isImg(f));
+  // helpers
+  const isImg = f => /image/i.test(f.format||'') || /\.(jpe?g|png|webp|bmp|tiff)$/i.test(f.name||'');
+  const ext = f => ((f.name||'').match(/\.(\w+)$/i)||[])[1]?.toLowerCase() || '';
+  const badName = /spectr|spectrum|spectrogram|waveform|thumb|thumbnail|sprite|small|icon/i;
+  const scoreName = (name='')=>{
+    let s = 0;
+    if(/front|frontal|cover|portada/i.test(name)) s += 5;
+    if(/back|rear|contratapa/i.test(name)) s += 3;
+    if(/inside|interna|booklet/i.test(name)) s += 1;
+    return s;
+  };
 
-    const good = candidates
-      .filter(f=> (f.size ? Number(f.size) <= MAX_HERO_BYTES : false))
-      .filter(f=> ext(f) !== 'png');
+  // candidatas: imágenes <=1MB, NO PNG, y que no sean thumbs/spectrum
+  const good = (files||[])
+    .filter(f => isImg(f))
+    .filter(f => f.size && Number(f.size) <= MAX_HERO_BYTES)
+    .filter(f => ext(f) !== 'png')
+    .filter(f => !badName.test(f.name||''));
 
-    const preferJpg = good.find(f=>['jpg','jpeg'].includes(ext(f)));
-    const pick = preferJpg || good[0];
+  // orden: (1) mejor nombre, (2) más grande (mejor calidad), (3) jpg/webp primero
+  good.sort((a,b)=>{
+    const byName = scoreName(b.name) - scoreName(a.name);
+    if(byName) return byName;
+    const byExt = (ext(b)==='jpg'||ext(b)==='jpeg'||ext(b)==='webp') - (ext(a)==='jpg'||ext(a)==='jpeg'||ext(a)==='webp');
+    if(byExt) return byExt;
+    return Number(b.size||0) - Number(a.size||0);
+  });
 
-    return pick
-      ? `https://archive.org/download/${albumId}/${encodeURIComponent(pick.name).replace(/\+/g,'%20')}`
-      : `https://archive.org/services/img/${albumId}`;
-  }
+  const pick = good[0];
+
+  return pick
+    ? `https://archive.org/download/${albumId}/${encodeURIComponent(pick.name).replace(/\+/g,'%20')}`
+    : `https://archive.org/services/img/${albumId}`; // fallback mini (solo si no hay nada ≤1MB)
+}
 
   function openPlayer(albumId){
     showPlayer();
