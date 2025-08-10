@@ -4,41 +4,35 @@
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Sanavera MP3 listo');
 
-  // ---------- Utilidades de DOM ----------
+  // ---------- Utilidades ----------
   function byId(id){ return document.getElementById(id); }
   function toggleBodyScroll(lock){ document.body.classList.toggle('modal-open', !!lock); }
   function fmtTime(s){ if(isNaN(s)||s<0) return '0:00'; const m=Math.floor(s/60), ss=Math.floor(s%60); return `${m}:${ss<10?'0':''}${ss}`; }
   function unique(arr){ return [...new Set(arr)]; }
   function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
 
-  // ---------- Cache de elementos ----------
+  // ---------- Cache ----------
   const el = {
-    // Modales
     welcomeModal: byId('welcome-modal'),
     searchModal: byId('search-modal'),
     playerModal: byId('player-modal'),
     favoritesModal: byId('favorites-modal'),
-    // Búsqueda
     searchInput: byId('search-input'),
     searchButton: byId('search-button'),
     albumList: byId('album-list'),
     resultsCount: byId('results-count'),
     loading: byId('loading'),
     errorMessage: byId('error-message'),
-    // Hero + info
     playerHero: byId('player-hero'),
     heroSongTitle: byId('hero-song-title'),
     heroSongArtist: byId('hero-song-artist'),
     coverImage: byId('cover-image'),
     songTitle: byId('song-title'),
     songArtist: byId('song-artist'),
-    // Listas
     playlist: byId('playlist'),
     favoritesPlaylist: byId('favorites-playlist'),
-    // Audio
     audio: byId('audio-player'),
     favAudio: byId('favorites-audio-player'),
-    // Controles player
     btnPlay: byId('btn-play'),
     btnPrev: byId('btn-prev'),
     btnNext: byId('btn-next'),
@@ -48,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
     seek: byId('seek-bar'),
     curTime: byId('current-time'),
     durTime: byId('duration'),
-    // Controles favoritos
     favBtnPlay: byId('favorites-btn-play'),
     favBtnPrev: byId('favorites-btn-prev'),
     favBtnNext: byId('favorites-btn-next'),
@@ -58,25 +51,21 @@ document.addEventListener('DOMContentLoaded', () => {
     favSeek: byId('favorites-seek-bar'),
     favCurTime: byId('favorites-current-time'),
     favDurTime: byId('favorites-duration'),
-    // Hero favoritos
     favoritesHero: byId('favorites-hero'),
     favoritesHeroSongTitle: byId('favorites-hero-song-title'),
     favoritesHeroSongArtist: byId('favorites-hero-song-artist'),
     favoritesCoverImage: byId('favorites-cover-image'),
     favoritesSongTitle: byId('favorites-song-title'),
     favoritesSongArtist: byId('favorites-song-artist'),
-    // FABs
     fabSearch: byId('floating-search-button'),
     fabPlayer: byId('floating-player-button'),
     fabFav: byId('floating-favorites-button'),
-    // Calidad
     qualityBtn: byId('quality-btn'),
     qualityMenu: byId('quality-menu'),
     qualityBackdrop: byId('quality-backdrop'),
     qualityList: byId('quality-options')
   };
 
-  // Validación de elementos esenciales
   const miss = Object.entries(el).filter(([,v]) => v == null).map(([k]) => k);
   if (miss.length) {
     console.error('Faltan elementos:', miss);
@@ -84,14 +73,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // Limpieza de botones con <i> internos (evita texto fantasma)
   document.querySelectorAll('.btn,.btn-small,.btn-play,.btn-favorite,.btn-remove-favorite')
     .forEach(b=>{
       const icons=[...b.querySelectorAll('i')];
-      if(icons.length){
-        b.innerHTML='';
-        icons.forEach(i=>b.appendChild(i));
-      }
+      if(icons.length){ b.innerHTML=''; icons.forEach(i=>b.appendChild(i)); }
     });
 
   // ---------- Estado ----------
@@ -125,12 +110,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let availableFormats = ['mp3'];
   let currentFormat = 'mp3';
   let currentAlbumId = null;
+  let currentAlbumTitle = ''; // NEW: guardo título del álbum para el HERO
 
-  // ---------- Helpers de datos ----------
+  // ---------- Helpers ----------
   function normalizeCreator(c){ return Array.isArray(c)? c.join(', ') : (c||'Desconocido'); }
   function qualityIsHQ(fmt){ return HQ_FORMATS.includes((fmt||'').toLowerCase()); }
 
-  // Título de canción desde nombre de archivo
   function extractSongTitle(fileName){
     try{
       let name = fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i,'');
@@ -148,21 +133,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Elegir mejor tapa HQ SOLO para el HERO (playlist queda con thumbnail liviano)
+  // Elegimos mejor tapa evitando espectrogramas
   function pickBestCoverUrl(data, albumId){
-    // Fallback liviano
     const thumb = `https://archive.org/services/img/${albumId}`;
     const files = Array.isArray(data?.files) ? data.files : [];
-    const imgFiles = files.filter(f => /\.(jpe?g|png|webp)$/i.test(f.name||''));
+    // Sólo imágenes
+    let imgFiles = files.filter(f => /\.(jpe?g|png|webp)$/i.test(f.name||''));
 
     if(imgFiles.length === 0) return { coverHero: thumb, coverThumb: thumb };
 
-    // prioridad por nombre (front/cover/portada/folder)
-    const pri = /(^|[/._-])(front|frontal|cover|portada|folder)([/._-]|$)/i;
+    // Excluir espectrogramas / análisis
+    const bad = /(spectro|spectrum|spectrogram|waveform|freq|frequency|fft|analysis)/i;
+    imgFiles = imgFiles.filter(f => !bad.test(f.name||''));
+
+    // Si filtré todo, vuelvo al thumbnail
+    if(imgFiles.length === 0) return { coverHero: thumb, coverThumb: thumb };
+
+    // Priorizar por nombre "de tapa"
+    const good = /(^|[/._-])(front|frontal|cover|portada|folder)([/._-]|$)/i;
     const scored = imgFiles.map(f=>{
       const name = f.name || '';
-      const s = (pri.test(name)? 1000 : 0) + (Number(f.size)||0);
-      return { f, score:s };
+      const score =
+        (good.test(name)? 2000 : 0) +
+        (Number(f.size)||0); // más grande, mejor
+      return { f, score };
     }).sort((a,b)=> b.score - a.score);
 
     const best = scored[0]?.f?.name;
@@ -182,12 +176,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const safe = coverUrl && coverUrl.trim()? coverUrl : 'https://via.placeholder.com/800x800?text=Sin+portada';
     if(hero) hero.style.setProperty('--cover-url', `url("${safe}")`);
-    if(hTitle) hTitle.textContent = title || 'Selecciona una canción';
+    if(hTitle) hTitle.textContent = title || '';
     if(hArtist) hArtist.textContent = artist || '';
     if(legacyImg) legacyImg.src = safe;
   }
 
-  // ---------- Player time wiring ----------
+  // ---------- Time wiring ----------
   function wireTime(player, seek, cur, dur, scope){
     player.addEventListener('loadedmetadata', ()=>{
       dur.textContent = fmtTime(player.duration);
@@ -200,11 +194,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
     player.addEventListener('ended', ()=>{
-      if(repeatMode==='one'){
-        player.currentTime = 0; player.play().catch(console.error);
-      }else{
-        nextTrack(scope);
-      }
+      if(repeatMode==='one'){ player.currentTime = 0; player.play().catch(console.error); }
+      else{ nextTrack(scope); }
     });
     seek.addEventListener('input', ()=>{
       if(!isNaN(player.duration) && player.duration>0){
@@ -216,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
   wireTime(el.audio, el.seek, el.curTime, el.durTime, 'player');
   wireTime(el.favAudio, el.favSeek, el.favCurTime, el.favDurTime, 'favorites');
 
-  // ---------- Calidad (menú) ----------
+  // ---------- Calidad ----------
   function buildQualityMenu(){
     if(!el.qualityList) return;
     el.qualityList.innerHTML = '';
@@ -240,7 +231,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     el.qualityList.appendChild(frag);
   }
-
   function openQualityMenu(){
     if(!el.qualityMenu) return;
     el.qualityBtn.classList.add('active');
@@ -430,67 +420,62 @@ document.addEventListener('DOMContentLoaded', () => {
     if(!albums || !albums.length){
       el.resultsCount.textContent='Resultados: 0';
       el.albumList.innerHTML='<p style="padding:12px">No se encontraron álbumes.</p>';
-    } else {
-      albums.sort((a,b)=>b.relevance-a.relevance);
-      el.albumList.innerHTML='';
-      const frag = document.createDocumentFragment();
-      albums.forEach(a=>{
-        const item = document.createElement('div');
-        item.className='album-item';
-        item.innerHTML = `
-          <img src="${a.image}" alt="${a.title}" loading="lazy">
-          <div class="album-item-info">
-            <h3>${truncate(a.title, 60)}</h3>
-            <p>${truncate(a.artist, 40)}</p>
-          </div>
-        `;
-        item.addEventListener('click', ()=> openPlayer(a.id));
-        frag.appendChild(item);
-      });
-      el.albumList.appendChild(frag);
+      return;
     }
+    albums.sort((a,b)=>b.relevance-a.relevance);
+    el.albumList.innerHTML='';
+    const frag = document.createDocumentFragment();
+    albums.forEach(a=>{
+      const item = document.createElement('div');
+      item.className='album-item';
+      item.innerHTML = `
+        <img src="${a.image}" alt="${a.title}" loading="lazy">
+        <div class="album-item-info">
+          <h3>${truncate(a.title, 60)}</h3>
+          <p>${truncate(a.artist, 40)}</p>
+        </div>
+      `;
+      item.addEventListener('click', ()=> openPlayer(a.id));
+      frag.appendChild(item);
+    });
+    el.albumList.appendChild(frag);
   }
   function truncate(t, n){ return (t||'').length>n? (t.slice(0,n-1)+'…') : (t||''); }
 
   // ---------- Player ----------
   function openPlayer(albumId){
     showPlayer();
-    // Reset UI
-    el.playlist.innerHTML='<p style="padding:10px;color:#b3b3b3">Cargando canciones…</p>';
-    setHero('player','', 'Selecciona una canción', '');
-    el.songTitle.textContent='Selecciona una canción';
-    el.songArtist.textContent='';
-    el.audio.src='';
-    el.seek.value=0; el.curTime.textContent='0:00'; el.durTime.textContent='0:00';
-    closeQualityMenu();
 
-    // Reset estado
+    el.playlist.innerHTML='<p style="padding:10px;color:#b3b3b3">Cargando canciones…</p>';
+    setHero('player','', '', ''); // limpio
+    el.audio.src=''; el.seek.value=0; el.curTime.textContent='0:00'; el.durTime.textContent='0:00';
+
     playlist=[]; originalPlaylist=[]; idx=0; isPlaying=false;
     availableFormats=['mp3']; currentFormat='mp3';
-    repeatMode='none'; isShuffled=false; currentAlbumId=albumId;
+    repeatMode='none'; isShuffled=false; currentAlbumId=albumId; currentAlbumTitle='';
     el.btnPlay.classList.remove('playing'); el.btnPlay.setAttribute('aria-label','Reproducir');
     el.btnRepeat.classList.remove('active','repeat-one'); el.btnShuffle.classList.remove('active');
+    closeQualityMenu();
 
     if(albumId==='queen_greatest_hits'){
       const coverThumb = MOCK_ALBUMS[0].image, artist='Queen';
-      // Para mock, uso misma imagen en hero
-      setHero('player', coverThumb, 'Selecciona una canción', artist);
+      currentAlbumTitle = 'Greatest Hits';
+      setHero('player', coverThumb, currentAlbumTitle, artist);
       playlist = MOCK_TRACKS.map(t=>({...t, coverUrl: coverThumb}));
       originalPlaylist=[...playlist];
       availableFormats=['mp3'];
-      buildQualityMenu();
-      renderPlaylist();
-      loadTrack(0);
+      buildQualityMenu(); renderPlaylist(); loadTrack(0);
       return;
     }
 
     fetch(`https://archive.org/metadata/${albumId}`, {headers:{'User-Agent':'Mozilla/5.0'}})
       .then(r=>{ if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(data=>{
-        // Portadas: HQ SOLO para HERO, thumbnail para lista
         const { coverHero, coverThumb } = pickBestCoverUrl(data, albumId);
         const artist = normalizeCreator(data.metadata?.creator || data.metadata?.artist || 'Desconocido');
-        setHero('player', coverHero, 'Selecciona una canción', artist);
+        currentAlbumTitle = data.metadata?.title || 'Álbum';
+        // HERO: título del álbum fijo
+        setHero('player', coverHero, currentAlbumTitle, artist);
 
         const files = (data.files||[]).filter(f=>/\.(mp3|wav|flac|ogg|aiff|m4a|alac)$/i.test(f.name||''));
         const tracks = {};
@@ -520,7 +505,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error(err);
         el.playlist.innerHTML=`<p style="padding:10px;color:#b3b3b3">Error: ${err.message}. Usando datos de prueba.</p>`;
         const coverThumb = MOCK_ALBUMS[0].image;
-        setHero('player', coverThumb, 'Selecciona una canción', 'Queen');
+        currentAlbumTitle = 'Greatest Hits';
+        setHero('player', coverThumb, currentAlbumTitle, 'Queen');
         playlist = MOCK_TRACKS.map(t=>({...t, coverUrl: coverThumb}));
         originalPlaylist=[...playlist];
         availableFormats=['mp3'];
@@ -534,18 +520,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const t = playlist[idx];
     if(!t) return;
 
-    // Títulos (hero + legado oculto)
+    // Texto “legacy” (oculto) por compatibilidad
     el.songTitle.textContent = t.title;
     el.songArtist.textContent = t.artist;
-    // El HERO ya quedó con la portada HQ del álbum; no lo cambiamos por pista
 
+    // El HERO queda con el título de ÁLBUM (no lo cambio por pista)
     // Audio
     const url = t.urls[currentFormat] || t.urls.mp3;
     el.audio.src = url;
     el.btnDownload.setAttribute('href', url);
     el.btnDownload.setAttribute('download', `${t.title}.${currentFormat}`);
 
-    // Reset tiempo
     el.seek.value=0; el.curTime.textContent='0:00'; el.durTime.textContent='0:00';
 
     renderPlaylist();
@@ -578,7 +563,6 @@ document.addEventListener('DOMContentLoaded', () => {
           </button>
         </div>
       `;
-      // Favoritos
       row.querySelector('.btn-favorite').addEventListener('click', (e)=>{
         e.stopPropagation();
         const nowFavs = getFavorites();
@@ -590,7 +574,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPlaylist();
         if(el.favoritesModal.style.display==='flex') loadFavorites();
       });
-      // Reproducir
       row.addEventListener('click', ()=>{
         loadTrack(i);
         el.audio.play().then(()=>{
@@ -613,21 +596,15 @@ document.addEventListener('DOMContentLoaded', () => {
         .filter(f=>f && f.title && f.artist && f.urls && f.urls.mp3);
     }catch(_){ return []; }
   }
-  function setFavorites(list){
-    localStorage.setItem('favorites', JSON.stringify(list||[]));
-  }
+  function setFavorites(list){ localStorage.setItem('favorites', JSON.stringify(list||[])); }
   function addToFavorites(track){
     const favs = getFavorites();
-    if(!favs.some(f=>f.urls && f.urls.mp3===track.urls.mp3)){
-      favs.unshift(track);
-      setFavorites(favs);
-    }
+    if(!favs.some(f=>f.urls && f.urls.mp3===track.urls.mp3)){ favs.unshift(track); setFavorites(favs); }
   }
   function removeFromFavorites(mp3Url){
     let favs = getFavorites();
     favs = favs.filter(f=>!(f.urls && f.urls.mp3===mp3Url));
-    setFavorites(favs);
-    favList = favs;
+    setFavorites(favs); favList = favs;
     if(el.favoritesModal.style.display==='flex') loadFavorites();
   }
 
@@ -636,7 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
     favOriginal=[...favList];
     if(favList.length===0){
       el.favoritesPlaylist.innerHTML='<p style="padding:10px">No hay canciones en favoritos.</p>';
-      setHero('favorites','', 'Selecciona una canción', '');
+      setHero('favorites','', '', '');
       el.favAudio.src='';
       el.favSeek.value=0; el.favCurTime.textContent='0:00'; el.favDurTime.textContent='0:00';
       isFavPlaying=false; el.favBtnPlay.classList.remove('playing'); el.favBtnPlay.setAttribute('aria-label','Reproducir');
@@ -695,7 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     el.favoritesSongTitle.textContent = t.title;
     el.favoritesSongArtist.textContent = t.artist;
-    setHero('favorites', t.coverUrl, t.title, t.artist); // en favs usamos su cover guardado (thumbnail)
+    setHero('favorites', t.coverUrl, t.title, t.artist);
 
     el.favAudio.src = url;
     el.favBtnDownload.setAttribute('href', url);
