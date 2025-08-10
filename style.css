@@ -28,7 +28,7 @@
   --border-radius-sm: 8px;
 }
 
-/* --- Reset tranqui --- */
+/* --- Reseteo --- */
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
 html{ -webkit-text-size-adjust:100%; }
@@ -97,7 +97,7 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 #reproductor-container-sanavera .topbar{
   position:sticky; top:0; z-index:30;
   background:var(--elev); border:1px solid var(--line);
-  padding:16px var(--side-pad) 18px; box-shadow:var(--shadow-md); backdrop-filter:blur(10px);
+  padding:24px var(--side-pad) 18px; box-shadow:var(--shadow-md); backdrop-filter:blur(10px);
 }
 
 /* Acá iba el logo/brand, pero lo volamos porque pintaba al dope */
