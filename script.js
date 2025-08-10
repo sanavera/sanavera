@@ -1,5 +1,5 @@
 // =====================================
-// Sanavera MP3 - script.js (full, corregido)
+// Sanavera MP3 - script.js (full, corregido títulos array)
 // =====================================
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Sanavera MP3 listo');
@@ -8,10 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
   function byId(id){ return document.getElementById(id); }
   function toggleBodyScroll(lock){ document.body.classList.toggle('modal-open', !!lock); }
   function fmtTime(s){ if(isNaN(s)||s<0) return '0:00'; const m=Math.floor(s/60), ss=Math.floor(s%60); return `${m}:${ss<10?'0':''}${ss}`; }
-  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+  function escapeHtml(s){ return (s??'').toString().replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
   const unique = arr => [...new Set(arr)];
-  const truncate = (t, n) => (t||'').length>n? (t.slice(0,n-1)+'…') : (t||'');
+  const truncate = (t, n) => (t??'').toString().length>n? ((t??'').toString().slice(0,n-1)+'…') : (t??'').toString();
   const normalizeCreator = c => Array.isArray(c)? c.join(', ') : (c||'Desconocido');
+  const normalizeTitle = t => {
+    if (Array.isArray(t)) return t.filter(Boolean).map(x=>x.toString()).join(' – ').trim() || 'Sin título';
+    if (t == null) return 'Sin título';
+    return t.toString().trim() || 'Sin título';
+  };
 
   // ---------- Cache ----------
   const el = {
@@ -350,7 +355,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function relevance(doc, q){
-    const t=(doc.title||'').toLowerCase(), c=normalizeCreator(doc.creator).toLowerCase(), qq=q.toLowerCase();
+    const t = normalizeTitle(doc.title).toLowerCase();
+    const c = normalizeCreator(doc.creator).toLowerCase();
+    const qq = (q||'').toLowerCase();
     let r=0; if(t===qq) r+=300; else if(t.includes(qq)) r+=150; if(c.includes(qq)) r+=50; return r;
   }
 
@@ -375,11 +382,11 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
         const albums = docs.map(d=>({
-          id:d.identifier,
-          title:d.title||'Sin título',
-          artist:normalizeCreator(d.creator),
-          image:`https://archive.org/services/img/${d.identifier}`,
-          relevance:relevance(d, query)
+          id: d.identifier,
+          title: normalizeTitle(d.title),
+          artist: normalizeCreator(d.creator),
+          image: `https://archive.org/services/img/${d.identifier}`,
+          relevance: relevance(d, query)
         }));
         allAlbums = allAlbums.concat(albums);
         const uniqueAlbumList = Array.from(new Map(allAlbums.map(a=>[`${a.title}|${a.artist}`, a])).values());
@@ -413,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const item = document.createElement('div');
       item.className='album-item';
       item.innerHTML = `
-        <img src="${a.image}" alt="${a.title}" loading="lazy">
+        <img src="${a.image}" alt="${escapeHtml(a.title)}" loading="lazy">
         <div class="album-item-info">
           <h3>${truncate(a.title, 60)}</h3>
           <p>${truncate(a.artist, 40)}</p>
@@ -427,40 +434,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- Player ----------
   function chooseHeroCover(files, albumId){
-  // helpers
-  const isImg = f => /image/i.test(f.format||'') || /\.(jpe?g|png|webp|bmp|tiff)$/i.test(f.name||'');
-  const ext = f => ((f.name||'').match(/\.(\w+)$/i)||[])[1]?.toLowerCase() || '';
-  const badName = /spectr|spectrum|spectrogram|waveform|thumb|thumbnail|sprite|small|icon/i;
-  const scoreName = (name='')=>{
-    let s = 0;
-    if(/front|frontal|cover|portada/i.test(name)) s += 5;
-    if(/back|rear|contratapa/i.test(name)) s += 3;
-    if(/inside|interna|booklet/i.test(name)) s += 1;
-    return s;
-  };
+    // helpers
+    const isImg = f => /image/i.test(f.format||'') || /\.(jpe?g|png|webp|bmp|tiff)$/i.test(f.name||'');
+    const ext = f => ((f.name||'').match(/\.(\w+)$/i)||[])[1]?.toLowerCase() || '';
+    const badName = /spectr|spectrum|spectrogram|waveform|thumb|thumbnail|sprite|small|icon/i;
+    const scoreName = (name='')=>{
+      let s = 0;
+      if(/front|frontal|cover|portada/i.test(name)) s += 5;
+      if(/back|rear|contratapa/i.test(name)) s += 3;
+      if(/inside|interna|booklet/i.test(name)) s += 1;
+      return s;
+    };
 
-  // candidatas: imágenes <=1MB, NO PNG, y que no sean thumbs/spectrum
-  const good = (files||[])
-    .filter(f => isImg(f))
-    .filter(f => f.size && Number(f.size) <= MAX_HERO_BYTES)
-    .filter(f => ext(f) !== 'png')
-    .filter(f => !badName.test(f.name||''));
+    // candidatas: imágenes <=1MB, NO PNG, y que no sean thumbs/spectrum
+    const good = (files||[])
+      .filter(f => isImg(f))
+      .filter(f => f.size && Number(f.size) <= MAX_HERO_BYTES)
+      .filter(f => ext(f) !== 'png')
+      .filter(f => !badName.test(f.name||''));
 
-  // orden: (1) mejor nombre, (2) más grande (mejor calidad), (3) jpg/webp primero
-  good.sort((a,b)=>{
-    const byName = scoreName(b.name) - scoreName(a.name);
-    if(byName) return byName;
-    const byExt = (ext(b)==='jpg'||ext(b)==='jpeg'||ext(b)==='webp') - (ext(a)==='jpg'||ext(a)==='jpeg'||ext(a)==='webp');
-    if(byExt) return byExt;
-    return Number(b.size||0) - Number(a.size||0);
-  });
+    // orden: (1) mejor nombre, (2) preferir jpg/webp, (3) más grande
+    good.sort((a,b)=>{
+      const byName = scoreName(b.name) - scoreName(a.name);
+      if(byName) return byName;
+      const pref = (x)=> (ext(x)==='jpg'||ext(x)==='jpeg'||ext(x)==='webp') ? 1 : 0;
+      const byExt = pref(b) - pref(a);
+      if(byExt) return byExt;
+      return Number(b.size||0) - Number(a.size||0);
+    });
 
-  const pick = good[0];
+    const pick = good[0];
 
-  return pick
-    ? `https://archive.org/download/${albumId}/${encodeURIComponent(pick.name).replace(/\+/g,'%20')}`
-    : `https://archive.org/services/img/${albumId}`; // fallback mini (solo si no hay nada ≤1MB)
-}
+    return pick
+      ? `https://archive.org/download/${albumId}/${encodeURIComponent(pick.name).replace(/\+/g,'%20')}`
+      : `https://archive.org/services/img/${albumId}`; // fallback mini
+  }
 
   function openPlayer(albumId){
     showPlayer();
@@ -503,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(r=>{ if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(data=>{
         const thumbUrl = `https://archive.org/services/img/${albumId}`;
-        albumTitleForHero = data.metadata?.title || 'Álbum';
+        albumTitleForHero = normalizeTitle(data.metadata?.title);
         albumArtistForHero = normalizeCreator(data.metadata?.creator || data.metadata?.artist || 'Desconocido');
 
         // elegir tapa grande segura
@@ -592,7 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const row = document.createElement('div');
       row.className = `playlist-item${active?' active':''}`;
       row.innerHTML = `
-        <img src="${t.coverThumb}" alt="${t.title}" loading="lazy">
+        <img src="${t.coverThumb}" alt="${escapeHtml(t.title)}" loading="lazy">
         <div class="playlist-item-info">
           <h3>
             ${active?`<span class="eq"><span></span><span></span><span></span></span>`:''}
@@ -679,7 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const row = document.createElement('div');
       row.className = `playlist-item${active?' active':''}`;
       row.innerHTML = `
-        <img src="${t.coverThumb || t.coverLarge}" alt="${t.title}" loading="lazy">
+        <img src="${t.coverThumb || t.coverLarge}" alt="${escapeHtml(t.title)}" loading="lazy">
         <div class="playlist-item-info">
           <h3>
             ${active?`<span class="eq"><span></span><span></span><span></span></span>`:''}
