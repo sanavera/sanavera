@@ -41,10 +41,15 @@
             <img id="brand-logo" src="./logo3.png" alt="Sanavera MP3" />
             <span id="brand-text">Sanavera MP3</span>
           </div>
+
           <div class="search-row">
-            <input type="text" id="search-input" placeholder="Buscar álbumes (ej. Amar Azul)" />
-            <button id="search-button">Buscar</button>
+            <input type="text" id="search-input" placeholder="Buscar álbumes (ej. Amar Azul)" autocomplete="off" />
+            <!-- Botón de buscar reemplazado por el logo -->
+            <button id="search-button" class="logo-button" type="button" aria-label="Buscar">
+              <img src="./logo3.png" alt="Buscar" />
+            </button>
           </div>
+
           <div id="results-count">Resultados: 0</div>
         </div>
 
@@ -94,7 +99,7 @@
             <button class="btn" id="btn-next" aria-label="Siguiente"><i class="fas fa-forward-step"></i></button>
             <button class="btn btn-small" id="btn-shuffle" aria-label="Mezclar"><i class="fas fa-shuffle"></i></button>
 
-            <!-- Calidad a la IZQUIERDA de repeat/shuffle (botón integrado) -->
+            <!-- Calidad -->
             <button class="btn btn-small" id="quality-btn" aria-label="Calidad"><i class="fas fa-bolt"></i></button>
 
             <!-- Descargar -->
