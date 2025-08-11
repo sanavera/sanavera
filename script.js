@@ -1,14 +1,14 @@
 // =====================================
-// Sanavera MP3 - script.js (full, corregido títulos array)
+// Sanavera MP3 - script.js (full, fix: títulos + clave por baseName)
 // =====================================
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Sanavera MP3 listo');
 
   // ---------- Util ----------
-  function byId(id){ return document.getElementById(id); }
-  function toggleBodyScroll(lock){ document.body.classList.toggle('modal-open', !!lock); }
-  function fmtTime(s){ if(isNaN(s)||s<0) return '0:00'; const m=Math.floor(s/60), ss=Math.floor(s%60); return `${m}:${ss<10?'0':''}${ss}`; }
-  function escapeHtml(s){ return (s??'').toString().replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+  const byId = id => document.getElementById(id);
+  const toggleBodyScroll = lock => document.body.classList.toggle('modal-open', !!lock);
+  const fmtTime = s => (isNaN(s)||s<0)?'0:00':`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+  const escapeHtml = s => (s??'').toString().replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
   const unique = arr => [...new Set(arr)];
   const truncate = (t, n) => (t??'').toString().length>n? ((t??'').toString().slice(0,n-1)+'…') : (t??'').toString();
   const normalizeCreator = c => Array.isArray(c)? c.join(', ') : (c||'Desconocido');
@@ -128,28 +128,36 @@ document.addEventListener('DOMContentLoaded', () => {
   let availableFormats = ['mp3']; // solo audio
   let currentFormat = 'mp3';
   let currentAlbumId = null;
-  let heroCoverLarge = ''; // tapa grande segura
+  let heroCoverLarge = '';
   let albumTitleForHero = '';
   let albumArtistForHero = '';
 
   // ---------- Helpers ----------
-  function extractSongTitle(fileName){
+  function extractSongTitle(fileName, artistHint=''){
     try{
-      let name = fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac|aac|opus)$/i,'');
-      name = name.replace(/^.*\//,'');
-      name = name.replace(/_/g,' ').replace(/\s+/g,' ').trim();
-      name = name.replace(/^[\[(]?\s*\d{1,2}\s*[\])\-.]\s*/,'');
-      if(name.includes(' - ')){
-        const parts = name.split(' - ').map(s=>s.trim()).filter(Boolean);
-        if(parts.length>1) name = parts[parts.length-1];
+      let base = fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac|aac|opus)$/i,'');
+      base = base.replace(/^.*\//,'');
+      base = base.replace(/_/g,' ').replace(/\s+/g,' ').trim();
+      base = base.replace(/^[\[(]?\s*\d{1,2}\s*[\])\-.]\s*/,''); // 01 - , (1) , etc.
+
+      // Si hay “ - ”, elegimos la parte que NO sea el artista
+      if (base.includes(' - ')){
+        const parts = base.split(' - ').map(s=>s.trim()).filter(Boolean);
+        if (parts.length >= 2){
+          const art = (artistHint||'').toLowerCase();
+          const pickByArtist = parts.find(p => p.toLowerCase() !== art) || parts[0];
+          base = pickByArtist;
+        }
       }
-      name = name.replace(/\s*[\[(]?\b(19|20)\d{2}\b[\])]?$/,'').trim();
-      return name || fileName;
+
+      // quitar año al final
+      base = base.replace(/\s*[\[(]?\b(19|20)\d{2}\b[\])]?$/,'').trim();
+      return base || fileName;
     }catch(_){
       return fileName.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac|aac|opus)$/i,'').replace(/_/g,' ');
     }
   }
-  function qualityIsHQ(fmt){ return HQ_FORMATS.includes((fmt||'').toLowerCase()); }
+  const qualityIsHQ = fmt => HQ_FORMATS.includes((fmt||'').toLowerCase());
   function setHero(scope, coverUrl, title, artist){
     const isFav = scope==='favorites';
     const hero = isFav? el.favoritesHero : el.playerHero;
@@ -198,7 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if(!el.qualityList) return;
     el.qualityList.innerHTML = '';
 
-    // asegurar: solo audio
     const fmts = availableFormats.filter(f=>AUDIO_FORMATS.includes(f.toLowerCase()));
     if(!fmts.includes('mp3')) fmts.unshift('mp3');
 
@@ -434,7 +441,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- Player ----------
   function chooseHeroCover(files, albumId){
-    // helpers
     const isImg = f => /image/i.test(f.format||'') || /\.(jpe?g|png|webp|bmp|tiff)$/i.test(f.name||'');
     const ext = f => ((f.name||'').match(/\.(\w+)$/i)||[])[1]?.toLowerCase() || '';
     const badName = /spectr|spectrum|spectrogram|waveform|thumb|thumbnail|sprite|small|icon/i;
@@ -446,14 +452,12 @@ document.addEventListener('DOMContentLoaded', () => {
       return s;
     };
 
-    // candidatas: imágenes <=1MB, NO PNG, y que no sean thumbs/spectrum
     const good = (files||[])
       .filter(f => isImg(f))
       .filter(f => f.size && Number(f.size) <= MAX_HERO_BYTES)
       .filter(f => ext(f) !== 'png')
       .filter(f => !badName.test(f.name||''));
 
-    // orden: (1) mejor nombre, (2) preferir jpg/webp, (3) más grande
     good.sort((a,b)=>{
       const byName = scoreName(b.name) - scoreName(a.name);
       if(byName) return byName;
@@ -467,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     return pick
       ? `https://archive.org/download/${albumId}/${encodeURIComponent(pick.name).replace(/\+/g,'%20')}`
-      : `https://archive.org/services/img/${albumId}`; // fallback mini
+      : `https://archive.org/services/img/${albumId}`;
   }
 
   function openPlayer(albumId){
@@ -486,9 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
     playlist=[]; originalPlaylist=[]; idx=0; isPlaying=false;
     availableFormats=['mp3']; currentFormat='mp3';
     repeatMode='none'; isShuffled=false; currentAlbumId=albumId;
-    heroCoverLarge = '';
-    albumTitleForHero = '';
-    albumArtistForHero = '';
+    heroCoverLarge = ''; albumTitleForHero = ''; albumArtistForHero = '';
     el.btnPlay.classList.remove('playing'); el.btnPlay.setAttribute('aria-label','Reproducir');
     el.btnRepeat.classList.remove('active','repeat-one'); el.btnShuffle.classList.remove('active');
 
@@ -514,25 +516,35 @@ document.addEventListener('DOMContentLoaded', () => {
         albumTitleForHero = normalizeTitle(data.metadata?.title);
         albumArtistForHero = normalizeCreator(data.metadata?.creator || data.metadata?.artist || 'Desconocido');
 
-        // elegir tapa grande segura
         heroCoverLarge = chooseHeroCover(data.files||[], albumId);
         setHero('player', heroCoverLarge, albumTitleForHero, albumArtistForHero);
 
-        // construir tracks
+        // construir tracks — clave por baseName (sin extensión) para juntar formatos sin pisar temas distintos
         const audioFiles = (data.files||[]).filter(f=>AUDIO_FORMATS.some(ext=>new RegExp(`\\.${ext}$`, 'i').test(f.name||'')));
         const tracks = {};
         audioFiles.forEach(f=>{
           const raw = f.name;
-          const title = extractSongTitle(raw);
+          const baseName = raw.replace(/\.(mp3|wav|flac|ogg|aiff|m4a|alac|aac|opus)$/i,'').trim().toLowerCase();
+          const title = extractSongTitle(raw, albumArtistForHero);
           const fmt = (raw.match(/\.(\w+)$/i)||[])[1]?.toLowerCase() || 'mp3';
           const url = `https://archive.org/download/${albumId}/${encodeURIComponent(raw).replace(/\+/g,'%20')}`;
-          if(!tracks[title]) tracks[title]={ title, artist: albumArtistForHero, coverThumb: thumbUrl, coverLarge: heroCoverLarge, urls:{}, format: currentFormat };
-          tracks[title].urls[fmt]=url;
+          if(!tracks[baseName]){
+            tracks[baseName] = {
+              id: baseName,
+              title,
+              artist: albumArtistForHero,
+              coverThumb: thumbUrl,
+              coverLarge: heroCoverLarge,
+              urls: {},
+              format: currentFormat
+            };
+          }
+          tracks[baseName].urls[fmt] = url;
         });
+
         playlist = Object.values(tracks);
         originalPlaylist=[...playlist];
 
-        // solo formatos de audio disponibles
         availableFormats = unique(
           audioFiles
             .map(f=>(f.name.match(/\.(\w+)$/i)||[])[1]?.toLowerCase())
@@ -570,19 +582,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const t = playlist[idx];
     if(!t) return;
 
-    // Títulos (hero + legado)
     el.songTitle.textContent = t.title;
     el.songArtist.textContent = t.artist;
-    // hero mantiene la tapa del álbum + título del álbum/autor
     setHero('player', heroCoverLarge, albumTitleForHero || t.title, albumArtistForHero || t.artist);
 
-    // Audio
     const url = t.urls[currentFormat] || t.urls.mp3;
     el.audio.src = url;
     el.btnDownload.setAttribute('href', url);
     el.btnDownload.setAttribute('download', `${t.title}.${currentFormat}`);
 
-    // Reset tiempo
     el.seek.value=0; el.curTime.textContent='0:00'; el.durTime.textContent='0:00';
 
     renderPlaylist();
@@ -806,14 +814,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if(scope==='player') el.btnRepeat.classList.remove('active','repeat-one'); else el.favBtnRepeat.classList.remove('active','repeat-one');
     }
   }
-  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+  const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
   function toggleShuffle(scope){
     if(scope==='player' && el.playerModal.style.display==='flex'){
       isShuffled=!isShuffled; el.btnShuffle.classList.toggle('active',isShuffled);
       if(isShuffled){
         const cur = playlist[idx];
         playlist = shuffle([...playlist]);
-        idx = playlist.findIndex(t=>t.urls.mp3===cur.urls.mp3);
+        idx = playlist.findIndex(t=>t.urls && (t.urls[currentFormat]||t.urls.mp3) === (cur.urls[currentFormat]||cur.urls.mp3));
       }else{
         playlist=[...originalPlaylist];
         const curUrl = el.audio.src;
