@@ -93,7 +93,7 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
   border-radius:var(--border-radius); box-shadow:var(--shadow-md);
 }
 #reproductor-container-sanavera .welcome-text{
-  font-size:20px; font-weight:500; text-align:center;
+  font-size:14px; font-weight:500; text-align:center;
 }
 #reproductor-container-sanavera .progress-container{ width:100%; max-width:420px; }
 #reproductor-container-sanavera .progress-bar{
