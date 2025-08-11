@@ -318,7 +318,7 @@ body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 
 /* Texto de crédito: pegado al borde inferior, sin comerse nada */
 .footer-text{
-  text-align:center; font-size:11px; font-weight:500; color:var(--muted);
+  text-align:center; font-size:9px; font-weight:500; color:var(--muted);
   line-height:1.2;
   padding-top:4px;
   margin-bottom:calc(4px + env(safe-area-inset-bottom)); /* queda visible y alineado a la barra */
