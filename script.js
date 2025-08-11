@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { title:'Another One Bites the Dust', artist:'Queen', urls:{ mp3:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' }, coverThumb:'https://indiehoy.com/wp-content/uploads/2022/05/queen-queen-ii.jpg', coverLarge:'https://indiehoy.com/wp-content/uploads/2022/05/queen-queen-ii.jpg', format:'mp3' }
   ];
 
-  const DEFAULT_QUERY = 'uploader:juan_chota_dura'; // << ordenamos por descargas
+  const DEFAULT_QUERY = 'juan_chota_dura'; // << ordenamos por descargas
   const DEFAULT_SORT = 'downloads desc';
 
   let allAlbums = [];
