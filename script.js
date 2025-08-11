@@ -284,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(()=>{
         el.welcomeModal.style.display='none';
         showSearch();
-        currentQuery='Shakira';
+        currentQuery='Gonzalomendoza34guemes';
         el.searchInput.value='';
         searchAlbums(currentQuery,1,true);
         sessionStorage.setItem('welcomeShown','true');
@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
     },10000);
   }else{
     showSearch();
-    currentQuery='Shakira';
+    currentQuery='Gonzalomendoza34guemes';
     el.searchInput.value='';
     searchAlbums(currentQuery,1,true);
   }
