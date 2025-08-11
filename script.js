@@ -1,5 +1,5 @@
 // =====================================
-// Sanavera MP3 - script.js (full, fix: títulos + clave por baseName)
+// Sanavera MP3 - script.js (full, fix: títulos + clave por baseName + sort descargas por uploader)
 // =====================================
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Sanavera MP3 listo');
@@ -107,6 +107,9 @@ document.addEventListener('DOMContentLoaded', () => {
     { title:'Another One Bites the Dust', artist:'Queen', urls:{ mp3:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' }, coverThumb:'https://indiehoy.com/wp-content/uploads/2022/05/queen-queen-ii.jpg', coverLarge:'https://indiehoy.com/wp-content/uploads/2022/05/queen-queen-ii.jpg', format:'mp3' }
   ];
 
+  const DEFAULT_QUERY = 'uploader:juan_chota_dura'; // << ordenamos por descargas
+  const DEFAULT_SORT = 'downloads desc';
+
   let allAlbums = [];
   let isLoading = false;
   let currentQuery = '';
@@ -140,7 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
       base = base.replace(/_/g,' ').replace(/\s+/g,' ').trim();
       base = base.replace(/^[\[(]?\s*\d{1,2}\s*[\])\-.]\s*/,''); // 01 - , (1) , etc.
 
-      // Si hay “ - ”, elegimos la parte que NO sea el artista
       if (base.includes(' - ')){
         const parts = base.split(' - ').map(s=>s.trim()).filter(Boolean);
         if (parts.length >= 2){
@@ -149,8 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
           base = pickByArtist;
         }
       }
-
-      // quitar año al final
       base = base.replace(/\s*[\[(]?\b(19|20)\d{2}\b[\])]?$/,'').trim();
       return base || fileName;
     }catch(_){
@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(()=>{
         el.welcomeModal.style.display='none';
         showSearch();
-        currentQuery='Gonzalomendoza34guemes';
+        currentQuery = DEFAULT_QUERY;          // << usa el uploader
         el.searchInput.value='';
         searchAlbums(currentQuery,1,true);
         sessionStorage.setItem('welcomeShown','true');
@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
     },10000);
   }else{
     showSearch();
-    currentQuery='Gonzalomendoza34guemes';
+    currentQuery = DEFAULT_QUERY;              // << usa el uploader
     el.searchInput.value='';
     searchAlbums(currentQuery,1,true);
   }
@@ -375,7 +375,9 @@ document.addEventListener('DOMContentLoaded', () => {
     el.errorMessage.style.display='none';
     if(clearPrev){ el.albumList.innerHTML=''; allAlbums=[]; el.resultsCount.textContent='Resultados: 0'; }
 
-    const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(query)}+AND+mediatype:audio+AND+NOT+access-restricted-item:true&fl=identifier,title,creator&rows=5000&page=${page}&output=json`;
+    // Advancedsearch ordenado por descargas desc
+    const sortParam = encodeURIComponent(DEFAULT_SORT); // "downloads desc"
+    const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(query)}+AND+mediatype:audio+AND+NOT+access-restricted-item:true&fl=identifier,title,creator&rows=5000&page=${page}&output=json&sort[]=${sortParam}`;
 
     fetch(url,{headers:{'User-Agent':'Mozilla/5.0','Accept':'application/json'}})
       .then(r=>{ if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
