@@ -1,106 +1,138 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Sanavera MP3</title>
-  <meta name="theme-color" content="#161821">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Sanavera MP3</title>
+    <meta name="theme-color" content="#161821">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="app-container">
-    <!-- VISTA: BÚSQUEDA -->
-    <main id="search-view" class="view active">
-      <header class="search-header">
-        <div class="search-row">
-          <input type="text" id="search-input" placeholder="Buscar álbumes o artistas..." autocomplete="off" value="banda XXI" />
-          <button id="search-button" type="button" aria-label="Buscar"><i class="fas fa-search"></i></button>
-        </div>
-      </header>
-      <div class="view-content">
-        <div id="album-list"></div>
-        <div id="loading-indicator">Cargando...</div>
-      </div>
-    </main>
-    <!-- VISTA: FAVORITOS -->
-    <main id="favorites-view" class="view">
-      <header class="view-header"><h1>Favoritos</h1></header>
-      <div class="view-content"><div class="playlist" id="favorites-list"></div></div>
-    </main>
-    <!-- VISTA: LISTAS -->
-    <main id="playlists-view" class="view">
-      <header class="view-header"><h1>Listas de Reproducción</h1></header>
-      <div class="view-content"><div class="playlist" id="playlists-list"></div></div>
-    </main>
-    <!-- VISTA: REPRODUCTOR -->
-    <main id="player-view" class="view">
-      <div class="player-layout">
-        <section class="player-hero" id="player-hero">
-          <div class="hero-text">
-            <h2 id="hero-song-title">Sanavera MP3</h2>
-            <p id="hero-song-artist">Elige una canción para empezar</p>
-          </div>
-        </section>
-        <div id="player-tracklist-wrapper">
-          <div class="playlist" id="player-tracklist"></div>
-        </div>
-        <div class="player-controls-wrapper">
-          <div class="controls-section">
-            <div class="progress-container">
-              <input type="range" id="seek-bar" min="0" max="100" value="0" />
-              <div class="time-info"><span id="current-time">0:00</span><span id="duration">0:00</span></div>
+    <div id="app-container">
+        <!-- MODAL: BÚSQUEDA -->
+        <div id="search-modal" class="modal active">
+            <div class="modal-content">
+                <div class="topbar">
+                    <div class="search-row">
+                        <input type="text" id="search-input" placeholder="Buscar en Archive.org..." autocomplete="off" />
+                        <button id="search-button" type="button" aria-label="Buscar"><i class="fas fa-search"></i></button>
+                    </div>
+                    <div id="results-count">Resultados: 0</div>
+                </div>
+                <div id="album-list"></div>
+                <div id="loading" class="loading-state" style="display:none;">Cargando...</div>
+                <div id="error-message" class="empty-state" style="display:none;"></div>
             </div>
-            <div class="controls">
-              <button class="btn" id="btn-shuffle" aria-label="Mezclar"><i class="fas fa-shuffle"></i></button>
-              <button class="btn" id="btn-prev" aria-label="Anterior"><i class="fas fa-backward-step"></i></button>
-              <button class="btn btn-play" id="btn-play" aria-label="Reproducir"><i class="fas fa-play"></i><i class="fas fa-pause"></i></button>
-              <button class="btn" id="btn-next" aria-label="Siguiente"><i class="fas fa-forward-step"></i></button>
-              <button class="btn" id="btn-repeat" aria-label="Repetir"><i class="fas fa-repeat"></i></button>
-            </div>
-             <div class="controls secondary-controls" style="justify-content:center; gap: 24px;">
-                <button class="btn" id="quality-btn" aria-label="Calidad"><i class="fas fa-bolt"></i></button>
-                <a class="btn" id="btn-download" href="#" download aria-label="Descargar"><i class="fas fa-download"></i></a>
-             </div>
-          </div>
         </div>
-      </div>
-    </main>
-  </div>
-  <!-- NAVEGACIÓN -->
-  <nav id="bottom-nav">
-    <button class="nav-link active" data-view="search"><i class="fas fa-search"></i><span>Buscar</span></button>
-    <button class="nav-link" data-view="favorites"><i class="fas fa-heart"></i><span>Favoritos</span></button>
-    <button class="nav-link" data-view="playlists"><i class="fas fa-list-music"></i><span>Listas</span></button>
-    <button class="nav-link" data-view="player"><i class="fas fa-circle-play"></i><span>Player</span></button>
-  </nav>
-  <!-- MODALES -->
-  <div class="modal" id="new-playlist-modal">
-    <div class="modal-backdrop modal-close"></div>
-    <div class="modal-content">
-        <div class="modal-header"><h2>Crear nueva lista</h2><button class="modal-close"><i class="fas fa-times"></i></button></div>
-        <div class="modal-body">
-            <form id="new-playlist-form">
-                <div class="form-group"><input type="text" id="new-playlist-input" placeholder="Nombre de la lista" required></div>
-                <div class="form-actions"><button type="submit" class="btn-primary">Crear</button></div>
-            </form>
+
+        <!-- MODAL: REPRODUCTOR DE ÁLBUM -->
+        <div id="player-modal" class="modal">
+            <div class="modal-content is-player">
+                <div class="player-background" id="player-bg"></div>
+                <button class="modal-close-btn" data-modal-id="player-modal"><i class="fas fa-chevron-down"></i></button>
+                <div class="player-header">
+                    <img id="player-cover-thumbnail" src="" alt="Cover" class="player-cover-small"/>
+                    <div class="header-info">
+                        <h2 id="player-album-title">Título del Álbum</h2>
+                        <p id="player-album-artist">Artista</p>
+                    </div>
+                </div>
+                <div class="playlist-section" id="player-playlist-wrapper">
+                    <div class="playlist" id="player-playlist"></div>
+                </div>
+                <div class="player-controls-container">
+                    <div class="now-playing-info">
+                        <h3 id="song-title">Selecciona una canción</h3>
+                        <p id="song-artist"></p>
+                    </div>
+                    <div class="progress-container">
+                        <input type="range" id="seek-bar" min="0" max="100" value="0" />
+                        <div class="time-info"><span id="current-time">0:00</span><span id="duration">0:00</span></div>
+                    </div>
+                    <div class="controls">
+                        <button class="btn btn-small" id="btn-shuffle" aria-label="Mezclar"><i class="fas fa-shuffle"></i></button>
+                        <button class="btn" id="btn-prev" aria-label="Anterior"><i class="fas fa-backward-step"></i></button>
+                        <button class="btn btn-play" id="btn-play" aria-label="Reproducir"><i class="fas fa-play"></i><i class="fas fa-pause"></i></button>
+                        <button class="btn" id="btn-next" aria-label="Siguiente"><i class="fas fa-forward-step"></i></button>
+                        <button class="btn btn-small" id="btn-repeat" aria-label="Repetir"><i class="fas fa-repeat"></i></button>
+                    </div>
+                    <div class="extra-controls">
+                        <button class="btn btn-tiny" id="quality-btn" aria-label="Calidad"><i class="fas fa-bolt"></i></button>
+                        <a class="btn btn-tiny" id="btn-download" href="#" download aria-label="Descargar"><i class="fas fa-download"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MODAL: FAVORITOS -->
+        <div id="favorites-modal" class="modal">
+            <div class="modal-content is-player">
+                 <div class="player-background" id="favorites-bg"></div>
+                 <button class="modal-close-btn" data-modal-id="favorites-modal"><i class="fas fa-chevron-down"></i></button>
+                 <div class="player-header">
+                    <div class="header-info full-width">
+                        <h2><i class="fas fa-heart"></i> Favoritos</h2>
+                        <p>Tus canciones preferidas</p>
+                    </div>
+                </div>
+                <div class="playlist-section" id="favorites-playlist-wrapper">
+                    <div class="playlist" id="favorites-playlist"></div>
+                </div>
+                 <!-- El reproductor de favoritos usa los mismos controles que el principal -->
+            </div>
+        </div>
+
+        <!-- MODAL: LISTAS DE REPRODUCCIÓN -->
+        <div id="playlists-modal" class="modal">
+             <div class="modal-content">
+                <button class="modal-close-btn" data-modal-id="playlists-modal"><i class="fas fa-chevron-down"></i></button>
+                <div class="modal-header-static">
+                    <h2><i class="fas fa-list-music"></i> Mis Listas</h2>
+                    <button id="btn-new-playlist" class="btn-primary">Crear Nueva</button>
+                </div>
+                <div class="modal-scroll-content" id="playlists-list-container"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Elementos flotantes y globales -->
+    <div id="fab-container">
+        <button class="fab" id="fab-player" aria-label="Reproductor"><i class="fas fa-play"></i></button>
+        <button class="fab" id="fab-playlists" aria-label="Listas"><i class="fas fa-list-music"></i></button>
+        <button class="fab" id="fab-fav" aria-label="Favoritos"><i class="fas fa-heart"></i></button>
+    </div>
+
+    <div id="quality-backdrop"></div>
+    <div id="quality-menu"><div id="quality-options"></div></div>
+
+    <!-- Modales para acciones de listas -->
+    <div class="action-modal-wrapper" id="new-playlist-dialog">
+        <div class="action-modal-backdrop"></div>
+        <div class="action-modal-content">
+            <h3>Nueva Lista de Reproducción</h3>
+            <input type="text" id="new-playlist-name" placeholder="Nombre de la lista">
+            <div class="action-modal-buttons">
+                <button id="cancel-new-playlist">Cancelar</button>
+                <button id="confirm-new-playlist" class="btn-primary">Crear</button>
+            </div>
         </div>
     </div>
-  </div>
-  <div class="modal" id="add-to-playlist-modal">
-      <div class="modal-backdrop modal-close"></div>
-      <div class="modal-content">
-          <div class="modal-header"><h2>Añadir a la lista</h2><button class="modal-close"><i class="fas fa-times"></i></button></div>
-          <div class="modal-body" id="add-to-playlist-options"></div>
-      </div>
-  </div>
-   <!-- MENÚ CALIDAD -->
-  <div id="quality-backdrop" class="modal-close"></div>
-  <div id="quality-menu" class="modal-content">
-    <div id="quality-options"></div>
-  </div>
-  <!-- AUDIO -->
-  <audio id="audio-player" preload="metadata"></audio>
-  <script src="script.js"></script>
+
+     <div class="action-modal-wrapper" id="add-to-playlist-dialog">
+        <div class="action-modal-backdrop"></div>
+        <div class="action-modal-content">
+            <h3>Añadir a...</h3>
+            <div id="add-to-playlist-options"></div>
+            <div class="action-modal-buttons">
+                 <button id="cancel-add-to-playlist">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    
+    <audio id="audio-player"></audio>
+
+    <script src="script.js"></script>
 </body>
 </html>
