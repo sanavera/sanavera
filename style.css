@@ -1,144 +1,441 @@
-/* =================================================================
-   Sanavera MP3 - v4.0 CSS (Restaurado y Mejorado)
-   BASE: Estilos originales del usuario.
-   CAMBIOS: Se añade barra de navegación, se ajusta el reproductor
-   para evitar solapamientos y se añaden estilos para listas.
-   ================================================================= */
-:root {
-  --bg: #0e0f13; --elev-1: #161821; --elev-2: #1b1e27; --elev-3: #222634;
-  --text: #f6f7fb; --text-muted: #aab0c0; --brand: #5ee192; --danger: #ff4757;
-  --line: #2a2f3e; --radius-md: 12px; --radius-sm: 8px;
-  --nav-height: 70px; --safe-area: env(safe-area-inset-bottom);
-  --content-padding: 16px; --shadow-lg: 0 8px 32px rgba(0,0,0,.35);
-  --transition: 200ms cubic-bezier(.4,0,.2,1);
+/* =====================================
+   Sanavera MP3 - style.css (completo)
+   Por Sebastián Sanavera
+   ===================================== */
+
+/* -------- Variables de tema -------- */
+:root{
+  --bg:#0e0f13;          /* fondo general */
+  --elev:#161821;        /* capas elevadas: headers, cajón de controles */
+  --tile:#1b1e27;        /* tarjetas/ítems */
+  --tile-hover:#222634;  /* hover sutil */
+  --muted:#aab0c0;       /* texto secundario */
+  --text:#f6f7fb;        /* texto principal */
+  --brand:#5ee192;       /* acento (play/acciones) */
+  --brand-2:#37c977;     /* acento al hover */
+  --line:#2a2f3e;        /* líneas/bordes suaves */
+
+  --header-h:110px;
+  --hero-max-h:44vh;
+  --footer-safe:max(88px,64px + env(safe-area-inset-bottom));
+  --side-pad:14px;
+
+  --transition:150ms cubic-bezier(.4,0,.2,1);
+  --shadow-sm:0 2px 8px rgba(0,0,0,.15);
+  --shadow-md:0 4px 16px rgba(0,0,0,.25);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.35);
+  --border-radius:12px;
+  --border-radius-sm:8px;
 }
+
+/* Le avisamos al navegador que la app es oscura */
 html { color-scheme: dark; }
-body {
-  margin: 0; background-color: var(--bg); color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, system-ui, sans-serif;
-  height: 100vh; width: 100vw; overflow: hidden;
-}
-body.modal-open { position: fixed; width: 100%; }
+body { background-color: #0e0f13; }
 
-/* ======================= MODAL (BASE) ======================= */
-.modal {
-  position: fixed; inset: 0; z-index: 1000;
-  background-color: var(--bg);
-  display: none; flex-direction: column;
+/* -------- Reseteo -------- */
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  margin:0;
+  background: linear-gradient(135deg, var(--bg) 0%, #0a0b0f 100%);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  line-height:1.5;
 }
-.modal.active { display: flex; }
-.modal-content { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+a{ color:inherit; text-decoration:none; }
+img{ display:block; max-width:100%; height:auto; }
 
-/* ======================= BARRA DE NAVEGACIÓN INFERIOR ======================= */
-#bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 1100;
-  height: calc(var(--nav-height) + var(--safe-area));
-  background: rgba(22, 24, 33, 0.9); backdrop-filter: blur(10px);
-  border-top: 1px solid var(--line); display: flex; justify-content: space-around;
-  padding: 10px 0 var(--safe-area);
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+  }
 }
-.nav-link {
-  background: none; border: none; color: var(--text-muted); cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  font-size: 10px; flex: 1;
-}
-.nav-link i { font-size: 22px; }
-.nav-link.active { color: var(--brand); }
 
-/* Contenido principal con padding para no ser tapado por la nav */
-#app-container { height: 100%; padding-bottom: calc(var(--nav-height) + var(--safe-area)); }
+/* Cuando hay modal, bloqueamos scroll del body */
+body.modal-open{ position:fixed; width:100%; overflow:hidden; }
 
-/* ======================= BÚSQUEDA ======================= */
-.topbar { padding: var(--content-padding); background: var(--elev-1); }
-.search-row { display: flex; gap: 12px; }
-#search-input {
-  flex: 1; background: var(--elev-2); color: var(--text); border: 1px solid var(--line);
-  border-radius: var(--radius-md); padding: 12px 16px; font-size: 16px; outline: none;
+/* -------- Contenedor raíz -------- */
+#reproductor-container-sanavera{
+  position:relative; width:100%; height:100vh; overflow:hidden; background:inherit;
 }
-#search-button {
-  width: 48px; height: 48px; min-width: 48px; border: none; border-radius: 50%;
-  background: var(--elev-2); color: var(--brand); font-size: 18px; cursor: pointer;
-}
-#results-count { margin-top: 12px; font-size: 13px; color: var(--text-muted); text-align: center; }
-#album-list { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 18px; padding: var(--content-padding); }
-.album-item { cursor: pointer; }
-.album-item img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: var(--radius-md); background: var(--elev-2); }
-.album-item-info h3 { margin: 8px 0 2px; font-size: 14px; font-weight: 600; }
-.album-item-info p { margin: 0; font-size: 12px; color: var(--text-muted); }
 
-/* ======================= REPRODUCTOR (HERO LAYOUT) ======================= */
-.player-hero {
-  height: 40vh; width: 100%;
-  background-size: cover; background-position: center;
-  position: relative;
-  display: flex; flex-direction: column; justify-content: flex-end;
-  padding: var(--content-padding); text-shadow: 0 2px 8px rgba(0,0,0,.6);
+/* =====================================
+   MODALES (capa superior con blur)
+   ===================================== */
+#reproductor-container-sanavera .modal{
+  display:none; position:fixed; inset:0; z-index:1000;
+  background:rgba(14,15,19,.85);
+  backdrop-filter: blur(8px);
+  justify-content:center; align-items:center;
 }
-.player-hero::before {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(to top, var(--bg) 15%, transparent 70%);
+#reproductor-container-sanavera .modal-content{
+  background:var(--elev); border:1px solid var(--line);
+  width:100%; max-width:100%; height:100vh; padding:0;
+  display:flex; flex-direction:column; overflow:hidden;
+  box-shadow:var(--shadow-lg);
 }
-.hero-text { position: relative; text-align: center; }
-.hero-text h2 { margin: 0 0 4px; font-size: 24px; }
-.hero-text p { margin: 0; font-size: 14px; color: var(--text-muted); }
 
-#playlist { flex: 1; overflow-y: auto; padding: var(--content-padding); }
-.playlist-item {
-    display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: var(--radius-sm);
-    cursor: pointer;
+/* =====================================
+   BIENVENIDA
+   ===================================== */
+#reproductor-container-sanavera .welcome-content{
+  height:100%; width:100%; padding:32px 20px;
+  display:flex; align-items:center; justify-content:center; flex-direction:column; gap:24px;
+  background: radial-gradient(circle at center, var(--elev) 0%, var(--bg) 70%);
 }
-.playlist-item.active { background: var(--elev-3); }
-.playlist-item.active h3 { color: var(--brand); }
-.playlist-item img { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; }
-.playlist-item-info { flex: 1; min-width: 0; }
-.playlist-item-info h3, .playlist-item-info p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; }
-.playlist-item-info h3 { font-size: 15px; font-weight: 500; }
-.playlist-item-info p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
-.playlist-item-actions { margin-left: auto; display: flex; }
-.btn-icon { background:none; border:none; color: var(--text-muted); font-size: 18px; padding: 10px; cursor: pointer; border-radius: 50%; }
-.btn-favorite.active { color: var(--danger); }
-.eq { display:inline-flex; align-items:flex-end; gap:2px; width:14px; height:12px; margin-right: 8px; }
-.eq span { width:3px; height:100%; background:var(--brand); animation:bar 1.2s ease-in-out infinite; }
+#reproductor-container-sanavera .welcome-image{
+  width:180px; height:180px; object-fit:contain;
+  border-radius:var(--border-radius); box-shadow:var(--shadow-md);
+}
+#reproductor-container-sanavera .welcome-text{
+  font-size:14px; font-weight:500; text-align:center;
+}
+#reproductor-container-sanavera .progress-container{ width:100%; max-width:420px; }
+#reproductor-container-sanavera .progress-bar{
+  width:100%; height:6px; background:var(--tile); border-radius:3px; overflow:hidden;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.2);
+}
+#reproductor-container-sanavera .progress{
+  width:0; height:100%; background:linear-gradient(90deg,var(--brand-2),var(--brand));
+  animation:welcome-progress 10s linear forwards; border-radius:3px;
+}
+@keyframes welcome-progress{ from{width:0} to{width:100%} }
+
+/* =====================================
+   BUSCADOR (header + grilla)
+   ===================================== */
+#reproductor-container-sanavera .search-modal .modal-content{
+  padding-bottom:var(--footer-safe); background:var(--bg);
+}
+
+/* Topbar con el buscador */
+#reproductor-container-sanavera .topbar{
+  position:sticky; top:0; z-index:30;
+  background:var(--elev); border:1px solid var(--line);
+  padding:44px var(--side-pad) 22px; /* si querés bajar/subir el buscador, tocá este padding */
+  box-shadow:var(--shadow-md); backdrop-filter: blur(10px);
+}
+
+/* Ocultamos la marca grande de arriba (no la usamos ahora) */
+#reproductor-container-sanavera .brand{ display:none !important; }
+#brand-logo{ height:36px; width:auto; }
+#brand-text{ font-weight:600; font-size:18px; letter-spacing:-.025em; }
+
+/* Campo + botón con el logo */
+#reproductor-container-sanavera .search-row{ display:flex; gap:12px; align-items:center; }
+#search-input{
+  flex:1; background:var(--tile); color:var(--text);
+  border:2px solid transparent; border-radius:var(--border-radius);
+  padding:14px 18px; font-size:15px; font-weight:500; outline:none;
+  transition:all var(--transition); box-shadow:var(--shadow-sm);
+}
+#search-input::placeholder{ color:var(--muted); font-weight:400; }
+#search-input:focus{
+  border-color:var(--brand); background:var(--elev);
+  box-shadow:0 0 0 3px rgba(94,225,146,.15), var(--shadow-sm);
+}
+
+/* Botón redondo pelado con el logo, sin borde de color */
+#search-button{
+  width:44px; height:44px; min-width:44px;
+  padding:0; border:none; border-radius:50%;
+  background:var(--tile) url("./logo3.png") center/75% no-repeat;
+  box-shadow:var(--shadow-sm);
+  font-size:0; color:transparent; cursor:pointer; transition:all var(--transition);
+}
+#search-button:hover{ transform:translateY(-1px); box-shadow:var(--shadow-md); background-color:var(--tile-hover); }
+#search-button:active{ transform:scale(.95); }
+#search-button:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
+
+#results-count{ margin-top:12px; font-size:13px; font-weight:500; color:var(--muted); text-align:center; }
+
+/* Grilla de álbumes */
+#album-list{
+  height:calc(100vh - var(--header-h));
+  overflow:auto; padding:20px var(--side-pad) 32px;
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px;
+  background:var(--bg);
+}
+.album-item{ cursor:pointer; transition:transform var(--transition); }
+.album-item:hover{ transform:translateY(-2px); }
+.album-item:active{ transform:scale(.98); }
+.album-item img{
+  width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:var(--border-radius);
+  background:var(--tile); box-shadow:var(--shadow-sm); transition:all var(--transition);
+}
+.album-item:hover img{ box-shadow:var(--shadow-md); }
+.album-item-info{ padding:10px 2px 0; }
+.album-item-info h3{
+  margin:0; font-size:14px; line-height:1.3; font-weight:600; color:var(--text);
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.album-item-info p{
+  margin:6px 0 0; font-size:12px; font-weight:500; color:var(--muted);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.loading,.error-message{ text-align:center; padding:24px; color:var(--muted); font-weight:500; }
+
+/* =====================================
+   REPRODUCTOR
+   ===================================== */
+.player-hero{
+  position:sticky; top:0; z-index:25;
+  width:100%; aspect-ratio:16/9; max-height:var(--hero-max-h);
+  background:center/cover no-repeat var(--elev);
+  background-image:var(--cover-url);
+  border-radius:0 0 var(--border-radius) var(--border-radius);
+  overflow:hidden;
+}
+.player-hero::before{
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(14,15,19,.85) 0%, rgba(14,15,19,.5) 30%, rgba(14,15,19,.2) 60%, rgba(14,15,19,0) 100%);
+  pointer-events:none;
+}
+.hero-text{ position:absolute; left:20px; right:20px; bottom:20px; text-align:center; }
+.hero-text h2{ margin:0 0 6px; font-size:clamp(20px,5.2vw,26px); font-weight:700; text-shadow:0 2px 8px rgba(0,0,0,.6); letter-spacing:-.025em; }
+.hero-text p{ margin:0; font-size:clamp(13px,3.6vw,16px); font-weight:500; color:#f0f0f0; text-shadow:0 1px 4px rgba(0,0,0,.4); }
+
+.player-section,.audio-info{ display:none !important; }
+
+.playlist-section{
+  flex:1; overflow:auto; padding:12px var(--side-pad) 140px; background:var(--bg);
+}
+
+.playlist{ display:flex; flex-direction:column; gap:4px; }
+.playlist-item{
+  display:flex; align-items:center; gap:12px; padding:10px 8px;
+  border-radius:var(--border-radius-sm); transition:all var(--transition); border-left:3px solid transparent;
+}
+.playlist-item:hover{ background:var(--tile); transform:translateX(2px); }
+.playlist-item.active{ background:var(--tile-hover); border-left-color:var(--brand); }
+.playlist-item.active h3{ color:var(--brand); }
+
+.playlist-item img{
+  width:48px; height:48px; border-radius:var(--border-radius-sm);
+  object-fit:cover; flex:0 0 48px; background:var(--tile); box-shadow:var(--shadow-sm);
+}
+.playlist-item-info{ min-width:0; flex:1; }
+.playlist-item-info h3{
+  margin:0; font-size:15px; line-height:1.3; font-weight:600;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:10px;
+}
+.playlist-item-info p{
+  margin:4px 0 0; font-size:13px; font-weight:500; color:var(--muted);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+.hq-indicator{
+  display:inline-block; font-size:10px; font-weight:700; color:#0a1f0f;
+  background:var(--brand); border-radius:4px; padding:3px 5px; letter-spacing:.3px;
+  box-shadow:0 1px 3px rgba(94,225,146,.3);
+}
+
+.eq{ display:inline-flex; align-items:flex-end; gap:2px; width:16px; height:14px; }
+.eq span{
+  display:block; width:3px; height:100%; background:var(--brand); opacity:.9; border-radius:1px;
+  animation:bar 1.2s ease-in-out infinite;
+}
 .eq span:nth-child(2){ animation-delay:.2s; }
 .eq span:nth-child(3){ animation-delay:.4s; }
-@keyframes bar{ 0%,100%{ transform:scaleY(.3); } 50%{ transform:scaleY(1); } }
+@keyframes bar{ 0%,100%{ transform:scaleY(.3); opacity:.6; } 50%{ transform:scaleY(1); opacity:1; } }
 
-.controls-section { padding: 12px var(--content-padding); background: var(--elev-1); border-top: 1px solid var(--line); }
-.controls { display: flex; justify-content: space-around; align-items: center; }
-.btn { background: none; border: none; color: var(--text); width: 52px; height: 52px; border-radius: 50%; font-size: 20px; }
-.btn-play { font-size: 24px; width: 64px; height: 64px; background: var(--brand); color: var(--bg); }
-.btn-play .fa-pause { display: none; }
-.btn-play.playing .fa-play { display: none; }
-.btn-play.playing .fa-pause { display: block; }
-.btn.active { color: var(--brand); }
-
-/* ======================= LISTAS DE REPRODUCCIÓN ======================= */
-#playlists-modal .modal-content { padding: var(--content-padding); }
-.playlists-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-#btn-create-playlist { background: var(--brand); color: var(--bg); border: none; padding: 10px 16px; border-radius: var(--radius-md); font-weight: 600; }
-.playlist-entry { display: flex; align-items: center; gap: 16px; padding: 12px; cursor: pointer; }
-.playlist-entry:hover { background: var(--elev-1); border-radius: var(--radius-sm); }
-.playlist-entry .fas { font-size: 24px; color: var(--text-muted); }
-
-/* ======================= DIÁLOGOS (Pop-ups) ======================= */
-.dialog {
-    position: fixed; inset: 0; z-index: 2000;
-    background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
-    display: none; justify-content: center; align-items: center;
+.playlist-item-actions{ margin-left:auto; display:flex; align-items:center; gap:8px; }
+.btn-favorite,.btn-remove-favorite{
+  background:none; border:none; padding:8px; cursor:pointer; color:var(--muted); font-size:16px;
+  border-radius:50%; transition:all var(--transition);
 }
-.dialog.active { display: flex; }
-.dialog-content { background: var(--elev-2); padding: 24px; border-radius: var(--radius-md); width: 90%; max-width: 340px; }
-.dialog-content h3 { margin: 0 0 16px; }
-.dialog-content input { width: 100%; background: var(--bg); border: 1px solid var(--line); padding: 12px; border-radius: var(--radius-sm); color: var(--text); }
-.dialog-buttons { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
-.dialog-buttons button { background: var(--elev-3); border: none; padding: 10px 16px; color: var(--text); border-radius: var(--radius-sm); }
-#add-to-playlist-options button { width: 100%; text-align: left; background: var(--elev-1); margin-bottom: 8px; }
+.btn-favorite:hover,.btn-remove-favorite:hover{ background:var(--tile); color:var(--text); }
+.btn-favorite.active i{ color:#ff4757; }
+.btn-favorite:focus-visible,.btn-remove-favorite:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
 
-/* ======================= OTROS ======================= */
-#now-playing-fab {
-    position: fixed; bottom: calc(var(--nav-height) + 24px + var(--safe-area)); right: 24px;
-    z-index: 1050; width: 60px; height: 60px; border-radius: 50%;
-    background: var(--brand); color: var(--bg); border: none;
-    font-size: 22px; box-shadow: var(--shadow-lg); display: none;
+/* =====================================
+   Controles inferiores (cajón") 
+   ===================================== */
+.controls-section{
+  position:sticky; bottom:0; z-index:26;
+  background:rgba(22,24,33,.85); backdrop-filter:blur(20px);
+  border:1px solid var(--line);
+  padding:16px var(--side-pad) calc(26px + env(safe-area-inset-bottom)); /* base justa */
+  border-top:1px solid var(--line);
+  box-shadow:var(--shadow-lg);
+  border-radius:var(--border-radius) var(--border-radius) 0 0;
 }
-.empty-state, .loading-state { text-align: center; padding: 48px; color: var(--text-muted); }
+.controls-section::before{
+  content:""; position:absolute; left:0; right:0; top:-80px; height:80px;
+  background:linear-gradient(to top, rgba(14,15,19,.9) 0%, rgba(14,15,19,.6) 40%, rgba(14,15,19,0) 100%);
+  pointer-events:none;
+}
+
+.controls{
+  display:flex; justify-content:center; align-items:center; gap:12px;
+  margin-bottom:10px; /* un toque menos para darle lugar al footer-text */
+}
+.btn{
+  background:var(--tile); border:none; color:var(--text); cursor:pointer;
+  width:44px; height:44px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:18px;
+  transition:all var(--transition); box-shadow:var(--shadow-sm);
+}
+.btn:hover{ background:var(--tile-hover); transform:translateY(-1px); box-shadow:var(--shadow-md); }
+.btn:active{ transform:scale(.95); }
+.btn:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
+.btn-small{ width:38px; height:38px; font-size:16px; }
+.btn-play{ width:56px; height:56px; font-size:24px; background:var(--brand); color:#0a1f0f; }
+.btn-play:hover{ background:var(--brand-2); }
+.btn-play .fa-pause{ display:none; } 
+.btn-play.playing .fa-play{ display:none; } 
+.btn-play.playing .fa-pause{ display:inline-block; }
+.btn.active{ color:var(--brand); background:var(--tile-hover); }
+.btn.repeat-one{ position:relative; }
+.btn.repeat-one::after{
+  content:'1'; position:absolute; right:8px; bottom:8px; font-size:10px; font-weight:700;
+  color:var(--brand); background:var(--bg); width:14px; height:14px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+}
+
+/* Progreso y tiempos */
+.progress-container{ width:100%; }
+.seek-bar{
+  width:100%; height:6px; background:var(--tile); border-radius:3px; outline:none; -webkit-appearance:none; appearance:none;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.2); transition:all var(--transition);
+}
+.seek-bar:hover{ background:var(--tile-hover); }
+.seek-bar::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none; width:16px; height:16px; background:var(--brand);
+  border-radius:50%; box-shadow:var(--shadow-sm); transition:all var(--transition);
+}
+.seek-bar::-webkit-slider-thumb:hover{ transform:scale(1.1); box-shadow:var(--shadow-md); }
+.seek-bar::-moz-range-thumb{ width:16px; height:16px; background:var(--brand); border:none; border-radius:50%; box-shadow:var(--shadow-sm); }
+.time-info{
+  display:flex; justify-content:space-between; font-size:13px; font-weight:500; color:var(--muted);
+  padding:6px 4px 0;
+}
+
+/* Texto de crédito: pegado al borde inferior, sin comerse nada */
+.footer-text{
+  text-align:center; font-size:9px; font-weight:500; color:var(--muted);
+  line-height:1.2;
+  padding-top:4px;
+  margin-bottom:calc(4px + env(safe-area-inset-bottom)); /* queda visible y alineado a la barra */
+}
+
+/* =====================================
+   SELECTOR DE CALIDAD (sin caja grande)
+   ===================================== */
+
+/* Telón borroso de fondo */
+#quality-backdrop{
+  position:fixed; inset:0; background:rgba(14,15,19,.4);
+  backdrop-filter:blur(4px); z-index:2000; display:none;
+}
+#quality-backdrop.show{ display:block; }
+
+/* Contenedor fantasma: solo posiciona */
+#quality-menu{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:120px;
+  min-width:240px; background:transparent; border:none; box-shadow:none;
+  z-index:2001; display:none;
+}
+#quality-menu.show{ display:block; }
+
+/* Título suelto */
+#quality-menu .title{
+  margin:0 12px 8px; padding:0; background:transparent; border:none;
+  color:var(--muted); font-size:13px; font-weight:600; letter-spacing:.025em;
+}
+
+/* Lista de formatos como pills */
+#quality-options{
+  display:flex; flex-direction:column; padding:0 8px 8px; gap:8px; max-height:50vh; overflow:auto;
+}
+.quality-option{
+  display:flex; align-items:center; justify-content:space-between;
+  width:100%; padding:12px 12px;
+  background:rgba(22,24,33,.85); border:1px solid var(--line);
+  border-radius:var(--border-radius-sm); color:var(--text);
+  cursor:pointer; transition:all var(--transition); font-weight:500;
+}
+.quality-option:hover{ background:var(--tile); }
+.quality-option:focus-visible{ outline:2px solid var(--brand); outline-offset:-2px; }
+.quality-option .center{ display:flex; align-items:center; gap:10px; }
+.badge-hq{
+  display:inline-block; font-size:10px; font-weight:700; color:#0a1f0f;
+  background:var(--brand); border-radius:4px; padding:3px 5px; letter-spacing:.3px;
+  box-shadow:0 1px 3px rgba(94,225,146,.3);
+}
+.check{ opacity:.3; color:var(--muted); transition:all var(--transition); }
+.quality-option:hover .check{ opacity:.7; }
+
+/* =====================================
+   FABs (botones flotantes)
+   ===================================== */
+#floating-search-button,#floating-player-button,#floating-favorites-button{
+  position:fixed; right:20px; z-index:1001;
+  width:64px; height:64px; border-radius:50%; border:none; cursor:pointer;
+  background:var(--elev); border:1px solid var(--line);
+  box-shadow:var(--shadow-lg); display:flex; align-items:center; justify-content:center;
+  transition:all var(--transition);
+}
+#floating-favorites-button{ bottom:32px; }
+#floating-player-button{ bottom:108px; }
+#floating-search-button{ bottom:184px; }
+#floating-search-button:hover,#floating-player-button:hover,#floating-favorites-button:hover{
+  transform:translateY(-2px); box-shadow:0 12px 40px rgba(0,0,0,.4); background:var(--tile);
+}
+#floating-search-button:active,#floating-player-button:active,#floating-favorites-button:active{ transform:scale(.95); }
+#floating-search-button:focus-visible,#floating-player-button:focus-visible,#floating-favorites-button:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
+#floating-search-button i,#floating-player-button i,#floating-favorites-button i{ color:var(--brand); font-size:22px; }
+
+/* Utilidad para esconder rápido */
+.hide{ display:none !important; }
+
+/* =====================================
+   Responsive (un poco más de aire en pantallas grandes)
+   ===================================== */
+@media (min-width:480px){
+  :root{ --side-pad:16px; }
+  #search-button{ width:48px; height:48px; background-size:75%; }
+  .album-item-info h3{ font-size:15px; }
+  .album-item-info p{ font-size:13px; }
+}
+@media (min-width:680px){
+  :root{ --side-pad:20px; }
+  #album-list{ grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; padding:24px var(--side-pad) 40px; }
+  .hero-text{ left:24px; right:24px; bottom:24px; }
+  .playlist-section{ padding:16px var(--side-pad) 140px; }
+  .controls-section{ padding:18px var(--side-pad) calc(26px + env(safe-area-inset-bottom)); }
+}
+@media (min-width:1024px){
+  :root{ --side-pad:24px; }
+  #album-list{ grid-template-columns:repeat(4,minmax(0,1fr)); gap:24px; padding:32px var(--side-pad) 48px; }
+  .album-item-info h3{ font-size:16px; } 
+  .album-item-info p{ font-size:14px; }
+  .playlist-item img{ width:52px; height:52px; flex:0 0 52px; }
+  .playlist-item-info h3{ font-size:16px; }
+  .playlist-item-info p{ font-size:14px; }
+  .controls{ gap:14px; }
+  .btn{ width:48px; height:48px; font-size:20px; }
+  .btn-small{ width:42px; height:42px; font-size:18px; }
+  .btn-play{ width:60px; height:60px; font-size:26px; }
+}
+
+/* Accesibilidad: enfoque visible */
+button:focus-visible,input:focus-visible,[tabindex]:focus-visible{
+  outline:2px solid var(--brand); outline-offset:2px;
+}
+
+/* Alto contraste (si el sistema lo pide) */
+@media (prefers-contrast:high){
+  :root{
+    --bg:#000; --elev:#1a1a1a; --tile:#2a2a2a; --tile-hover:#3a3a3a;
+    --text:#fff; --muted:#ccc; --line:#555;
+  }
+  #search-input:focus{ border-width:3px; }
+  .btn{ border:1px solid var(--line); }
+  .playlist-item.active{ border-left-width:4px; }
+}
